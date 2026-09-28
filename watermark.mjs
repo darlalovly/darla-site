@@ -43,8 +43,11 @@ async function watermarkAllPosts() {
 
       const logoWidth = Math.max(Math.round(metadata.width * 0.07), 24);
       
-      const resizedLogo = await sharp(logoBuffer)
-        .resize({ width: logoWidth })
+      const resizedLogoInstance = sharp(logoBuffer).resize({ width: logoWidth });
+      const logoMeta = await resizedLogoInstance.metadata();
+      const logoHeight = logoMeta.height || logoWidth;
+
+      const resizedLogo = await resizedLogoInstance
         .composite([{
           input: Buffer.from([255, 255, 255, Math.round(255 * 0.40)]),
           raw: { width: 1, height: 1, channels: 4 },
@@ -53,10 +56,16 @@ async function watermarkAllPosts() {
         }])
         .toBuffer();
 
+      // Inset padding from bottom-right corner to clear container border-radius clipping
+      const padding = Math.max(Math.round(metadata.width * 0.035), 20);
+      const topPos = Math.max(0, metadata.height - logoHeight - padding);
+      const leftPos = Math.max(0, metadata.width - logoWidth - padding);
+
       const watermarkedBuffer = await image
         .composite([{
           input: resizedLogo,
-          gravity: 'southeast',
+          top: topPos,
+          left: leftPos,
         }])
         .toBuffer();
 
