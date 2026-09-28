@@ -1,0 +1,44 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'darlalovly',
+  description = 'A chronological archive of travel, sights, and local experiences.'
+} = Astro.props;
+
+const currentYear = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="en" class="bg-neutral-50 text-neutral-900 antialiased">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/icons/logo-black.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body class="min-h-screen flex flex-col font-sans bg-neutral-50 text-neutral-900">
+    <header class="w-full border-b border-neutral-200 bg-white sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+        <a href="/" class="transition-opacity hover:opacity-80">
+          <img src="https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp" alt="darlalovly" class="h-8 w-auto object-contain" />
+        </a>
+      </div>
+    </header>
+
+    <div class="flex-grow flex flex-col">
+      <slot />
+    </div>
+
+    <footer class="border-t border-neutral-200 py-8 mt-16 text-center text-xs text-neutral-500">
+      <p>&copy; {currentYear} darlalovly. All rights reserved.</p>
+    </footer>
+  </body>
+</html>

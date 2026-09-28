@@ -1,96 +1,39 @@
 ---
-import { getCollection, render } from 'astro:content';
-import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
-// Fetch field notes excluding drafts
-const allNotes = await getCollection('field_notes', ({ data }) => {
-  return data.isDraft !== true;
-});
+const allPosts = await getCollection('field_notes');
 
-// Sort entries newest first
-const sortedNotes = allNotes.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
-
-// Render Markdown body content using render(note)
-const notes = await Promise.all(
-  sortedNotes.map(async (note) => {
-    const { Content } = await render(note);
-    return { note, Content };
-  })
-);
+const sortedPosts = allPosts
+  .filter((post) => post.data && post.data.isDraft !== true)
+  .sort((a, b) => {
+    const timeA = new Date(a.data.date).getTime();
+    const timeB = new Date(b.data.date).getTime();
+    return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+  });
 ---
 
-<Layout title="DarlaLovly">
-  <main class="max-w-3xl mx-auto px-6 py-12">
-    
-    <!-- BRAND HEADER -->
-    <header class="text-center mb-10 border-b border-neutral-200 pb-8">
-      <div class="flex justify-center mb-4">
-        <img 
-          src="https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp" 
-          alt="Darla Lovly Logo" 
-          class="brand-logo" 
-        />
-      </div>
-      <h1 class="mb-1 text-2xl tracking-widest uppercase">DarlaLovly</h1>
-      <p class="col-meta text-xs">My Latest Musings</p>
-    </header>
-
-    <!-- SINGLE FEED STREAM -->
-    <section class="space-y-6">
-      {notes.length === 0 ? (
-        <div class="text-center py-16 bg-neutral-50 rounded-xl border border-dashed border-neutral-200">
-          <p class="text-neutral-500 italic mb-2">This place is quiet right now.</p>
-          <p class="col-meta text-xs">New field notes will appear here once published.</p>
-        </div>
-      ) : (
-        notes.map(({ note, Content }) => (
-          <article class="p-6 bg-white border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex flex-wrap items-center justify-between col-meta mb-3 gap-2 text-xs">
-              <div class="flex items-center gap-2">
-                <span class="bg-neutral-100 px-2 py-0.5 rounded font-semibold text-neutral-800 uppercase">
-                  {note.data.category}
-                </span>
-                {note.data.location && (
-                  <span>📍 {note.data.location}</span>
-                )}
-              </div>
-              <time datetime={new Date(note.data.date).toISOString()}>
-                {new Date(note.data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </time>
-            </div>
-
-            <h2 class="text-xl mb-3 uppercase font-mono tracking-wider text-neutral-900">{note.data.title}</h2>
-            
-            {note.data.image && (
-              <div class="col-double-frame mb-4">
-                <img src={note.data.image} alt={note.data.title} />
-              </div>
-            )}
-
-            <!-- MARKDOWN BODY TEXT -->
-            <div class="text-neutral-700 text-sm leading-relaxed space-y-4 mb-4">
-              <Content />
-            </div>
-
-            {note.data.sotd && (
-              <div class="col-meta text-xs bg-neutral-50 p-2.5 rounded border border-neutral-100 mb-3">
-                <strong class="text-neutral-900">Scent of the Day:</strong> {note.data.sotd}
-              </div>
-            )}
-
-            {note.data.mood && note.data.mood.length > 0 && (
-              <div class="flex flex-wrap gap-1 mt-3">
-                {note.data.mood.map((m: string) => (
-                  <span class="col-meta text-[11px] bg-neutral-100 px-2 py-0.5 rounded-full text-neutral-600">
-                    #{m}
-                  </span>
-                ))}
-              </div>
-            )}
-          </article>
-        ))
-      )}
-    </section>
-
+<BaseLayout title="darlalovly">
+  <main class="mx-auto flex max-w-7xl flex-col px-4 py-10 sm:px-6 lg:px-8">
+    <div class="columns-1 gap-4 sm:columns-2 lg:columns-3 sm:gap-6">
+      {sortedPosts.map((post) => (
+        <a
+          href={`/posts/${post.id}`}
+          class="group relative mb-4 block break-inside-avoid overflow-hidden rounded-xl bg-neutral-900 sm:mb-6"
+        >
+          <img
+            src={post.data.image}
+            alt={post.data.title}
+            class="h-auto w-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-75"
+            loading="lazy"
+          />
+          <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 p-5 z-10">
+            <h2 class="text-lg font-semibold !text-white leading-snug drop-shadow-lg">
+              {post.data.title}
+            </h2>
+          </div>
+        </a>
+      ))}
+    </div>
   </main>
-</Layout>
+</BaseLayout>

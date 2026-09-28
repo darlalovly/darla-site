@@ -7,14 +7,19 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "start": "astro dev",
+    "prebuild": "node watermark.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.10",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.1",
-    "tailwindcss": "^4.3.3"
+    "sharp": "^0.35.4",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3"
   },
   "allowScripts": {
     "esbuild": true

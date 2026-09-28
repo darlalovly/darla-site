@@ -23,6 +23,27 @@ const {
     <title>{title}</title>
   </head>
   <body>
-    <slot />
+
+    <!-- Sniffcult Master Fixed Header -->
+    <header class="col-topnav">
+      <a href="/" class="col-topnav-brand">
+        <img src="https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp" alt="Darla Lovly" />
+      </a>
+      
+      <nav class="col-nav-desktop">
+        <ul class="col-nav-list">
+          <li><a href="/field_notes">Field Notes</a></li>
+          <li><a href="/books">Library</a></li>
+          <li><a href="/recipes">Recipes</a></li>
+          <li><a href="/about">About</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Main Content Container with Top Padding for Fixed Header -->
+    <main class="max-w-5xl mx-auto px-4 py-8">
+      <slot />
+    </main>
+
   </body>
 </html>

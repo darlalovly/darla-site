@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ==========================================================
-   Darla Lovly — Brand Identity & Global Stylesheet
+   Darla Lovly — Global Stylesheet 
    ========================================================== */
 
 :root {
@@ -13,22 +13,30 @@
   --accent-purple: #382b3f;
   --radius: 12px;
   --caps-track: 0.12em;
-
-  /* System Font Stack */
+  --dash: 1px dashed var(--text-2);
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-title: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-sig: "Brush Script MT", "Apple Chancery", "Segoe Script", cursive;
   --font-serif: "Iowan Old Style", "Apple Garamond", "Baskerville", serif;
 }
 
-/* Global Layout */
-html {
-  box-sizing: border-box;
-  -webkit-text-size-adjust: 100%;
+/* Global Layout & Scroll Resets */
+html { 
+  box-sizing: border-box; 
+  -webkit-text-size-adjust: 100%; 
 }
 
-*, *::before, *::after {
-  box-sizing: inherit;
+*, *::before, *::after { 
+  box-sizing: inherit; 
+}
+
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none !important;
 }
 
 body {
@@ -40,9 +48,10 @@ body {
   font-size: 16px;
   line-height: 1.6;
   font-weight: 300;
+  overscroll-behavior-x: none;
 }
 
-/* Typography & Branding */
+/* Typography & Branding Rules */
 h1, h2, h3, h4 {
   font-family: var(--font-title);
   text-transform: uppercase;
@@ -52,26 +61,23 @@ h1, h2, h3, h4 {
   margin: 0 0 1rem 0;
 }
 
-h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); }
-p { margin-bottom: 1.25rem; }
+h1 { font-size: clamp(2rem, 5vw, 2.5rem); }
+p { margin-bottom: 1.5rem; }
+
+.col-signature {
+  font-family: var(--font-sig);
+  font-size: 3rem;
+  color: var(--title);
+  transform: rotate(-2deg);
+  display: inline-block;
+}
 
 .col-meta {
   font-family: var(--font-title);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   letter-spacing: var(--caps-track);
   text-transform: uppercase;
   color: var(--text-2);
-}
-
-/* Logo Sizing Rules */
-.brand-logo {
-  max-height: 80px;
-  max-width: 240px;
-  width: auto;
-  height: auto;
-  object-contain: contain;
-  display: block;
-  margin: 0 auto;
 }
 
 .col-double-frame {
@@ -79,4 +85,108 @@ p { margin-bottom: 1.25rem; }
   padding: 10px;
   background: var(--bg);
   border-radius: 4px;
+}
+
+/* Base Top Navigation */
+.col-topnav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--hdr-height);
+  padding: 0 2rem;
+  background: var(--bg);
+  border-bottom: var(--dash);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+}
+
+.col-topnav-brand img {
+  height: 40px;
+  width: auto;
+  display: block;
+}
+
+.col-nav-list {
+  display: flex;
+  gap: 30px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.col-nav-list a {
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: var(--caps-track);
+  font-size: 0.8rem;
+  color: var(--text-2);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.col-nav-list a:hover {
+  color: var(--title);
+}
+
+/* Universal Page Content Offset for Fixed Header */
+main {
+  min-height: calc(100vh - var(--hdr-height));
+  padding-top: var(--hdr-height);
+}
+
+@media (max-width: 768px) {
+  :root { 
+    --hdr-height: 70px; 
+  }
+  .col-topnav {
+    padding: 0 1rem;
+  }
+}
+
+/* Remove background boxes, borders, and shadows from markdown image containers */
+.prose div,
+.prose figure {
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Content image sizing rules for prose markdown */
+.prose div > img,
+.prose p > img:not([src*="icon"]),
+.prose img {
+  margin-left: auto;
+  margin-right: auto;
+  max-height: 70vh;
+  width: auto;
+  border-radius: 0.75rem;
+  object-fit: contain;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Constrain social icons and inline link graphics sitewide */
+.prose a img,
+.prose img[src*="icon"] {
+  display: inline-block !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  max-width: 1.25rem !important;
+  max-height: 1.25rem !important;
+  margin: 0 !important;
+  vertical-align: middle !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Underline all content links inside post prose */
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
