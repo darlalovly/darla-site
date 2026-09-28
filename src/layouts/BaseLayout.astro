@@ -1,44 +1,65 @@
 ---
-import '../styles/global.css';
-
 interface Props {
   title?: string;
-  description?: string;
 }
 
-const {
-  title = 'darlalovly',
-  description = 'A chronological archive of travel, sights, and local experiences.'
-} = Astro.props;
-
-const currentYear = new Date().getFullYear();
+const { title = "darlalovly" } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" class="bg-neutral-50 text-neutral-900 antialiased">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/icons/logo-black.svg" />
-    <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    <meta name="description" content={description} />
   </head>
-  <body class="min-h-screen flex flex-col font-sans bg-neutral-50 text-neutral-900">
-    <header class="w-full border-b border-neutral-200 bg-white sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-        <a href="/" class="transition-opacity hover:opacity-80">
-          <img src="https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp" alt="darlalovly" class="h-8 w-auto object-contain" />
-        </a>
-      </div>
-    </header>
+  <body class="bg-white text-neutral-800 antialiased">
+    <slot />
 
-    <div class="flex-grow flex flex-col">
-      <slot />
-    </div>
+    <script>
+      document.addEventListener('contextmenu', async (e) => {
+        const target = e.target as HTMLElement;
+        if (target && target.tagName === 'IMG') {
+          e.preventDefault();
+          const img = target as HTMLImageElement;
+          
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
 
-    <footer class="border-t border-neutral-200 py-8 mt-16 text-center text-xs text-neutral-500">
-      <p>&copy; {currentYear} darlalovly. All rights reserved.</p>
-    </footer>
+          const tempImg = new Image();
+          tempImg.crossOrigin = 'anonymous';
+          tempImg.src = img.src;
+
+          await new Promise((resolve) => {
+            tempImg.onload = resolve;
+          });
+
+          canvas.width = tempImg.naturalWidth;
+          canvas.height = tempImg.naturalHeight;
+
+          ctx.drawImage(tempImg, 0, 0);
+
+          const fontSize = Math.max(Math.round(canvas.width * 0.03), 16);
+          const paddingX = Math.max(Math.round(canvas.width * 0.06), 35);
+          const paddingY = Math.max(Math.round(canvas.height * 0.06), 35);
+
+          ctx.font = `500 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.textAlign = 'end';
+          ctx.fillText('darlalovly', canvas.width - paddingX, canvas.height - paddingY);
+
+          canvas.toBlob((blob) => {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = img.src.split('/').pop() || 'download.webp';
+            a.click();
+            URL.revokeObjectURL(url);
+          }, 'image/webp');
+        }
+      });
+    </script>
   </body>
 </html>
