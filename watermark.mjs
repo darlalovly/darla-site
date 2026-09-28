@@ -13,7 +13,6 @@ async function watermarkAllPosts() {
   }
   const logoBuffer = Buffer.from(await logoResponse.arrayBuffer());
 
-  // Function to scan all subfolders inside /public/images/posts
   function getAllImages(dir) {
     let results = [];
     if (!fs.existsSync(dir)) return results;
@@ -40,9 +39,21 @@ async function watermarkAllPosts() {
       const image = sharp(inputBuffer);
       const metadata = await image.metadata();
 
-      // Set logo size to 15% of image width
-      const logoWidth = Math.round(metadata.width * 0.15);
-      const resizedLogo = await sharp(logoBuffer).resize({ width: logoWidth }).toBuffer();
+      if (!metadata.width || !metadata.height) continue;
+
+      // Scaled down to 7% of image width for a refined, discrete footprint
+      const logoWidth = Math.max(Math.round(metadata.width * 0.07), 24);
+      
+      // Resizes logo and applies a soft 40% opacity alpha mask
+      const resizedLogo = await sharp(logoBuffer)
+        .resize({ width: logoWidth })
+        .composite([{
+          input: Buffer.from([255, 255, 255, Math.round(255 * 0.40)]),
+          raw: { width: 1, height: 1, channels: 4 },
+          tile: true,
+          blend: 'dest-in'
+        }])
+        .toBuffer();
 
       // Bake watermark into bottom-right corner
       const watermarkedBuffer = await image
@@ -52,7 +63,6 @@ async function watermarkAllPosts() {
         }])
         .toBuffer();
 
-      // Overwrite the original file in place
       fs.writeFileSync(filePath, watermarkedBuffer);
       console.log(`Watermarked: ${filePath}`);
     } catch (err) {
