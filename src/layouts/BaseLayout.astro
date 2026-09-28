@@ -6,6 +6,7 @@ interface Props {
 }
 
 const { title = "darlalovly" } = Astro.props;
+const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp";
 ---
 
 <!doctype html>
@@ -13,14 +14,25 @@ const { title = "darlalovly" } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/webp" href={logoUrl} />
     <title>{title}</title>
   </head>
-  <body class="bg-white text-neutral-800 antialiased">
-    <slot />
+  <body class="bg-white text-neutral-800 antialiased min-h-screen flex flex-col">
+    <header class="w-full border-b border-neutral-100 py-4">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <a href="/" class="hover:opacity-75 transition-opacity">
+          <img src={logoUrl} alt="darlalovly" class="h-10 sm:h-12 w-auto object-contain" />
+        </a>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <slot />
+    </main>
 
     <script>
-      document.addEventListener('contextmenu', async (e) => {
-        const target = e.target as HTMLElement;
+      document.addEventListener('contextmenu', async (e: MouseEvent) => {
+        const target = e.target as HTMLElement | null;
         if (target && target.tagName === 'IMG') {
           e.preventDefault();
           const img = target as HTMLImageElement;
@@ -33,8 +45,8 @@ const { title = "darlalovly" } = Astro.props;
           tempImg.crossOrigin = 'anonymous';
           tempImg.src = img.src;
 
-          await new Promise((resolve) => {
-            tempImg.onload = resolve;
+          await new Promise<void>((resolve) => {
+            tempImg.onload = () => resolve();
           });
 
           canvas.width = tempImg.naturalWidth;
