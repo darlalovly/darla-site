@@ -1,5 +1,6 @@
 ---
 title: "Infinity Comics"
+description: "Explore Infinity Comics in downtown West Monroe, Louisiana—featuring vintage back issues, rare key issue grails, collectibles, and pop culture memorabilia."
 date: 2026-07-28
 category: "sights"
 location: "West Monroe, Louisiana"
@@ -18,4 +19,37 @@ Whether you're looking to hunt down a key issue, add to your collection, or just
 
 📍 **Location:** 108 Cotton St, West Monroe, LA 71291 (Antique Alley)  
 ⏰ **Store Hours:** Tuesday – Saturday: 11:00 AM – 5:00 PM (Closed Sunday & Monday)  
-[<img src="/icons/icon-facebook.svg" alt="Facebook" /> Connect on Facebook](https://www.facebook.com/Infinity-Comics-West-Monroe-265766180745709/)
+[Connect on Facebook](https://www.facebook.com/Infinity-Comics-West-Monroe-265766180745709/)
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ComicStore",
+  "name": "Infinity Comics",
+  "image": "https://darlalovly.com/images/posts/2026-07-28-infinity-comics/infinity-comics-exterior.webp",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "108 Cotton St",
+    "addressLocality": "West Monroe",
+    "addressRegion": "LA",
+    "postalCode": "71291",
+    "addressCountry": "US"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 32.5037,
+    "longitude": -92.1468
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      "opens": "11:00",
+      "closes": "17:00"
+    }
+  ],
+  "sameAs": [
+    "https://www.facebook.com/Infinity-Comics-West-Monroe-265766180745709/"
+  ]
+}
+</script>
