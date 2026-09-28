@@ -41,10 +41,8 @@ async function watermarkAllPosts() {
 
       if (!metadata.width || !metadata.height) continue;
 
-      // Scaled down to 7% of image width for a refined, discrete footprint
       const logoWidth = Math.max(Math.round(metadata.width * 0.07), 24);
       
-      // Resizes logo and applies a soft 40% opacity alpha mask
       const resizedLogo = await sharp(logoBuffer)
         .resize({ width: logoWidth })
         .composite([{
@@ -55,7 +53,6 @@ async function watermarkAllPosts() {
         }])
         .toBuffer();
 
-      // Bake watermark into bottom-right corner
       const watermarkedBuffer = await image
         .composite([{
           input: resizedLogo,
