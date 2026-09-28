@@ -3,10 +3,20 @@ import '../styles/global.css';
 
 interface Props {
   title?: string;
+  description?: string;
+  image?: string;
+  canonicalURL?: URL | string;
 }
 
-const { title = "darlalovly" } = Astro.props;
+const { 
+  title = "darlalovly", 
+  description = "A daily digital garden and field notes by Darla.", 
+  image = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp",
+  canonicalURL 
+} = Astro.props;
+
 const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp";
+const canonicalHref = canonicalURL ? canonicalURL.toString() : undefined;
 ---
 
 <!doctype html>
@@ -16,6 +26,20 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/webp" href={logoUrl} />
     <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    {canonicalHref && <link rel="canonical" href={canonicalHref} />}
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    {image && <meta property="og:image" content={image} />}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content={title} />
+    {description && <meta property="twitter:description" content={description} />}
+    {image && <meta property="twitter:image" content={image} />}
   </head>
   <body class="bg-white text-neutral-800 antialiased min-h-screen flex flex-col">
     <header class="w-full border-b border-neutral-100 py-4">

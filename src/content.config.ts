@@ -6,6 +6,7 @@ const field_notes = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/field_notes' }),
   schema: z.object({
     title: z.string(),
+    description: z.string().optional(),
     date: z.coerce.date(),
     category: z.enum([
       'musings',

@@ -49,6 +49,16 @@ isDraft: false
   <p>Anyway, I hope the parents in the community realize what a treasure they have in their local library.</p>
 </div>
 
+📍 **Location:** 610 Quincy St, Rapid City, SD 57701  
+⏰ **Library Hours:** Monday – Thursday: 9:00 AM – 7:00 PM | Friday – Sunday: 10:00 AM – 6:00 PM
+
+<div class="mt-4 flex items-center">
+  <a href="https://www.facebook.com/RapidCityPublicLibrary/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-medium text-neutral-800 hover:text-[#1877F2] transition-colors">
+    <img src="/icons/icon-facebook.svg" alt="Facebook logo" class="h-5 w-5" />
+    <span>Connect on Facebook</span>
+  </a>
+</div>
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -64,10 +74,15 @@ isDraft: false
   "about": {
     "@type": "PublicLibrary",
     "name": "Rapid City Public Library",
+    "sameAs": [
+      "https://www.facebook.com/RapidCityPublicLibrary/"
+    ],
     "address": {
       "@type": "PostalAddress",
+      "streetAddress": "610 Quincy St",
       "addressLocality": "Rapid City",
       "addressRegion": "SD",
+      "postalCode": "57701",
       "addressCountry": "US"
     }
   }

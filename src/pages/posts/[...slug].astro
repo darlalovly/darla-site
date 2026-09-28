@@ -20,9 +20,16 @@ export async function getStaticPaths() {
 
 const { post, prevPost, nextPost } = Astro.props;
 const { Content } = await render(post);
+const siteUrl = Astro.site ? Astro.site.href : 'https://darlalovly.com';
+const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 ---
 
-<BaseLayout title={`${post.data.title} — darlalovly`}>
+<BaseLayout 
+  title={`${post.data.title} — darlalovly`}
+  description={post.data.description ?? ''}
+  image={post.data.image}
+  canonicalURL={canonicalURL}
+>
   <article class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
     <header class="mb-8 border-b border-neutral-200 pb-6 text-center">
       <div class="mb-3 flex items-center justify-center gap-2 text-xs uppercase tracking-wider text-neutral-500">
@@ -55,6 +62,7 @@ const { Content } = await render(post);
         <a
           href={`/posts/${prevPost.id}`}
           class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors"
+          rel="prev"
         >
           <span>←</span>
           <span>{prevPost.data.title}</span>
@@ -67,6 +75,7 @@ const { Content } = await render(post);
         <a
           href={`/posts/${nextPost.id}`}
           class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors text-right"
+          rel="next"
         >
           <span>{nextPost.data.title}</span>
           <span>→</span>

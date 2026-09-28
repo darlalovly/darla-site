@@ -53,6 +53,16 @@ isDraft: false
   </div>
 </div>
 
+📍 **Location:** 2631 S College Ave, Fort Collins, CO 80525  
+⏰ **Store Hours:** Monday – Sunday: 8:00 AM – 6:00 PM
+
+<div class="mt-4 flex items-center">
+  <a href="https://www.facebook.com/p/Turkish-Cafe-Co-100094631631108/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-medium text-neutral-800 hover:text-[#1877F2] transition-colors">
+    <img src="/icons/icon-facebook.svg" alt="Facebook logo" class="h-5 w-5" />
+    <span>Connect on Facebook</span>
+  </a>
+</div>
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -69,11 +79,15 @@ isDraft: false
     "@type": "CafeOrCoffeeShop",
     "name": "Turkish Cafe Co.",
     "url": "https://turkishcafeco.com/",
+    "sameAs": [
+      "https://www.facebook.com/p/Turkish-Cafe-Co-100094631631108/"
+    ],
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "College Avenue",
+      "streetAddress": "2631 S College Ave",
       "addressLocality": "Fort Collins",
       "addressRegion": "CO",
+      "postalCode": "80525",
       "addressCountry": "US"
     }
   }

@@ -18,8 +18,14 @@ Whether you're looking to hunt down a key issue, add to your collection, or just
 ![Infinity Comics interior view with rows of comic boxes](/images/posts/2026-07-28-infinity-comics/infinity-comics-interior.webp)
 
 📍 **Location:** 108 Cotton St, West Monroe, LA 71291 (Antique Alley)  
-⏰ **Store Hours:** Tuesday – Saturday: 11:00 AM – 5:00 PM (Closed Sunday & Monday)  
-[Connect on Facebook](https://www.facebook.com/Infinity-Comics-West-Monroe-265766180745709/)
+⏰ **Store Hours:** Tuesday – Saturday: 11:00 AM – 5:00 PM (Closed Sunday & Monday)
+
+<div class="mt-4 flex items-center">
+  <a href="https://www.facebook.com/p/Infinity-Comics-WM-100057487987966/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-medium text-neutral-800 hover:text-[#1877F2] transition-colors">
+    <img src="/icons/icon-facebook.svg" alt="Facebook logo" class="h-5 w-5" />
+    <span>Connect on Facebook</span>
+  </a>
+</div>
 
 <script type="application/ld+json">
 {
@@ -49,7 +55,7 @@ Whether you're looking to hunt down a key issue, add to your collection, or just
     }
   ],
   "sameAs": [
-    "https://www.facebook.com/Infinity-Comics-West-Monroe-265766180745709/"
+    "https://www.facebook.com/p/Infinity-Comics-WM-100057487987966/"
   ]
 }
 </script>
