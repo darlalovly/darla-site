@@ -146,9 +146,16 @@ main {
   }
 }
 
-/* Remove background boxes, borders, and shadows from markdown image containers */
-.prose div,
-.prose figure {
+/* Default prose body text color to dark/black */
+.prose {
+  color: var(--title);
+  --tw-prose-body: var(--title);
+  --tw-prose-bold: var(--title);
+}
+
+/* Restrict container resets strictly to image wrappers so custom cards keep backgrounds and borders */
+.prose figure,
+.prose div:has(> img) {
   border: none !important;
   background-color: transparent !important;
   box-shadow: none !important;

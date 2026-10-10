@@ -45,7 +45,7 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
   canonicalURL={canonicalURL}
 >
   <article class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
-    <header class="mb-8 border-b border-neutral-200 pb-6 text-center">
+    <header class="mb-8 border-b border-neutral-200 pb-6 text-center dark:border-neutral-800">
       <div class="mb-3 flex items-center justify-center gap-2 text-xs uppercase tracking-wider text-neutral-500">
         <time datetime={new Date(post.data.date).toISOString()}>
           {new Date(post.data.date).toLocaleDateString('en-US', {
@@ -62,20 +62,20 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
           </>
         )}
       </div>
-      <h1 class="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl">
+      <h1 class="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-4xl">
         {post.data.title}
       </h1>
     </header>
 
-    <div class="prose prose-neutral max-w-none [&_div>img]:mx-auto [&_div>img]:max-h-[70vh] [&_div>img]:w-auto [&_div>img]:rounded-xl [&_div>img]:object-contain [&_p>img]:mx-auto [&_p>img]:max-h-[70vh] [&_p>img]:w-auto [&_p>img]:rounded-xl [&_p>img]:object-contain [&_a_img]:inline-block [&_a_img]:my-0 [&_a_img]:h-5 [&_a_img]:w-5 [&_a_img]:max-h-5 [&_a_img]:rounded-none">
+    <div class="prose prose-neutral dark:prose-invert max-w-none">
       <Content />
     </div>
 
-    <nav class="mt-12 flex items-center justify-between border-t border-neutral-200 pt-6 text-sm font-medium">
+    <nav class="mt-12 flex items-center justify-between border-t border-neutral-200 pt-6 text-sm font-medium dark:border-neutral-800">
       {prevSlug ? (
         <a
           href={`/posts/${prevSlug}`}
-          class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors"
+          class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors"
           rel="prev"
         >
           <span>←</span>
@@ -88,7 +88,7 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
       {nextSlug ? (
         <a
           href={`/posts/${nextSlug}`}
-          class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors text-right"
+          class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors text-right"
           rel="next"
         >
           <span>{nextTitle}</span>
