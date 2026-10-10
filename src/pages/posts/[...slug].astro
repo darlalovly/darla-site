@@ -6,9 +6,8 @@ export const prerender = true;
 
 export async function getStaticPaths() {
   const posts = await getCollection('field_notes');
-  const sortedPosts = posts
-    .filter((post) => !post.data.isDraft)
-    .sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
+  const validPosts = posts.filter((post) => !post.data.isDraft);
+  const sortedPosts = validPosts.sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
 
   return sortedPosts.map((post, index) => {
     const slug = post.id.replace(/\.mdx?$/, '');
@@ -28,13 +27,7 @@ export async function getStaticPaths() {
   });
 }
 
-let { post, prevSlug, prevTitle, nextSlug, nextTitle } = Astro.props;
-
-if (!post) {
-  const { slug } = Astro.params;
-  const posts = await getCollection('field_notes');
-  post = posts.find((p) => p.id.replace(/\.mdx?$/, '') === slug);
-}
+const { post, prevSlug, prevTitle, nextSlug, nextTitle } = Astro.props;
 
 if (!post) {
   return Astro.redirect('/404');
