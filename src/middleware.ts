@@ -5,7 +5,7 @@ const ALLOWED_USERS: Record<string, string> = {
   devdarla: "Ponderosa2356",
 };
 
-export const onRequest = defineMiddleware((context, next) => {
+export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
 
   // Bypass authentication for static assets, public images, and media files to prevent browser asset load 401 failures
@@ -40,6 +40,7 @@ export const onRequest = defineMiddleware((context, next) => {
     status: 401,
     headers: {
       "WWW-Authenticate": 'Basic realm="Darlalovly Site Preview"',
+      "Cache-Control": "no-store, no-cache, must-revalidate",
     },
   });
 });
