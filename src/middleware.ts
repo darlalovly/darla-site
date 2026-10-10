@@ -10,12 +10,16 @@ export const onRequest = defineMiddleware((context, next) => {
 
   if (authHeader) {
     const [scheme, encoded] = authHeader.split(" ");
-    if (scheme.toLowerCase() === "basic") {
-      const decoded = atob(encoded);
-      const [username, password] = decoded.split(":");
+    if (scheme?.toLowerCase() === "basic" && encoded) {
+      try {
+        const decoded = atob(encoded);
+        const [username, password] = decoded.split(":");
 
-      if (ALLOWED_USERS[username] && ALLOWED_USERS[username] === password) {
-        return next();
+        if (username && password && ALLOWED_USERS[username] === password) {
+          return next();
+        }
+      } catch {
+        // Handle malformed base64 headers safely
       }
     }
   }
