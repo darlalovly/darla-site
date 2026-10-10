@@ -2,51 +2,73 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const allPosts = await getCollection('field_notes');
+const posts = await getCollection('field_notes');
+const sortedPosts = posts
+  .filter((post) => !post.data.isDraft)
+  .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
 
-const sortedPosts = allPosts
-  .filter((post) => post.data && post.data.isDraft !== true)
-  .sort((a, b) => {
-    const timeA = new Date(a.data.date).getTime();
-    const timeB = new Date(b.data.date).getTime();
-    return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
-  });
-
-const itemListSchema = {
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  "itemListElement": sortedPosts.map((post, index) => ({
-    "@type": "ListItem",
-    "position": index + 1,
-    "url": `https://darlalovly.com/posts/${post.id}`,
-    "name": post.data.title
-  }))
-};
+const siteUrl = Astro.site ? Astro.site.href : 'https://darlalovly.com';
+const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 ---
 
-<BaseLayout title="darlalovly | Daily Notes & Sights">
-  <div class="columns-1 gap-4 sm:columns-2 lg:columns-3 sm:gap-6 py-4">
-    {sortedPosts.map((post, index) => (
-      <a
-        href={`/posts/${post.id}`}
-        class="group relative mb-4 block break-inside-avoid overflow-hidden rounded-xl bg-neutral-900 sm:mb-6"
-      >
-        <img
-          src={post.data.image}
-          alt={post.data.title}
-          class="h-auto w-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-75"
-          loading={index < 3 ? "eager" : "lazy"}
-          fetchpriority={index === 0 ? "high" : "auto"}
-          decoding="async"
-        />
-        <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 p-5 z-10">
-          <h2 class="text-lg font-semibold !text-white leading-snug drop-shadow-lg">
-            {post.data.title}
-          </h2>
-        </div>
-      </a>
-    ))}
-  </div>
+<BaseLayout title="Field Notes — darlalovly" canonicalURL={canonicalURL}>
+  <main class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+    <header class="mb-10 border-b border-neutral-200 pb-6 text-center dark:border-neutral-800">
+      <h1 class="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-4xl">
+        Field Notes
+      </h1>
+    </header>
 
-  <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+    <div class="flex flex-col space-y-12">
+      {sortedPosts.map((post) => {
+        const slug = post.id.replace(/\.mdx?$/, '');
+        return (
+          <article class="group flex flex-col space-y-4 border-b border-neutral-200 pb-10 dark:border-neutral-800">
+            {post.data.image && (
+              <a 
+                href={`/posts/${slug}`} 
+                class="block overflow-hidden rounded-xl border border-neutral-200 shadow-sm transition-all duration-200 group-hover:opacity-90 dark:border-neutral-800"
+              >
+                <img
+                  src={post.data.image}
+                  alt={post.data.title}
+                  class="h-auto w-full object-cover"
+                  loading="lazy"
+                />
+              </a>
+            )}
+            
+            <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-500">
+              <time datetime={new Date(post.data.date).toISOString()}>
+                {new Date(post.data.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  timeZone: 'UTC'
+                })}
+              </time>
+              {post.data.location && (
+                <>
+                  <span>•</span>
+                  <span>{post.data.location}</span>
+                </>
+              )}
+            </div>
+
+            <h2 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+              <a href={`/posts/${slug}`} class="hover:underline">
+                {post.data.title}
+              </a>
+            </h2>
+
+            {post.data.description && (
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                {post.data.description}
+              </p>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  </main>
 </BaseLayout>
