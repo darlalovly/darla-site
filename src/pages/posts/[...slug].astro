@@ -2,23 +2,44 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   const posts = await getCollection('field_notes');
   const sortedPosts = posts
     .filter((post) => !post.data.isDraft)
     .sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
 
-  return sortedPosts.map((post, index) => ({
-    params: { slug: post.id },
-    props: {
-      post,
-      prevPost: index > 0 ? sortedPosts[index - 1] : null,
-      nextPost: index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null,
-    },
-  }));
+  return sortedPosts.map((post, index) => {
+    const slug = post.id.replace(/\.mdx?$/, '');
+    const prevPost = index > 0 ? sortedPosts[index - 1] : null;
+    const nextPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
+
+    return {
+      params: { slug },
+      props: {
+        post,
+        prevSlug: prevPost ? prevPost.id.replace(/\.mdx?$/, '') : null,
+        prevTitle: prevPost ? prevPost.data.title : null,
+        nextSlug: nextPost ? nextPost.id.replace(/\.mdx?$/, '') : null,
+        nextTitle: nextPost ? nextPost.data.title : null,
+      },
+    };
+  });
 }
 
-const { post, prevPost, nextPost } = Astro.props;
+let { post, prevSlug, prevTitle, nextSlug, nextTitle } = Astro.props;
+
+if (!post) {
+  const { slug } = Astro.params;
+  const posts = await getCollection('field_notes');
+  post = posts.find((p) => p.id.replace(/\.mdx?$/, '') === slug);
+}
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
 const { Content } = await render(post);
 const siteUrl = Astro.site ? Astro.site.href : 'https://darlalovly.com';
 const canonicalURL = new URL(Astro.url.pathname, siteUrl);
@@ -58,26 +79,26 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
     </div>
 
     <nav class="mt-12 flex items-center justify-between border-t border-neutral-200 pt-6 text-sm font-medium">
-      {prevPost ? (
+      {prevSlug ? (
         <a
-          href={`/posts/${prevPost.id}`}
+          href={`/posts/${prevSlug}`}
           class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors"
           rel="prev"
         >
           <span>←</span>
-          <span>{prevPost.data.title}</span>
+          <span>{prevTitle}</span>
         </a>
       ) : (
         <div />
       )}
 
-      {nextPost ? (
+      {nextSlug ? (
         <a
-          href={`/posts/${nextPost.id}`}
+          href={`/posts/${nextSlug}`}
           class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors text-right"
           rel="next"
         >
-          <span>{nextPost.data.title}</span>
+          <span>{nextTitle}</span>
           <span>→</span>
         </a>
       ) : (
