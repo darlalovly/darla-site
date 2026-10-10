@@ -3,9 +3,12 @@ import cloudflare from "@astrojs/cloudflare";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  site: "https://darlalovly.com",
   output: "server",
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    platformProxy: {
+      enabled: true,
+    },
+  }),
   vite: {
     plugins: [tailwindcss()],
   },
