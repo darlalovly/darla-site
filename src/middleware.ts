@@ -2,7 +2,7 @@ import { defineMiddleware } from "astro:middleware";
 
 const ALLOWED_USERS: Record<string, string> = {
   pauldeo: "lovlypreview",
-  devdarla: "Ponderosa2356", 
+  devdarla: "Ponderosa2356",
 };
 
 export const onRequest = defineMiddleware((context, next) => {
