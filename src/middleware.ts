@@ -6,6 +6,18 @@ const ALLOWED_USERS: Record<string, string> = {
 };
 
 export const onRequest = defineMiddleware((context, next) => {
+  const url = new URL(context.request.url);
+
+  // Bypass authentication for static assets, public images, and media files to prevent browser asset load 401 failures
+  if (
+    url.pathname.startsWith("/_astro/") ||
+    url.pathname.startsWith("/images/") ||
+    url.pathname.startsWith("/favicon") ||
+    /\.(webp|jpg|jpeg|png|gif|svg|ico|mp4|css|js)$/i.test(url.pathname)
+  ) {
+    return next();
+  }
+
   const authHeader = context.request.headers.get("authorization");
 
   if (authHeader) {
@@ -19,7 +31,7 @@ export const onRequest = defineMiddleware((context, next) => {
           return next();
         }
       } catch {
-        // Handle malformed base64 headers safely
+        // Fallback for malformed header strings
       }
     }
   }
