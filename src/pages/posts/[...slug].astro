@@ -2,36 +2,29 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-export const prerender = true;
+const { slug } = Astro.params;
 
-export async function getStaticPaths() {
-  const posts = await getCollection('field_notes');
-  const validPosts = posts.filter((post) => !post.data.isDraft);
-  const sortedPosts = validPosts.sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
-
-  return sortedPosts.map((post, index) => {
-    const slug = post.id.replace(/\.mdx?$/, '');
-    const prevPost = index > 0 ? sortedPosts[index - 1] : null;
-    const nextPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
-
-    return {
-      params: { slug },
-      props: {
-        post,
-        prevSlug: prevPost ? prevPost.id.replace(/\.mdx?$/, '') : null,
-        prevTitle: prevPost ? prevPost.data.title : null,
-        nextSlug: nextPost ? nextPost.id.replace(/\.mdx?$/, '') : null,
-        nextTitle: nextPost ? nextPost.data.title : null,
-      },
-    };
-  });
-}
-
-const { post, prevSlug, prevTitle, nextSlug, nextTitle } = Astro.props;
-
-if (!post) {
+if (!slug) {
   return Astro.redirect('/404');
 }
+
+const posts = await getCollection('field_notes', (post) => !post.data.isDraft);
+const sortedPosts = posts.sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
+
+const currentIndex = sortedPosts.findIndex((p) => p.id.replace(/\.mdx?$/, '') === slug);
+
+if (currentIndex === -1) {
+  return Astro.redirect('/404');
+}
+
+const post = sortedPosts[currentIndex];
+const prevPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
+const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
+
+const prevSlug = prevPost ? prevPost.id.replace(/\.mdx?$/, '') : null;
+const prevTitle = prevPost ? prevPost.data.title : null;
+const nextSlug = nextPost ? nextPost.id.replace(/\.mdx?$/, '') : null;
+const nextTitle = nextPost ? nextPost.data.title : null;
 
 const { Content } = await render(post);
 const siteUrl = Astro.site ? Astro.site.href : 'https://darlalovly.com';
@@ -44,9 +37,9 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
   image={post.data.image}
   canonicalURL={canonicalURL}
 >
-  <article class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
-    <header class="mb-8 border-b border-neutral-200 pb-6 text-center dark:border-neutral-800">
-      <div class="mb-3 flex items-center justify-center gap-2 text-xs uppercase tracking-wider text-neutral-500">
+  <article class="mx-auto flex max-w-2xl flex-col px-4 py-10 sm:px-6 lg:px-8">
+    <header class="mb-8 flex flex-col border-b border-neutral-200 pb-6 text-center dark:border-neutral-800">
+      <div class="mb-3 flex flex-col items-center justify-center gap-2 text-xs uppercase tracking-wider text-neutral-500">
         <time datetime={new Date(post.data.date).toISOString()}>
           {new Date(post.data.date).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -56,10 +49,7 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
           })}
         </time>
         {post.data.location && (
-          <>
-            <span>•</span>
-            <span>{post.data.location}</span>
-          </>
+          <span class="text-neutral-400">{post.data.location}</span>
         )}
       </div>
       <h1 class="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-4xl">
@@ -67,35 +57,31 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
       </h1>
     </header>
 
-    <div class="prose prose-neutral dark:prose-invert max-w-none">
+    <div class="prose prose-neutral dark:prose-invert max-w-none flex flex-col">
       <Content />
     </div>
 
-    <nav class="mt-12 flex items-center justify-between border-t border-neutral-200 pt-6 text-sm font-medium dark:border-neutral-800">
-      {prevSlug ? (
+    <nav class="mt-12 flex flex-col items-center gap-8 border-t border-neutral-200 pt-6 text-sm font-medium dark:border-neutral-800">
+      {prevSlug && (
         <a
           href={`/posts/${prevSlug}`}
-          class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors"
+          class="flex w-full flex-col items-center gap-2 text-center text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
           rel="prev"
         >
-          <span>←</span>
-          <span>{prevTitle}</span>
+          <span class="text-xs uppercase tracking-wider text-neutral-500">← Previous Note</span>
+          <span class="text-base font-semibold">{prevTitle}</span>
         </a>
-      ) : (
-        <div />
       )}
 
-      {nextSlug ? (
+      {nextSlug && (
         <a
           href={`/posts/${nextSlug}`}
-          class="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors text-right"
+          class="flex w-full flex-col items-center gap-2 text-center text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
           rel="next"
         >
-          <span>{nextTitle}</span>
-          <span>→</span>
+          <span class="text-xs uppercase tracking-wider text-neutral-500">Next Note →</span>
+          <span class="text-base font-semibold">{nextTitle}</span>
         </a>
-      ) : (
-        <div />
       )}
     </nav>
   </article>
