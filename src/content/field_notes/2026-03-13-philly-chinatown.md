@@ -58,7 +58,7 @@ isDraft: false
     </p>
     <p class="!m-0">
       📍 <strong>QQ Mart:</strong> 1231 Race St #35, Philadelphia, PA 19107<br>
-      Hours: Daily 8:00 AM - 3:00 AM
+      ⏰ <strong>Store Hours:</strong> Daily 8:00 AM – 3:00 AM
     </p>
   </div>
 </div>

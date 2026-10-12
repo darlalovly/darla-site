@@ -109,12 +109,8 @@ isDraft: false
   <p>All in all, it was a fantastic experience to witness each of these artists performing. It truly highlighted the importance of Louisiana musicians and their influence across our nation and worldwide.</p>
 </div>
 
-<div class="p-6 rounded-xl border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-  <p class="font-bold text-lg mb-2">Venue Information</p>
-  <p class="font-semibold">Shreveport Municipal Auditorium</p>
-  <p class="text-neutral-600 dark:text-neutral-400">705 Elvis Presley Ave, Shreveport, LA 71101</p>
-  <p class="mt-2"><a href="https://shreveportmunicipalauditorium.com/" target="_blank" rel="noopener noreferrer" class="text-sm underline hover:opacity-80">Official Website & Tickets</a></p>
-</div>
+📍 **Location:** <a href="https://shreveportmunicipalauditorium.com/" target="_blank" rel="noopener noreferrer" class="underline hover:opacity-80">Shreveport Municipal Auditorium</a>, 705 Elvis Presley Ave, Shreveport, LA 71101  
+⏰ **Hours:** Varies by event (Check website for details)
 
 <script type="application/ld+json">
 {

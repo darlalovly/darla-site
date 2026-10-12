@@ -20,7 +20,6 @@
   --font-serif: "Iowan Old Style", "Apple Garamond", "Baskerville", serif;
 }
 
-/* Global Layout & Scroll Resets */
 html { 
   box-sizing: border-box; 
   -webkit-text-size-adjust: 100%; 
@@ -131,7 +130,6 @@ p { margin-bottom: 1.5rem; }
   color: var(--title);
 }
 
-/* Universal Page Content Offset for Fixed Header */
 main {
   min-height: calc(100vh - var(--hdr-height));
   padding-top: var(--hdr-height);
@@ -146,14 +144,17 @@ main {
   }
 }
 
-/* Default prose body text color to dark/black */
 .prose {
   color: var(--title);
   --tw-prose-body: var(--title);
   --tw-prose-bold: var(--title);
 }
 
-/* Restrict container resets strictly to image wrappers so custom cards keep backgrounds and borders */
+.prose div {
+  background-color: transparent !important;
+  border-color: #e5e5e5 !important;
+}
+
 .prose figure,
 .prose div:has(> img) {
   border: none !important;
@@ -161,7 +162,6 @@ main {
   box-shadow: none !important;
 }
 
-/* Content image sizing rules for prose markdown */
 .prose div > img,
 .prose p > img:not([src*="icon"]),
 .prose img {
@@ -176,7 +176,6 @@ main {
   box-shadow: none !important;
 }
 
-/* Constrain social icons and inline link graphics sitewide */
 .prose a img,
 .prose img[src*="icon"] {
   display: inline-block !important;
@@ -192,7 +191,6 @@ main {
   box-shadow: none !important;
 }
 
-/* Underline all content links inside post prose */
 .prose a {
   text-decoration: underline;
   text-underline-offset: 4px;
