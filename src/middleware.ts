@@ -15,24 +15,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return await next();
   }
 
-  // 2. Read PREVIEW_USERS JSON string safely
-  // Astro v5/v6 Cloudflare adapter uses process.env or import.meta.env or env from cloudflare:workers
-  let previewUsersEnv: string | undefined = undefined;
-
-  try {
-    // Try importing env from cloudflare:workers dynamically if in Cloudflare runtime
-    const cfWorkers = await import("cloudflare:workers");
-    previewUsersEnv = (cfWorkers as any)?.env?.PREVIEW_USERS;
-  } catch {
-    // Fallback for local development or standard Node environments
+  // 2. Bypass authentication in local development mode (localhost)
+  if (
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1" ||
+    url.hostname === "::1"
+  ) {
+    return await next();
   }
 
-  if (!previewUsersEnv) {
-    previewUsersEnv =
-      (import.meta.env as any)?.PREVIEW_USERS ||
-      process.env.PREVIEW_USERS ||
-      '{"pauldeo":"lovlypreview","devdarla":"Ponderosa2356"}';
-  }
+  // 3. Read PREVIEW_USERS JSON string safely from env variables
+  const previewUsersEnv =
+    (import.meta.env as any)?.PREVIEW_USERS ||
+    process.env.PREVIEW_USERS ||
+    '{"pauldeo":"lovlypreview","devdarla":"Ponderosa2356"}';
 
   let allowedUsers: Record<string, string> = {};
   try {
@@ -41,7 +37,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     allowedUsers = { pauldeo: "lovlypreview", devdarla: "Ponderosa2356" };
   }
 
-  // 3. Extract Authorization Header
+  // 4. Extract Authorization Header
   const authHeader =
     context.request.headers.get("authorization") ||
     context.request.headers.get("Authorization");
@@ -61,7 +57,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // 4. Challenge with 401 Unauthorized if not authenticated
+  // 5. Challenge with 401 Unauthorized if not authenticated
   return new Response("Unauthorized access", {
     status: 401,
     headers: {

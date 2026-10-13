@@ -30,8 +30,7 @@ const nextSlug = nextPost ? (nextPost.slug || nextPost.id.replace(/\.(md|mdx)$/,
 const nextTitle = nextPost ? nextPost.data.title : null;
 
 const { Content } = await render(post);
-const siteUrl = Astro.site ? Astro.site.href : '/';
-const canonicalURL = new URL(Astro.url.pathname, siteUrl);
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url);
 
 // Helper to format date cleanly (e.g. "OCTOBER 7, 2026")
 const formatDate = (dateStr: string) => {
