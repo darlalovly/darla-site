@@ -1,44 +1,523 @@
 ---
 import { getCollection } from 'astro:content';
+import { ClientRouter } from 'astro:transitions';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const posts = await getCollection('field_notes');
-const sortedPosts = posts
-  .filter((post) => !post.data.isDraft)
-  .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
+// Fetch all posts from the field_notes collection
+const allPosts = await getCollection('field_notes');
 
-const siteUrl = Astro.site ? Astro.site.href : 'https://darlalovly.com';
-const canonicalURL = new URL(Astro.url.pathname, siteUrl);
+// Sort posts chronologically (newest first)
+const posts = allPosts.sort((a, b) => {
+  const dateA = new Date(a.data.date).valueOf();
+  const dateB = new Date(b.data.date).valueOf();
+  return dateB - dateA;
+});
+
+// Helper to format date cleanly (e.g. "OCT 7, 2026")
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+};
 ---
 
-<BaseLayout title="Field Notes — darlalovly" canonicalURL={canonicalURL}>
-  <main class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-    <div class="columns-1 gap-6 sm:columns-2 lg:columns-3">
-      {sortedPosts.map((post) => {
-        const slug = post.id.replace(/\.mdx?$/, '');
-        return (
-          <article class="group relative mb-6 break-inside-avoid overflow-hidden rounded-xl shadow-sm transition-all duration-300 hover:shadow-lg">
-            <a href={`/posts/${slug}`} class="relative block w-full">
-              {post.data.image ? (
-                <img
-                  src={post.data.image}
-                  alt={post.data.title}
-                  class="h-auto w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-              ) : (
-                <div class="h-48 w-full bg-neutral-800" />
-              )}
-              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div class="pointer-events-none absolute bottom-0 left-0 right-0 z-10 p-5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <h2 class="text-xl font-bold leading-snug !text-white">
-                  {post.data.title}
-                </h2>
-              </div>
-            </a>
-          </article>
-        );
-      })}
-    </div>
-  </main>
+<BaseLayout title="darlalovly — Personal Dispatches, Places & Scent">
+  <!-- Enable smooth page-to-page transitions -->
+  <ClientRouter />
+
+  <!-- Fixed Animated Analog Static/Noise Canvas Overlay -->
+  <div class="fixed inset-0 pointer-events-none z-50 animated-noise-overlay" aria-hidden="true"></div>
+
+  <!-- Unified Seamless Black Canvas Container -->
+  <div class="min-h-screen bg-neutral-950 text-white selection:bg-white selection:text-neutral-900 font-sans antialiased overflow-x-hidden flex flex-col justify-between relative z-10">
+    
+    <!-- Main Content Area -->
+    <main class="w-full max-w-6xl mx-auto px-4 sm:px-6 pt-16 md:pt-28 pb-16">
+      
+      <!-- HERO SECTION: Extra-Large Centered Glitch Title & Scroll Indicator -->
+      <header class="relative mb-24 md:mb-36 flex flex-col items-center justify-center text-center space-y-8 animate-fade-in w-full overflow-hidden">
+        
+        <!-- Extra-Large Centered TV Static Glitch Title with Increased Letter Spacing -->
+        <div class="relative w-full py-4 flex justify-center items-center select-none overflow-hidden">
+          <h1 
+            class="glitch-title font-sans font-normal text-white leading-[0.9] text-center"
+            data-text="darlalovly"
+          >
+            darlalovly
+          </h1>
+        </div>
+
+        <!-- Centered Scroll to Explore Link & Arrow -->
+        <div class="pt-4 flex items-center justify-center gap-3 text-xs uppercase tracking-[0.25em] text-neutral-400 font-mono">
+          <a href="#intro" class="group inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors">
+            <span>Scroll to explore</span>
+            <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-y-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+            </svg>
+          </a>
+        </div>
+      </header>
+
+
+      <!-- STAGGERED QUOTES SECTION (FUTURISTIC SPACED NARROW CAPS & TV STATIC GLITCH REVEAL) -->
+      <section id="intro" class="mb-36 md:mb-52 pt-16 border-t border-neutral-800 space-y-36 md:space-y-52">
+        
+        <!-- Quote 1: Left Position -->
+        <div class="glitch-reveal-item mr-auto max-w-2xl">
+          <p class="futuristic-narrow-caps text-lg sm:text-xl md:text-2xl text-white leading-relaxed">
+            My personal space for wandering thoughts, unexpected detours, and local discoveries along the open road.
+          </p>
+        </div>
+
+        <!-- Quote 2: Right Position -->
+        <div class="glitch-reveal-item ml-auto max-w-2xl text-right">
+          <p class="futuristic-narrow-caps text-lg sm:text-xl md:text-2xl text-neutral-200 leading-relaxed">
+            Written plainly from real learned life experience - no expert guides, no heavy photography, just stories as I see them.
+          </p>
+        </div>
+
+        <!-- Quote 3: Middle Position -->
+        <div class="glitch-reveal-item mx-auto max-w-2xl text-center">
+          <p class="futuristic-narrow-caps text-lg sm:text-xl md:text-2xl text-neutral-300 leading-relaxed">
+            Paying attention to the little details, one step at a time where fragrant memories mingle with everyday moments.
+          </p>
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <!-- HORIZONTAL SCROLLING POSTS GALLERY -->
+    <section id="notes" class="w-full mb-16 pt-12 border-t border-neutral-800">
+      
+      <!-- Scroll Indicator Header below dividing line -->
+      <div class="max-w-6xl mx-auto px-6 md:px-12 mb-6 flex items-center justify-between">
+        <button 
+          id="scroll-right-btn"
+          class="group inline-flex items-center gap-2.5 text-xs font-mono uppercase tracking-[0.25em] text-neutral-400 hover:text-white transition-colors cursor-pointer"
+        >
+          <span>Scroll for more</span>
+          <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Horizontal Scroll Track without default scrollbar -->
+      <div 
+        id="posts-scroll-container"
+        class="px-6 md:px-12 overflow-x-auto flex items-center gap-8 md:gap-12 pb-8 pt-4 snap-x snap-mandatory scrollbar-none scroll-smooth"
+        style="scrollbar-width: none; -ms-overflow-style: none;"
+      >
+        {posts.map((post, index) => {
+          const { title, date, image } = post.data;
+          const slug = post.slug || (post.id ? post.id.replace(/\.(md|mdx)$/, '') : '');
+          const isStaggered = index % 2 !== 0;
+          const formattedDate = formatDate(date);
+
+          return (
+            <article 
+              class={`group relative flex-shrink-0 w-72 sm:w-80 md:w-96 snap-center transition-all duration-500 ease-out flex flex-col items-center justify-center ${
+                isStaggered ? 'mt-12 md:mt-20' : 'mb-12 md:mb-20'
+              }`}
+            >
+              <a href={`/posts/${slug}`} class="inline-flex flex-col items-start relative group overflow-hidden rounded-none bg-transparent transition-all duration-500 hover:-translate-y-2 max-w-full">
+                
+                <!-- Date above top-left corner of image on hover -->
+                <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-left h-4 w-full">
+                  {formattedDate}
+                </div>
+
+                <!-- Shrinkwrapped Image Wrapper with CRT TV Frame Effects -->
+                {image && (
+                  <div class="relative inline-block overflow-hidden bg-transparent rounded-none max-w-full crt-tv-wrapper">
+                    
+                    <!-- CRT Screen Glass Bezel Vignette Shadow -->
+                    <div class="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-400 crt-screen-vignette"></div>
+                    
+                    <!-- CRT Screen Scanline Texture Layer -->
+                    <div class="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-400 crt-scanlines"></div>
+
+                    <!-- Post Header Image (Kept Fully Visible on Hover) -->
+                    <img 
+                      src={image} 
+                      alt={title}
+                      class="block w-auto h-auto max-h-[420px] max-w-full object-contain rounded-none transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      transition:name={`img-${slug}`}
+                    />
+
+                    <!-- Soft Bottom Gradient for Pure White Title Overlay -->
+                    <div class="absolute inset-0 z-30 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 ease-out flex flex-col justify-end p-5 text-left rounded-none pointer-events-none">
+                      <h3 
+                        class="post-hover-title text-lg sm:text-xl font-serif leading-snug font-medium text-left text-white"
+                        transition:name={`title-${slug}`}
+                      >
+                        {title}
+                      </h3>
+                    </div>
+
+                  </div>
+                )}
+
+              </a>
+            </article>
+          );
+        })}
+      </div>
+
+      <!-- Sleek Custom Track Line with White < and > Controls -->
+      <div class="max-w-6xl mx-auto px-6 md:px-12 mt-6 flex items-center gap-4">
+        
+        <!-- Left Arrow < -->
+        <button 
+          id="track-prev-btn" 
+          aria-label="Scroll left"
+          class="text-white hover:text-neutral-300 font-mono text-sm transition-colors cursor-pointer px-1 py-0.5 select-none font-bold"
+        >
+          &lt;
+        </button>
+
+        <!-- White Track Line & Progress Indicator -->
+        <div 
+          id="track-line-bg" 
+          class="relative flex-1 h-[2px] bg-white/30 cursor-pointer overflow-hidden rounded-full"
+        >
+          <div 
+            id="track-line-progress" 
+            class="absolute top-0 left-0 h-full bg-white w-1/6 transition-all duration-150 ease-out shadow-[0_0_10px_rgba(255,255,255,0.9)]"
+          ></div>
+        </div>
+
+        <!-- Right Arrow > -->
+        <button 
+          id="track-next-btn" 
+          aria-label="Scroll right"
+          class="text-white hover:text-neutral-300 font-mono text-sm transition-colors cursor-pointer px-1 py-0.5 select-none font-bold"
+        >
+          &gt;
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- FOOTER: Centered Copyright Only on Unified Dark Canvas -->
+    <footer class="border-t border-neutral-800 bg-neutral-950 py-12 px-6">
+      <div class="max-w-6xl mx-auto flex items-center justify-center text-xs text-neutral-400 font-mono text-center">
+        <span>© {new Date().getFullYear()} darlalovly</span>
+      </div>
+    </footer>
+
+  </div>
 </BaseLayout>
+
+<!-- Client Script for Track Line & Navigation -->
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const container = document.getElementById('posts-scroll-container');
+    const trackBg = document.getElementById('track-line-bg');
+    const trackProgress = document.getElementById('track-line-progress');
+    const prevBtn = document.getElementById('track-prev-btn');
+    const nextBtn = document.getElementById('track-next-btn');
+    const scrollRightBtn = document.getElementById('scroll-right-btn');
+
+    if (!container) return;
+
+    // Update progress bar
+    const updateProgress = () => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (maxScroll <= 0) return;
+      const percentage = (container.scrollLeft / maxScroll) * 100;
+      if (trackProgress) {
+        trackProgress.style.width = `${Math.max(8, percentage)}%`;
+      }
+    };
+
+    container.addEventListener('scroll', updateProgress);
+    window.addEventListener('resize', updateProgress);
+    updateProgress();
+
+    // Scroll by amount
+    const scrollByAmount = (distance) => {
+      container.scrollBy({ left: distance, behavior: 'smooth' });
+    };
+
+    if (prevBtn) prevBtn.addEventListener('click', () => scrollByAmount(-380));
+    if (nextBtn) nextBtn.addEventListener('click', () => scrollByAmount(380));
+    if (scrollRightBtn) scrollRightBtn.addEventListener('click', () => scrollByAmount(380));
+
+    // Track click to jump
+    if (trackBg) {
+      trackBg.addEventListener('click', (e) => {
+        const rect = trackBg.getBoundingClientRect();
+        const clickRatio = (e.clientX - rect.left) / rect.width;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        container.scrollTo({ left: clickRatio * maxScroll, behavior: 'smooth' });
+      });
+    }
+
+    // Scroll reveal observer
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+
+    document.querySelectorAll('.glitch-reveal-item').forEach((item) => {
+      observer.observe(item);
+    });
+  });
+</script>
+
+<!-- Global CSS overrides to force 100% black page canvas & subtler header logo glow -->
+<style is:global>
+  html, body {
+    background-color: #0a0a0a !important;
+    color: #ffffff !important;
+  }
+
+  /* Ensure all layout wrappers inside BaseLayout stay deep black */
+  body > div, body > main, header, nav, footer {
+    background-color: #0a0a0a !important;
+  }
+
+  /* Header logo subtler glowing effect for dark theme */
+  header nav img, nav img, .site-logo, .logo, [class*="logo"] img {
+    filter: invert(1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) !important;
+    transition: filter 0.3s ease-in-out;
+  }
+  header nav img:hover, nav img:hover, .site-logo:hover, .logo:hover {
+    filter: invert(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.65)) !important;
+  }
+</style>
+
+<style>
+  /* Animated Analog Static / High-Noise Canvas Overlay */
+  .animated-noise-overlay {
+    background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 1px, transparent 1px), radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 1px, transparent 1px);
+    background-size: 6px 6px, 8px 8px;
+    opacity: 0.25;
+    mix-blend-mode: screen;
+    animation: grain-motion 0.25s steps(4) infinite;
+  }
+
+  @keyframes grain-motion {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(-3px, 2px); }
+    50% { transform: translate(3px, -1px); }
+    75% { transform: translate(-2px, -3px); }
+    100% { transform: translate(2px, 1px); }
+  }
+
+  /* CRT Screen Post Frame Elevation on Hover */
+  .crt-tv-wrapper {
+    transition: all 0.4s ease-out;
+  }
+
+  .group:hover .crt-tv-wrapper {
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.9), 0 0 16px rgba(255, 255, 255, 0.12);
+    transform: translateY(-4px);
+  }
+
+  /* CRT TV Glass Bezel Vignette Shadow on Image Hover */
+  .crt-screen-vignette {
+    box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.85), inset 0 0 12px rgba(0, 0, 0, 0.95);
+  }
+
+  /* CRT TV Fine Scanline Lines Overlay */
+  .crt-scanlines {
+    background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%, 
+      rgba(0, 0, 0, 0.35) 50%
+    );
+    background-size: 100% 4px;
+  }
+
+  /* Hide standard scrollbars across browsers */
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Ensure post hover title is strictly pure white text */
+  .post-hover-title {
+    color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  }
+
+  /* Futuristic Spaced Narrow Caps Styling */
+  .futuristic-narrow-caps {
+    font-family: 'Arial Narrow', 'SF Compact Text', 'Trebuchet MS', 'Franklin Gothic Medium', 'Arial Nova', sans-serif-condensed, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+  }
+
+  /* Fluid extra-large title sizing with relaxed letter-spacing */
+  .glitch-title {
+    position: relative;
+    display: inline-block;
+    font-size: clamp(3rem, 11vw, 10rem);
+    letter-spacing: 0.06em;
+    max-width: 100%;
+    word-break: normal;
+    white-space: nowrap;
+    cursor: default;
+    color: #ffffff !important;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+  }
+
+  /* Monochromatic TV Static Glitch Pseudo Layers */
+  .glitch-title::before,
+  .glitch-title::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  /* Monochromatic TV Static Shift 1 (Bright Silver / Light Gray) */
+  .glitch-title::before {
+    left: 2px;
+    text-shadow: -2px 0 #a3a3a3, 1px 0 #e5e5e5;
+    clip-path: inset(0 0 100% 0);
+    animation: tv-static-glitch-1 3.2s infinite linear alternate-reverse;
+  }
+
+  /* Monochromatic TV Static Shift 2 (Pure White) */
+  .glitch-title::after {
+    left: -2px;
+    text-shadow: 2px 0 #ffffff, -1px 0 #d4d4d4;
+    clip-path: inset(0 0 100% 0);
+    animation: tv-static-glitch-2 2.6s infinite linear alternate-reverse;
+  }
+
+  /* Keyframe animations for old television set static slicing */
+  @keyframes tv-static-glitch-1 {
+    0%, 80%, 100% {
+      clip-path: inset(0 0 100% 0);
+      transform: translate(0);
+      opacity: 0.9;
+    }
+    82% {
+      clip-path: inset(20% 0 50% 0);
+      transform: translate(-3px, 1px);
+      opacity: 0.75;
+    }
+    86% {
+      clip-path: inset(60% 0 15% 0);
+      transform: translate(3px, -1px);
+      opacity: 0.85;
+    }
+    90% {
+      clip-path: inset(10% 0 70% 0);
+      transform: translate(-2px, 2px);
+      opacity: 0.6;
+    }
+    95% {
+      clip-path: inset(75% 0 8% 0);
+      transform: translate(2px, -2px);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes tv-static-glitch-2 {
+    0%, 75%, 100% {
+      clip-path: inset(0 0 100% 0);
+      transform: translate(0);
+      opacity: 0.9;
+    }
+    78% {
+      clip-path: inset(40% 0 35% 0);
+      transform: translate(4px, -1px);
+      opacity: 0.7;
+    }
+    83% {
+      clip-path: inset(12% 0 72% 0);
+      transform: translate(-3px, 1px);
+      opacity: 0.8;
+    }
+    88% {
+      clip-path: inset(68% 0 12% 0);
+      transform: translate(2px, -2px);
+      opacity: 0.65;
+    }
+    93% {
+      clip-path: inset(25% 0 60% 0);
+      transform: translate(-2px, 1px);
+      opacity: 0.85;
+    }
+  }
+
+  /* Initial state for scroll reveal items */
+  .glitch-reveal-item {
+    opacity: 0;
+    transform: translateY(24px);
+    will-change: opacity, transform, filter;
+  }
+
+  /* Triggered state on scroll */
+  .glitch-reveal-item.is-visible {
+    animation: static-glitch-reveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Static Glitch-in Animation for Quotes */
+  @keyframes static-glitch-reveal {
+    0% {
+      opacity: 0;
+      transform: translateY(24px) skewX(6deg);
+      filter: blur(4px) contrast(150%);
+    }
+    20% {
+      opacity: 0.4;
+      transform: translateY(16px) skewX(-4deg) scaleX(1.02);
+      filter: blur(2px) grayscale(100%);
+    }
+    40% {
+      opacity: 0.7;
+      transform: translateY(8px) skewX(2deg);
+      filter: blur(1px);
+    }
+    60% {
+      opacity: 0.9;
+      transform: translateY(2px) skewX(-1deg);
+      filter: blur(0px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) skewX(0deg);
+      filter: blur(0);
+    }
+  }
+
+  /* Fade in for hero */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+</style>

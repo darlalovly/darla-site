@@ -11,7 +11,10 @@ if (!slug) {
 const posts = await getCollection('field_notes', (post) => !post.data.isDraft);
 const sortedPosts = posts.sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
 
-const currentIndex = sortedPosts.findIndex((p) => p.id.replace(/\.mdx?$/, '') === slug);
+const currentIndex = sortedPosts.findIndex((p) => {
+  const pSlug = p.slug || (p.id ? p.id.replace(/\.(md|mdx)$/, '') : '');
+  return pSlug === slug;
+});
 
 if (currentIndex === -1) {
   return Astro.redirect('/404');
@@ -21,14 +24,24 @@ const post = sortedPosts[currentIndex];
 const prevPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
 const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
 
-const prevSlug = prevPost ? prevPost.id.replace(/\.mdx?$/, '') : null;
+const prevSlug = prevPost ? (prevPost.slug || prevPost.id.replace(/\.(md|mdx)$/, '')) : null;
 const prevTitle = prevPost ? prevPost.data.title : null;
-const nextSlug = nextPost ? nextPost.id.replace(/\.mdx?$/, '') : null;
+const nextSlug = nextPost ? (nextPost.slug || nextPost.id.replace(/\.(md|mdx)$/, '')) : null;
 const nextTitle = nextPost ? nextPost.data.title : null;
 
 const { Content } = await render(post);
-const siteUrl = Astro.site ? Astro.site.href : 'https://darlalovly.com';
+const siteUrl = Astro.site ? Astro.site.href : '/';
 const canonicalURL = new URL(Astro.url.pathname, siteUrl);
+
+// Helper to format date cleanly (e.g. "OCTOBER 7, 2026")
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
+};
+
+const formattedDate = formatDate(post.data.date);
 ---
 
 <BaseLayout 
@@ -37,52 +50,182 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
   image={post.data.image}
   canonicalURL={canonicalURL}
 >
-  <article class="mx-auto flex max-w-2xl flex-col px-4 py-10 sm:px-6 lg:px-8">
-    <header class="mb-8 flex flex-col border-b border-neutral-200 pb-6 text-center dark:border-neutral-800">
-      <div class="mb-3 flex flex-col items-center justify-center gap-2 text-xs uppercase tracking-wider text-neutral-500">
-        <time datetime={new Date(post.data.date).toISOString()}>
-          {new Date(post.data.date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            timeZone: 'UTC'
-          })}
-        </time>
-        {post.data.location && (
-          <span class="text-neutral-400">{post.data.location}</span>
+  <!-- Fixed Animated Analog Static/Noise Canvas Overlay -->
+  <div class="fixed inset-0 pointer-events-none z-50 animated-noise-overlay" aria-hidden="true"></div>
+
+  <!-- Unified Seamless Black Canvas Container -->
+  <div class="min-h-screen bg-neutral-950 text-white selection:bg-white selection:text-neutral-900 font-sans antialiased overflow-x-hidden flex flex-col justify-between relative z-10">
+    
+    <!-- Main Content Area -->
+    <main class="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-12 md:pt-20 pb-20">
+      
+      <!-- Top Navigation: Back to Dispatches Link -->
+      <nav class="mb-12 flex items-center justify-between font-mono text-xs uppercase tracking-[0.2em] text-neutral-400 border-b border-neutral-800 pb-6">
+        <a href="/" class="group inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors cursor-pointer">
+          <svg class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          <span>Back to Dispatches</span>
+        </a>
+        {post.data.category && (
+          <span class="text-neutral-500 uppercase tracking-widest">{post.data.category}</span>
         )}
+      </nav>
+
+      <!-- Post Article Header & Body -->
+      <article class="flex flex-col">
+        <header class="mb-10 flex flex-col items-start space-y-4">
+          
+          <!-- Date & Location Meta -->
+          <div class="flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-[0.2em] text-neutral-400">
+            <time datetime={new Date(post.data.date).toISOString()}>
+              {formattedDate}
+            </time>
+            {post.data.location && (
+              <>
+                <span class="text-neutral-600">•</span>
+                <span class="text-neutral-300">{post.data.location}</span>
+              </>
+            )}
+          </div>
+
+          <!-- Post Title -->
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif font-medium text-white leading-tight tracking-tight pt-2">
+            {post.data.title}
+          </h1>
+
+          <!-- Optional Description / Subtitle -->
+          {post.data.description && (
+            <p class="text-lg sm:text-xl text-neutral-300 font-sans leading-relaxed pt-2 border-l-2 border-neutral-700 pl-4 my-2">
+              {post.data.description}
+            </p>
+          )}
+        </header>
+
+        <!-- Main Body Content (Rendered directly without repeating header image) -->
+        <div class="prose prose-invert prose-neutral max-w-none font-sans text-neutral-200 leading-relaxed pt-4">
+          <Content />
+        </div>
+
+        <!-- Previous / Next Navigation Footer -->
+        <nav class="mt-20 pt-10 border-t border-neutral-800 flex flex-col sm:flex-row items-stretch justify-between gap-6 font-mono text-xs uppercase tracking-[0.2em]">
+          
+          {prevSlug ? (
+            <a
+              href={`/posts/${prevSlug}`}
+              class="group flex flex-1 flex-col items-start gap-2 p-5 border border-neutral-800/80 hover:border-neutral-600 bg-neutral-900/40 hover:bg-neutral-900 transition-all duration-300 rounded-none"
+              rel="prev"
+            >
+              <span class="text-neutral-500 inline-flex items-center gap-1.5 group-hover:text-white transition-colors">
+                <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                <span>Previous Dispatch</span>
+              </span>
+              <span class="text-sm font-serif normal-case text-neutral-200 group-hover:text-white font-medium line-clamp-1 pt-1">
+                {prevTitle}
+              </span>
+            </a>
+          ) : <div class="flex-1"></div>}
+
+          {nextSlug && (
+            <a
+              href={`/posts/${nextSlug}`}
+              class="group flex flex-1 flex-col items-end text-right gap-2 p-5 border border-neutral-800/80 hover:border-neutral-600 bg-neutral-900/40 hover:bg-neutral-900 transition-all duration-300 rounded-none"
+              rel="next"
+            >
+              <span class="text-neutral-500 inline-flex items-center gap-1.5 group-hover:text-white transition-colors">
+                <span>Next Dispatch</span>
+                <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </span>
+              <span class="text-sm font-serif normal-case text-neutral-200 group-hover:text-white font-medium line-clamp-1 pt-1">
+                {nextTitle}
+              </span>
+            </a>
+          )}
+
+        </nav>
+
+      </article>
+
+    </main>
+
+    <!-- FOOTER: Centered Copyright Only on Unified Dark Canvas -->
+    <footer class="border-t border-neutral-800 bg-neutral-950 py-12 px-6">
+      <div class="max-w-6xl mx-auto flex items-center justify-center text-xs text-neutral-400 font-mono text-center">
+        <span>© {new Date().getFullYear()} darlalovly</span>
       </div>
-      <h1 class="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-4xl">
-        {post.data.title}
-      </h1>
-    </header>
+    </footer>
 
-    <div class="prose prose-neutral dark:prose-invert max-w-none flex flex-col">
-      <Content />
-    </div>
-
-    <nav class="mt-12 flex flex-col items-center gap-8 border-t border-neutral-200 pt-6 text-sm font-medium dark:border-neutral-800">
-      {prevSlug && (
-        <a
-          href={`/posts/${prevSlug}`}
-          class="flex w-full flex-col items-center gap-2 text-center text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-          rel="prev"
-        >
-          <span class="text-xs uppercase tracking-wider text-neutral-500">← Previous Note</span>
-          <span class="text-base font-semibold">{prevTitle}</span>
-        </a>
-      )}
-
-      {nextSlug && (
-        <a
-          href={`/posts/${nextSlug}`}
-          class="flex w-full flex-col items-center gap-2 text-center text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-          rel="next"
-        >
-          <span class="text-xs uppercase tracking-wider text-neutral-500">Next Note →</span>
-          <span class="text-base font-semibold">{nextTitle}</span>
-        </a>
-      )}
-    </nav>
-  </article>
+  </div>
 </BaseLayout>
+
+<!-- Global CSS overrides for dark theme and prose images -->
+<style is:global>
+  html, body {
+    background-color: #0a0a0a !important;
+    color: #ffffff !important;
+  }
+
+  /* Ensure layout wrappers inside BaseLayout stay deep black */
+  body > div, body > main, header, nav, footer {
+    background-color: #0a0a0a !important;
+  }
+
+  /* Header logo glowing effect for dark theme */
+  header nav img, nav img, .site-logo {
+    filter: invert(1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) !important;
+    transition: filter 0.3s ease-in-out;
+  }
+  header nav img:hover, nav img:hover, .site-logo:hover {
+    filter: invert(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.75)) !important;
+  }
+
+  /* Content typography dark theme adjustments */
+  .prose {
+    color: #e5e5e5 !important;
+  }
+  .prose h1, .prose h2, .prose h3, .prose h4 {
+    color: #ffffff !important;
+    font-family: serif;
+  }
+  .prose a {
+    color: #ffffff !important;
+    text-decoration-color: #525252;
+  }
+  .prose a:hover {
+    text-decoration-color: #ffffff;
+  }
+  .prose blockquote {
+    border-left-color: #404040 !important;
+    color: #d4d4d4 !important;
+  }
+  .prose code {
+    color: #f5f5f5 !important;
+    background-color: #171717 !important;
+  }
+  .prose img {
+    border-radius: 0px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+</style>
+
+<style>
+  /* Animated Analog Static / Noise Canvas Overlay */
+  .animated-noise-overlay {
+    opacity: 0.12;
+    mix-blend-mode: screen;
+    animation: grain-motion 0.3s steps(5) infinite;
+  }
+
+  @keyframes grain-motion {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-3px, 2px); }
+    40% { transform: translate(3px, -1px); }
+    60% { transform: translate(-2px, 3px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(-1px, 1px); }
+  }
+</style>
