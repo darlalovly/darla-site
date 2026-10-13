@@ -15,13 +15,24 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return await next();
   }
 
-  // 2. Read PREVIEW_USERS JSON string from environment variables
-  // Checks Cloudflare runtime environment first, then process.env / import.meta.env
-  const previewUsersEnv =
-    (context.locals as any)?.runtime?.env?.PREVIEW_USERS ||
-    import.meta.env.PREVIEW_USERS ||
-    process.env.PREVIEW_USERS ||
-    '{"pauldeo":"lovlypreview","devdarla":"Ponderosa2356"}';
+  // 2. Read PREVIEW_USERS JSON string safely
+  // Astro v5/v6 Cloudflare adapter uses process.env or import.meta.env or env from cloudflare:workers
+  let previewUsersEnv: string | undefined = undefined;
+
+  try {
+    // Try importing env from cloudflare:workers dynamically if in Cloudflare runtime
+    const cfWorkers = await import("cloudflare:workers");
+    previewUsersEnv = (cfWorkers as any)?.env?.PREVIEW_USERS;
+  } catch {
+    // Fallback for local development or standard Node environments
+  }
+
+  if (!previewUsersEnv) {
+    previewUsersEnv =
+      (import.meta.env as any)?.PREVIEW_USERS ||
+      process.env.PREVIEW_USERS ||
+      '{"pauldeo":"lovlypreview","devdarla":"Ponderosa2356"}';
+  }
 
   let allowedUsers: Record<string, string> = {};
   try {
