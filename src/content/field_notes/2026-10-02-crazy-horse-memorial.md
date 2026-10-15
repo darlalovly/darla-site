@@ -1,7 +1,7 @@
 ---
 title: "Crazy Horse Memorial"
 description: "A visit to the Crazy Horse Memorial in the Black Hills of South Dakota."
-date: "2026-10-02"
+date: "2026-10-02T08:00:00"
 category: "sights"
 location: "Crazy Horse, South Dakota"
 image: "/images/posts/2026-10-02-crazy-horse-memorial/2026-10-02-crazy-horse-memorial-header.webp"

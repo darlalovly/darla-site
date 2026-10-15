@@ -1,14 +1,13 @@
 ---
 title: "An Up-Close Look at Mount Rushmore"
 description: "An early morning visit to Mount Rushmore National Memorial, exploring the monument's history, the sculptor, and the sacred landscape of the Black Hills."
-date: "2026-10-02"
+date: "2026-10-02T06:00:00"
 category: "sights"
 location: "Keystone, South Dakota"
 image: "/images/posts/2026-10-02-mount-rushmore-up-close/2026-10-02-mount-rushmore-up-close-header.webp"
 mood: ["reflective", "awe"]
 isDraft: false
 ---
-
 <div class="mb-8 overflow-hidden rounded-xl border border-neutral-200 shadow-sm dark:border-neutral-800">
   <img src="/images/posts/2026-10-02-mount-rushmore-up-close/2026-10-02-mount-rushmore-up-close-header.webp" alt="Close-up view of the four presidents carved into Mount Rushmore at sunrise" class="w-full h-auto object-cover rounded-xl" />
 </div>

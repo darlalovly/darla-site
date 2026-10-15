@@ -1,6 +1,5 @@
-import { defineCollection } from 'astro:content';
+import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { z } from 'astro/zod';
 
 const field_notes = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/field_notes' }),
@@ -8,6 +7,7 @@ const field_notes = defineCollection({
     title: z.string(),
     description: z.string().optional(),
     date: z.coerce.date(),
+    order: z.number().optional(),
     category: z.enum([
       'musings',
       'watching',

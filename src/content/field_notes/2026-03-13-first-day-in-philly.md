@@ -1,7 +1,7 @@
 ---
 title: "First Day in Philadelphia"
 description: "Exploring Center City Philadelphia for the first time—stepping off the train at Jefferson Station, encountering Contrafuerte, Reading Terminal Market, City Hall, and a Reuben at Foods on First."
-date: "2026-03-13"
+date: "2026-03-13T11:00:00"
 category: "sights"
 location: "Philadelphia, Pennsylvania"
 image: "/images/posts/2026-03-13-first-day-in-philly/2026-03-13-first-day-in-philly-header.webp"

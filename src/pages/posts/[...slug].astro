@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { ClientRouter } from 'astro:transitions';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const { slug } = Astro.params;
@@ -11,10 +12,9 @@ if (!slug) {
 const posts = await getCollection('field_notes', (post) => !post.data.isDraft);
 const sortedPosts = posts.sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
 
-const currentIndex = sortedPosts.findIndex((p) => {
-  const pSlug = p.slug || (p.id ? p.id.replace(/\.(md|mdx)$/, '') : '');
-  return pSlug === slug;
-});
+const getSlug = (p: any) => p.slug || (p.id ? p.id.replace(/\.(md|mdx)$/, '') : '');
+
+const currentIndex = sortedPosts.findIndex((p) => getSlug(p) === slug);
 
 if (currentIndex === -1) {
   return Astro.redirect('/404');
@@ -24,19 +24,21 @@ const post = sortedPosts[currentIndex];
 const prevPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
 const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
 
-const prevSlug = prevPost ? (prevPost.slug || prevPost.id.replace(/\.(md|mdx)$/, '')) : null;
+const prevSlug = prevPost ? getSlug(prevPost) : null;
 const prevTitle = prevPost ? prevPost.data.title : null;
-const nextSlug = nextPost ? (nextPost.slug || nextPost.id.replace(/\.(md|mdx)$/, '')) : null;
+const prevImage = prevPost ? prevPost.data.image : null;
+
+const nextSlug = nextPost ? getSlug(nextPost) : null;
 const nextTitle = nextPost ? nextPost.data.title : null;
+const nextImage = nextPost ? nextPost.data.image : null;
 
 const { Content } = await render(post);
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url);
 
-// Helper to format date cleanly (e.g. "OCTOBER 7, 2026")
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
+const formatDate = (dateVal: string | Date) => {
+  if (!dateVal) return '';
+  const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
+  if (isNaN(d.getTime())) return String(dateVal);
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
 };
 
@@ -49,34 +51,30 @@ const formattedDate = formatDate(post.data.date);
   image={post.data.image}
   canonicalURL={canonicalURL}
 >
-  <!-- Fixed Animated Analog Static/Noise Canvas Overlay -->
+  <ClientRouter />
+
+  <!-- Multi-Mode Analog TV Signal Transition Overlay -->
+  <div id="crt-static-overlay" class="fixed inset-0 pointer-events-none z-[100] opacity-0 bg-neutral-950 flex items-center justify-center overflow-hidden" aria-hidden="true">
+    <div class="tv-noise-layer absolute inset-0 pointer-events-none"></div>
+    <div class="tv-horizontal-bar absolute inset-x-0 pointer-events-none"></div>
+    <div class="tv-tear-slice tv-tear-1 absolute inset-x-0 pointer-events-none"></div>
+    <div class="tv-tear-slice tv-tear-2 absolute inset-x-0 pointer-events-none"></div>
+    <div class="tv-vhold-blanking-bar absolute inset-x-0 h-16 pointer-events-none"></div>
+    <div class="tv-interlace-odd absolute inset-0 pointer-events-none"></div>
+    <div class="tv-interlace-even absolute inset-0 pointer-events-none"></div>
+    <div class="tv-hsync-band tv-hsync-upper absolute inset-x-0 pointer-events-none"></div>
+    <div class="tv-hsync-band tv-hsync-lower absolute inset-x-0 pointer-events-none"></div>
+    <div class="tv-scanlines absolute inset-0 pointer-events-none"></div>
+  </div>
+
+  <!-- Ambient Static Texture Canvas Overlay -->
   <div class="fixed inset-0 pointer-events-none z-50 animated-noise-overlay" aria-hidden="true"></div>
 
-  <!-- Unified Seamless Black Canvas Container -->
   <div class="min-h-screen bg-neutral-950 text-white selection:bg-white selection:text-neutral-900 font-sans antialiased overflow-x-hidden flex flex-col justify-between relative z-10">
-    
-    <!-- Main Content Area -->
-    <main class="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-12 md:pt-20 pb-20">
-      
-      <!-- Top Navigation: Back to Dispatches Link -->
-      <nav class="mb-12 flex items-center justify-between font-mono text-xs uppercase tracking-[0.2em] text-neutral-400 border-b border-neutral-800 pb-6">
-        <a href="/" class="group inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors cursor-pointer">
-          <svg class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-          <span>Back to Dispatches</span>
-        </a>
-        {post.data.category && (
-          <span class="text-neutral-500 uppercase tracking-widest">{post.data.category}</span>
-        )}
-      </nav>
-
-      <!-- Post Article Header & Body -->
-      <article class="flex flex-col">
-        <header class="mb-10 flex flex-col items-start space-y-4">
-          
-          <!-- Date & Location Meta -->
-          <div class="flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-[0.2em] text-neutral-400">
+    <main class="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 md:pt-24 pb-20 flex flex-col">
+      <article class="flex flex-col w-full">
+        <header class="mb-10 sm:mb-14 flex flex-col items-center justify-center text-center space-y-4 sm:space-y-5">
+          <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-neutral-400">
             <time datetime={new Date(post.data.date).toISOString()}>
               {formattedDate}
             </time>
@@ -88,107 +86,197 @@ const formattedDate = formatDate(post.data.date);
             )}
           </div>
 
-          <!-- Post Title -->
-          <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif font-medium text-white leading-tight tracking-tight pt-2">
-            {post.data.title}
-          </h1>
-
-          <!-- Optional Description / Subtitle -->
-          {post.data.description && (
-            <p class="text-lg sm:text-xl text-neutral-300 font-sans leading-relaxed pt-2 border-l-2 border-neutral-700 pl-4 my-2">
-              {post.data.description}
-            </p>
-          )}
+          <div class="relative w-full py-2 flex justify-center items-center select-none overflow-hidden">
+            <h1 
+              class="glitch-title font-sans font-normal text-white text-center break-words"
+              data-text={post.data.title}
+            >
+              {post.data.title}
+            </h1>
+          </div>
         </header>
 
-        <!-- Main Body Content (Rendered directly without repeating header image) -->
-        <div class="prose prose-invert prose-neutral max-w-none font-sans text-neutral-200 leading-relaxed pt-4">
+        <div class="prose prose-invert prose-neutral max-w-none font-sans text-neutral-200 leading-relaxed pt-2 flex flex-col space-y-6 break-words">
           <Content />
         </div>
 
-        <!-- Previous / Next Navigation Footer -->
-        <nav class="mt-20 pt-10 border-t border-neutral-800 flex flex-col sm:flex-row items-stretch justify-between gap-6 font-mono text-xs uppercase tracking-[0.2em]">
-          
-          {prevSlug ? (
-            <a
-              href={`/posts/${prevSlug}`}
-              class="group flex flex-1 flex-col items-start gap-2 p-5 border border-neutral-800/80 hover:border-neutral-600 bg-neutral-900/40 hover:bg-neutral-900 transition-all duration-300 rounded-none"
-              rel="prev"
-            >
-              <span class="text-neutral-500 inline-flex items-center gap-1.5 group-hover:text-white transition-colors">
-                <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-                <span>Previous Dispatch</span>
-              </span>
-              <span class="text-sm font-serif normal-case text-neutral-200 group-hover:text-white font-medium line-clamp-1 pt-1">
-                {prevTitle}
-              </span>
-            </a>
-          ) : <div class="flex-1"></div>}
+        <nav class="mt-16 sm:mt-24 pt-8 sm:pt-12 border-t border-neutral-800 flex flex-row items-center justify-between gap-4 w-full">
+          <!-- Next Post: Left Position -->
+          <div class="flex-1 flex justify-start min-w-0">
+            {nextSlug && (
+              <a
+                href={`/posts/${nextSlug}`}
+                class="post-nav-link group relative flex items-center gap-2 sm:gap-4 text-left transition-colors cursor-pointer max-w-full sm:max-w-sm py-2 active:opacity-70"
+                rel="next"
+              >
+                {nextImage && (
+                  <img 
+                    src={nextImage} 
+                    alt={nextTitle || 'Next dispatch'} 
+                    loading="lazy"
+                    class="absolute bottom-full left-0 mb-3 hidden sm:block opacity-0 translate-y-2 pointer-events-none group-hover:opacity-40 group-hover:translate-y-0 transition-all duration-300 ease-out z-30 max-h-24 max-w-[130px] w-auto h-auto object-contain bg-transparent border-none shadow-none"
+                  />
+                )}
 
-          {nextSlug && (
-            <a
-              href={`/posts/${nextSlug}`}
-              class="group flex flex-1 flex-col items-end text-right gap-2 p-5 border border-neutral-800/80 hover:border-neutral-600 bg-neutral-900/40 hover:bg-neutral-900 transition-all duration-300 rounded-none"
-              rel="next"
-            >
-              <span class="text-neutral-500 inline-flex items-center gap-1.5 group-hover:text-white transition-colors">
-                <span>Next Dispatch</span>
-                <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </span>
-              <span class="text-sm font-serif normal-case text-neutral-200 group-hover:text-white font-medium line-clamp-1 pt-1">
-                {nextTitle}
-              </span>
-            </a>
-          )}
+                <span class="text-3xl sm:text-5xl md:text-6xl font-mono text-white leading-none select-none transition-all duration-300 ease-out group-hover:-translate-x-1 sm:group-hover:-translate-x-2 group-hover:scale-110 sm:group-hover:scale-125 group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.85)] flex-shrink-0">
+                  &lt;
+                </span>
 
+                <span class="font-sans text-xs sm:text-sm font-normal uppercase tracking-wider text-neutral-300 group-hover:text-white transition-colors line-clamp-2">
+                  {nextTitle}
+                </span>
+              </a>
+            )}
+          </div>
+
+          <!-- Previous Post: Right Position -->
+          <div class="flex-1 flex justify-end min-w-0">
+            {prevSlug && (
+              <a
+                href={`/posts/${prevSlug}`}
+                class="post-nav-link group relative flex items-center justify-end text-right gap-2 sm:gap-4 transition-colors cursor-pointer max-w-full sm:max-w-sm py-2 active:opacity-70"
+                rel="prev"
+              >
+                {prevImage && (
+                  <img 
+                    src={prevImage} 
+                    alt={prevTitle || 'Previous dispatch'} 
+                    loading="lazy"
+                    class="absolute bottom-full right-0 mb-3 hidden sm:block opacity-0 translate-y-2 pointer-events-none group-hover:opacity-40 group-hover:translate-y-0 transition-all duration-300 ease-out z-30 max-h-24 max-w-[130px] w-auto h-auto object-contain bg-transparent border-none shadow-none"
+                  />
+                )}
+
+                <span class="font-sans text-xs sm:text-sm font-normal uppercase tracking-wider text-neutral-300 group-hover:text-white transition-colors line-clamp-2">
+                  {prevTitle}
+                </span>
+
+                <span class="text-3xl sm:text-5xl md:text-6xl font-mono text-white leading-none select-none transition-all duration-300 ease-out group-hover:translate-x-1 sm:group-hover:translate-x-2 group-hover:scale-110 sm:group-hover:scale-125 group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.85)] flex-shrink-0">
+                  &gt;
+                </span>
+              </a>
+            )}
+          </div>
         </nav>
-
       </article>
-
     </main>
 
-    <!-- FOOTER: Centered Copyright Only on Unified Dark Canvas -->
-    <footer class="border-t border-neutral-800 bg-neutral-950 py-12 px-6">
+    <footer class="border-t border-neutral-800 bg-neutral-950 py-12 px-6 flex flex-col items-center justify-center">
       <div class="max-w-6xl mx-auto flex items-center justify-center text-xs text-neutral-400 font-mono text-center">
         <span>© {new Date().getFullYear()} darlalovly</span>
       </div>
     </footer>
-
   </div>
 </BaseLayout>
 
-<!-- Global CSS overrides for dark theme and prose images -->
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  const TRANSITION_MODES = [
+    { name: 'mode-antenna-gust', delay: 280 },
+    { name: 'mode-static-dissolve', delay: 280 },
+    { name: 'mode-frame-tear', delay: 180 },
+    { name: 'mode-vhold-slip', delay: 180 },
+    { name: 'mode-interlace-jitter', delay: 190 },
+    { name: 'mode-hsync-shift', delay: 180 }
+  ];
+
+  const STORAGE_KEY = 'darlalovly_last_transition_mode';
+
+  function getNextNonRepeatingEffect() {
+    try {
+      const lastMode = sessionStorage.getItem(STORAGE_KEY);
+      const candidatePool = TRANSITION_MODES.filter((mode) => mode.name !== lastMode);
+      const chosenEffect = candidatePool[Math.floor(Math.random() * candidatePool.length)] || TRANSITION_MODES[0];
+      sessionStorage.setItem(STORAGE_KEY, chosenEffect.name);
+      return chosenEffect;
+    } catch {
+      return TRANSITION_MODES[Math.floor(Math.random() * TRANSITION_MODES.length)];
+    }
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const staticOverlay = document.getElementById('crt-static-overlay');
+    if (staticOverlay) {
+      staticOverlay.className = 'fixed inset-0 pointer-events-none z-[100] opacity-0 bg-neutral-950 flex items-center justify-center overflow-hidden';
+    }
+
+    const navLinks = document.querySelectorAll('.post-nav-link');
+    navLinks.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetHref = link.getAttribute('href');
+        if (!targetHref) return;
+
+        const selectedEffect = getNextNonRepeatingEffect();
+
+        if (staticOverlay) {
+          staticOverlay.className = `fixed inset-0 pointer-events-none z-[100] bg-neutral-950 flex items-center justify-center overflow-hidden is-active ${selectedEffect.name}`;
+        }
+
+        setTimeout(() => {
+          navigate(targetHref);
+        }, selectedEffect.delay);
+      });
+    });
+  });
+</script>
+
 <style is:global>
   html, body {
     background-color: #0a0a0a !important;
     color: #ffffff !important;
   }
 
-  /* Ensure layout wrappers inside BaseLayout stay deep black */
+  ::view-transition-group(root) {
+    animation-duration: 260ms;
+  }
+
+  ::view-transition-old(root) {
+    animation: 120ms steps(3) both crt-root-out;
+  }
+
+  ::view-transition-new(root) {
+    animation: 140ms ease-out 80ms both crt-root-in;
+  }
+
+  @keyframes crt-root-out {
+    0% { opacity: 1; filter: brightness(1); transform: none; }
+    50% { opacity: 0.65; filter: contrast(1.3) brightness(0.7); transform: skewX(-1.5deg) translateX(3px); }
+    100% { opacity: 0; filter: contrast(1.1) brightness(0.2); transform: skewX(1deg) translateX(-2px); }
+  }
+
+  @keyframes crt-root-in {
+    0% { opacity: 0; filter: contrast(1.2) brightness(0.3); transform: skewX(1.5deg) translateX(-3px); }
+    100% { opacity: 1; filter: brightness(1); transform: none; }
+  }
+
   body > div, body > main, header, nav, footer {
     background-color: #0a0a0a !important;
   }
 
-  /* Header logo glowing effect for dark theme */
-  header nav img, nav img, .site-logo {
-    filter: invert(1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) !important;
-    transition: filter 0.3s ease-in-out;
+  header a img, .site-logo {
+    filter: none !important;
+    transition: opacity 0.3s ease-in-out;
   }
-  header nav img:hover, nav img:hover, .site-logo:hover {
-    filter: invert(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.75)) !important;
+  header a img:hover, .site-logo:hover {
+    opacity: 0.8;
   }
 
-  /* Content typography dark theme adjustments */
+  nav img {
+    filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+  }
+
   .prose {
     color: #e5e5e5 !important;
   }
   .prose h1, .prose h2, .prose h3, .prose h4 {
     color: #ffffff !important;
-    font-family: serif;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
   .prose a {
     color: #ffffff !important;
@@ -206,13 +294,299 @@ const formattedDate = formatDate(post.data.date);
     background-color: #171717 !important;
   }
   .prose img {
-    border-radius: 0px !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem !important;
+    border: none !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
 </style>
 
 <style>
-  /* Animated Analog Static / Noise Canvas Overlay */
+  #crt-static-overlay.is-active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  .tv-scanlines {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.75) 0px,
+      rgba(0, 0, 0, 0.75) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+  }
+
+  /* Mode 1: Antenna Gust */
+  .mode-antenna-gust .tv-noise-layer {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='antennaGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23antennaGrain)'/%3E%3C/svg%3E");
+    background-size: 150px 150px;
+    filter: contrast(180%) grayscale(100%) brightness(35%);
+    opacity: 0.45;
+    animation: jitter-step 0.07s steps(3) infinite;
+  }
+  .mode-antenna-gust .tv-horizontal-bar {
+    top: -100px;
+    height: 110px;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: bar-sweep 0.28s cubic-bezier(0.3, 0.1, 0.2, 1) infinite;
+  }
+
+  /* Mode 2: Dim Static Dissolve */
+  .mode-static-dissolve .tv-noise-layer {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='dissolveNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23dissolveNoise)'/%3E%3C/svg%3E");
+    background-size: 130px 130px;
+    filter: contrast(170%) grayscale(100%) brightness(32%);
+    opacity: 0.45;
+    animation: jitter-step 0.08s steps(3) infinite;
+  }
+
+  /* Mode 3: Stepped Frame Tear */
+  .mode-frame-tear .tv-noise-layer {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='tearNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23tearNoise)'/%3E%3C/svg%3E");
+    background-size: 150px 150px;
+    filter: contrast(180%) grayscale(100%) brightness(32%);
+    opacity: 0.45;
+    animation: jitter-step 0.05s steps(2) infinite;
+  }
+  .mode-frame-tear .tv-tear-slice {
+    background: rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+  }
+  .mode-frame-tear .tv-tear-1 {
+    top: 22%;
+    height: 38px;
+    animation: tear-shift-left 0.09s steps(2) infinite alternate;
+  }
+  .mode-frame-tear .tv-tear-2 {
+    top: 68%;
+    height: 24px;
+    animation: tear-shift-right 0.08s steps(2) infinite alternate;
+  }
+
+  /* Mode 4: Fast V-Hold Vertical Sync Roll */
+  .mode-vhold-slip .tv-noise-layer {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='vholdNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23vholdNoise)'/%3E%3C/svg%3E");
+    background-size: 150px 150px;
+    filter: contrast(180%) grayscale(100%) brightness(30%);
+    opacity: 0.5;
+    animation: jitter-step 0.06s steps(3) infinite;
+  }
+  .mode-vhold-slip .tv-vhold-blanking-bar {
+    top: -80px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.95) 20%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(0, 0, 0, 0.95) 80%,
+      transparent 100%
+    );
+    animation: vhold-roll 0.18s ease-in forwards;
+  }
+
+  /* Mode 5: Interlaced Field Desync */
+  .mode-interlace-jitter .tv-noise-layer {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='interlaceNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23interlaceNoise)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+    filter: contrast(180%) grayscale(100%) brightness(32%);
+    opacity: 0.45;
+    animation: jitter-step 0.06s steps(2) infinite;
+  }
+  .mode-interlace-jitter .tv-interlace-odd {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.06) 0px,
+      rgba(255, 255, 255, 0.06) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+    animation: interlace-odd-shift 0.08s steps(2) infinite;
+  }
+  .mode-interlace-jitter .tv-interlace-even {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(255, 255, 255, 0.04) 4px
+    );
+    animation: interlace-even-shift 0.08s steps(2) infinite;
+  }
+
+  /* Mode 6: H-Sync Phase Shift */
+  .mode-hsync-shift .tv-noise-layer {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='hsyncNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.25' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23hsyncNoise)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+    filter: contrast(180%) grayscale(100%) brightness(30%);
+    opacity: 0.45;
+    animation: jitter-step 0.06s steps(2) infinite;
+  }
+  .mode-hsync-shift .tv-hsync-band {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+  .mode-hsync-shift .tv-hsync-upper {
+    top: 18%;
+    height: 44px;
+    animation: hsync-skew-left 0.09s steps(2) infinite alternate;
+  }
+  .mode-hsync-shift .tv-hsync-lower {
+    top: 62%;
+    height: 32px;
+    animation: hsync-skew-right 0.08s steps(2) infinite alternate;
+  }
+
+  @keyframes jitter-step {
+    0% { transform: translate(0, 0); }
+    50% { transform: translate(-2px, 1px); }
+    100% { transform: translate(2px, -1px); }
+  }
+
+  @keyframes bar-sweep {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(115vh); }
+  }
+
+  @keyframes tear-shift-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-12px); }
+  }
+
+  @keyframes tear-shift-right {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(10px); }
+  }
+
+  @keyframes vhold-roll {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(115vh); }
+  }
+
+  @keyframes interlace-odd-shift {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-6px); }
+    100% { transform: translateX(4px); }
+  }
+
+  @keyframes interlace-even-shift {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(6px); }
+    100% { transform: translateX(-4px); }
+  }
+
+  @keyframes hsync-skew-left {
+    0% { transform: skewX(-4deg) translateX(0); }
+    100% { transform: skewX(-4deg) translateX(-14px); }
+  }
+
+  @keyframes hsync-skew-right {
+    0% { transform: skewX(3deg) translateX(0); }
+    100% { transform: skewX(3deg) translateX(12px); }
+  }
+
+  .glitch-title {
+    position: relative;
+    display: inline-block;
+    font-size: clamp(2rem, 5.5vw, 4rem);
+    letter-spacing: 0.05em;
+    line-height: 1.15;
+    max-width: 100%;
+    word-break: normal;
+    text-transform: uppercase;
+    cursor: default;
+    color: #ffffff !important;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+  }
+
+  .glitch-title::before,
+  .glitch-title::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .glitch-title::before {
+    left: 2px;
+    text-shadow: -2px 0 #a3a3a3, 1px 0 #e5e5e5;
+    clip-path: inset(0 0 100% 0);
+    animation: tv-static-glitch-1 3.2s infinite linear alternate-reverse;
+  }
+
+  .glitch-title::after {
+    left: -2px;
+    text-shadow: 2px 0 #ffffff, -1px 0 #d4d4d4;
+    clip-path: inset(0 0 100% 0);
+    animation: tv-static-glitch-2 2.6s infinite linear alternate-reverse;
+  }
+
+  @keyframes tv-static-glitch-1 {
+    0%, 80%, 100% {
+      clip-path: inset(0 0 100% 0);
+      transform: translate(0);
+      opacity: 0.9;
+    }
+    82% {
+      clip-path: inset(20% 0 50% 0);
+      transform: translate(-3px, 1px);
+      opacity: 0.75;
+    }
+    86% {
+      clip-path: inset(60% 0 15% 0);
+      transform: translate(3px, -1px);
+      opacity: 0.85;
+    }
+    90% {
+      clip-path: inset(10% 0 70% 0);
+      transform: translate(-2px, 2px);
+      opacity: 0.6;
+    }
+    95% {
+      clip-path: inset(75% 0 8% 0);
+      transform: translate(2px, -2px);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes tv-static-glitch-2 {
+    0%, 75%, 100% {
+      clip-path: inset(0 0 100% 0);
+      transform: translate(0);
+      opacity: 0.9;
+    }
+    78% {
+      clip-path: inset(40% 0 35% 0);
+      transform: translate(4px, -1px);
+      opacity: 0.7;
+    }
+    83% {
+      clip-path: inset(12% 0 72% 0);
+      transform: translate(-3px, 1px);
+      opacity: 0.8;
+    }
+    88% {
+      clip-path: inset(68% 0 12% 0);
+      transform: translate(2px, -2px);
+      opacity: 0.65;
+    }
+    93% {
+      clip-path: inset(25% 0 60% 0);
+      transform: translate(-2px, 1px);
+      opacity: 0.85;
+    }
+  }
+
   .animated-noise-overlay {
     opacity: 0.12;
     mix-blend-mode: screen;

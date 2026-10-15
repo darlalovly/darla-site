@@ -1,7 +1,7 @@
 ---
 title: "Exploring Philadelphia's Chinatown"
 description: "Exploring Philadelphia's Chinatown, Sanrio shop, murals, QQ Mart, and community stories on my first night in Philly."
-date: "2026-03-13"
+date: "2026-03-13T20:00:00"
 category: "sights"
 location: "Chinatown, Philadelphia, PA"
 image: "/images/posts/2026-03-13-chinatown/2026-03-13-chinatown-06.webp"
