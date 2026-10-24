@@ -54,7 +54,8 @@ const formatDate = (date: Date | string | undefined) => {
     <div class="flex flex-col gap-10">
       {publishedPosts.map((post) => {
         const postSlug = post.id ? post.id.replace(/\.(md|mdx)$/, '') : '';
-        const thumbUrl = resolveImageUrl(post.data.thumbnailKey || post.data.image || (post.data.gallery && post.data.gallery[0]));
+        const postData = post.data as any;
+        const thumbUrl = resolveImageUrl(postData.thumbnailKey || postData.image || (postData.gallery && postData.gallery[0]));
         
         return (
           <article class="border border-neutral-800/80 bg-neutral-900/40 p-6 sm:p-8 transition-colors hover:border-neutral-600 rounded-xl">
