@@ -1,64 +1,132 @@
 ---
+// File: src/pages/index.astro
+
 import { getCollection } from 'astro:content';
-import { ClientRouter } from 'astro:transitions';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-// Fetch all posts from the field_notes collection
-const allPosts = await getCollection('field_notes', (post) => !post.data.isDraft);
+const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
 
-// Sort posts chronologically (newest first)
-const posts = allPosts.sort((a, b) => {
-  const dateA = new Date(a.data.date).valueOf();
-  const dateB = new Date(b.data.date).valueOf();
-  return dateB - dateA;
-});
+let rawPosts: any[] = [];
+try {
+  rawPosts = await getCollection('posts');
+} catch {
+  rawPosts = [];
+}
 
-// Helper to format date cleanly (e.g. "OCT 7, 2026")
-const formatDate = (dateVal: string | Date) => {
-  if (!dateVal) return '';
-  const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
-  if (isNaN(d.getTime())) return String(dateVal);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+let rawRecipes: any[] = [];
+try {
+  rawRecipes = await getCollection('recipes');
+} catch {
+  rawRecipes = [];
+}
+
+const postsList = (rawPosts || []).filter((p) => !p?.data?.isDraft && !p?.data?.draft);
+const recipesList = (rawRecipes || []).filter((r) => !r?.data?.isDraft && !r?.data?.draft);
+
+const parseDate = (val: any): Date => {
+  if (!val) return new Date(0);
+  const d = val instanceof Date ? val : new Date(val);
+  return isNaN(d.getTime()) ? new Date(0) : d;
 };
+
+const formatDate = (dateVal: any): string => {
+  const d = parseDate(dateVal);
+  if (d.getTime() === 0) return '';
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).toUpperCase();
+};
+
+const resolveImageUrl = (img: any): string | undefined => {
+  if (!img) return undefined;
+  if (typeof img === 'string') {
+    if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
+      return img;
+    }
+    const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
+    return `${cleanBase}${img.replace(/^\/+/, '')}`;
+  }
+  if (typeof img === 'object' && img?.src) {
+    return img.src;
+  }
+  return undefined;
+};
+
+const detectOrientation = (data: any): 'portrait' | 'landscape' | 'square' => {
+  const raw = String(
+    data?.heroOrientation ||
+    data?.orientation ||
+    data?.imageOrientation ||
+    data?.aspectRatio ||
+    data?.aspect ||
+    ''
+  ).toLowerCase();
+  if (raw.includes('portrait') || raw.includes('vertical')) return 'portrait';
+  if (raw.includes('square')) return 'square';
+  return 'landscape';
+};
+
+const combinedEntries = [
+  ...postsList.map((post) => {
+    const slug = (post as any).slug || (post.id ? post.id.replace(/\.(md|mdx)$/, '') : '');
+    const imgKey = post.data?.image || post.data?.thumbnailKey;
+    const orientation = detectOrientation(post.data);
+    return {
+      title: post.data?.title || 'Untitled Post',
+      date: parseDate(post.data?.date || post.data?.pubDate || post.data?.timestamp),
+      image: resolveImageUrl(imgKey),
+      orientation,
+      isVertical: orientation === 'portrait',
+      excerpt: post.data?.excerpt || post.data?.description || '',
+      category: post.data?.category || 'Post',
+      type: 'POST',
+      href: `/posts/${slug}`,
+    };
+  }),
+  ...recipesList.map((recipe) => {
+    const imgKey = recipe.data?.thumbnailKey || (recipe.data?.gallery && recipe.data?.gallery[0]);
+    const orientation = detectOrientation(recipe.data);
+    return {
+      title: recipe.data?.recipeName || recipe.data?.title || 'Untitled Recipe',
+      date: parseDate(recipe.data?.date),
+      image: resolveImageUrl(imgKey),
+      orientation,
+      isVertical: orientation === 'portrait',
+      excerpt: recipe.data?.recipeExcerpt || '',
+      category: 'Recipe',
+      type: 'RECIPE',
+      href: `/recipes/${recipe.id.replace(/\.(md|mdx)$/, '')}`,
+    };
+  }),
+];
+
+const feed = combinedEntries.sort((a, b) => b.date.valueOf() - a.date.valueOf());
+const featuredItem = feed[0];
+const streamItems = feed.slice(1);
 ---
 
-<BaseLayout title="darlalovly — Personal Dispatches, Places & Scent">
-  <!-- Enable smooth page-to-page transitions -->
-  <ClientRouter />
-
-  <!-- Multi-Mode CRT TV Transition Overlay & Static Layer with Audio -->
-  <div id="crt-off-overlay" class="fixed inset-0 pointer-events-none z-[100] opacity-0 flex items-center justify-center overflow-hidden" aria-hidden="true">
-    <div class="crt-screen-flash absolute inset-0 bg-white opacity-0 pointer-events-none"></div>
-    <div class="crt-static-burst absolute inset-0 pointer-events-none"></div>
-    <div class="crt-collapse-line w-full pointer-events-none"></div>
-    <div class="degauss-warp-mesh absolute inset-0 pointer-events-none"></div>
-    <div class="tv-scanlines absolute inset-0 pointer-events-none"></div>
-  </div>
-
-  <!-- Fixed Animated Analog Static/Noise Canvas Overlay -->
-  <div class="fixed inset-0 pointer-events-none z-50 animated-noise-overlay" aria-hidden="true"></div>
-
-  <!-- Unified Seamless Black Canvas Container -->
-  <div class="min-h-screen bg-neutral-950 text-white selection:bg-white selection:text-neutral-900 font-sans antialiased overflow-x-hidden flex flex-col justify-between relative z-10">
-    
-    <!-- Main Content Area -->
-    <main class="w-full max-w-6xl mx-auto px-4 sm:px-6 pt-16 md:pt-28 pb-16">
+<BaseLayout 
+  title="darlalovly — Personal Posts, Places & Scent"
+  enableAudioTransition={true}
+>
+  <!-- Primary Vertical Stream -->
+  <div class="w-full flex flex-col justify-between relative z-10 dot-bg">
+    <div class="w-full max-w-5xl mx-auto pt-8 sm:pt-12 pb-20">
       
-      <!-- HERO SECTION: Extra-Large Centered Glitch Title & Scroll Indicator -->
-      <header class="relative mb-24 md:mb-36 flex flex-col items-center justify-center text-center space-y-8 animate-fade-in w-full overflow-hidden">
-        
-        <!-- Extra-Large Centered TV Static Glitch Title with Increased Letter Spacing -->
+      <!-- HERO TITLE -->
+      <header class="relative mb-20 md:mb-28 flex flex-col items-center justify-center text-center space-y-6 animate-fade-in w-full overflow-hidden">
         <div class="relative w-full py-4 flex justify-center items-center select-none overflow-hidden">
-          <h1 
-            class="glitch-title font-sans font-normal text-white leading-[0.9] text-center"
+          <h1
+            class="glitch-title font-mono font-normal text-white leading-[0.9] text-center"
             data-text="darlalovly"
           >
             darlalovly
           </h1>
         </div>
 
-        <!-- Centered Scroll to Explore Link & Arrow -->
-        <div class="pt-4 flex items-center justify-center gap-3 text-xs uppercase tracking-[0.25em] text-neutral-400 font-mono">
+        <div class="pt-2 flex items-center justify-center gap-3 text-xs uppercase tracking-[0.25em] text-neutral-400 font-mono">
           <a href="#intro" class="group inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors">
             <span>Scroll to explore</span>
             <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-y-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,435 +136,208 @@ const formatDate = (dateVal: string | Date) => {
         </div>
       </header>
 
-      <!-- STAGGERED QUOTES SECTION (FUTURISTIC SPACED NARROW CAPS & TV STATIC GLITCH REVEAL) -->
-      <section id="intro" class="mb-24 sm:mb-36 md:mb-52 pt-16 border-t border-neutral-800 space-y-24 sm:space-y-36 md:space-y-52">
-        
-        <!-- Quote 1: Left Position -->
+      <!-- STAGGERED INTRO QUOTES -->
+      <section id="intro" class="mb-24 sm:mb-32 pt-16 border-t border-neutral-800 space-y-20 sm:space-y-28">
         <div class="glitch-reveal-item mr-auto max-w-2xl text-left">
-          <p class="futuristic-narrow-caps text-base sm:text-xl md:text-2xl text-white leading-relaxed">
+          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-white leading-relaxed">
             My personal space for wandering thoughts, unexpected detours, and local discoveries along the open road.
           </p>
         </div>
 
-        <!-- Quote 2: Right Position -->
         <div class="glitch-reveal-item ml-auto max-w-2xl text-right">
-          <p class="futuristic-narrow-caps text-base sm:text-xl md:text-2xl text-neutral-200 leading-relaxed">
+          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed">
             Written plainly from real, learned-life experience - no expert guides, no heavy photography, just stories as I see them.
           </p>
         </div>
 
-        <!-- Quote 3: Middle Position -->
         <div class="glitch-reveal-item mx-auto max-w-2xl text-center">
-          <p class="futuristic-narrow-caps text-base sm:text-xl md:text-2xl text-neutral-300 leading-relaxed">
+          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-neutral-400 leading-relaxed">
             Paying attention to the little details, one step at a time, where fragrant memories mingle with everyday moments.
           </p>
         </div>
-
       </section>
 
-    </main>
-
-    <!-- HORIZONTAL SCROLLING POSTS GALLERY -->
-    <section id="notes" class="w-full mb-16 pt-12 border-t border-neutral-800">
-      
-      <!-- Scroll Indicator Header below dividing line -->
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 md:px-12 mb-6 flex items-center justify-between">
-        <button 
-          id="scroll-right-btn"
-          class="group inline-flex items-center gap-2.5 text-xs font-mono uppercase tracking-[0.25em] text-neutral-400 hover:text-white transition-colors cursor-pointer"
-        >
-          <span>Scroll for more</span>
-          <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13.5 4.5L21 12m0 0l-7.5-7.5M21 12H3" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Horizontal Scroll Track without default scrollbar -->
-      <div 
-        id="posts-scroll-container"
-        class="px-4 sm:px-6 md:px-12 overflow-x-auto flex items-center gap-6 sm:gap-8 md:gap-12 pb-8 pt-4 snap-x snap-mandatory scrollbar-none scroll-smooth touch-pan-x"
-        style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch;"
-      >
-        {posts.map((post, index) => {
-          const { title, date, image } = post.data;
-          const slug = (post as any).slug || (post.id ? post.id.replace(/\.(md|mdx)$/, '') : '');
-          const isStaggered = index % 2 !== 0;
-          const formattedDate = formatDate(date);
-
-          return (
-            <article 
-              class={`group relative flex-shrink-0 w-64 sm:w-80 md:w-96 snap-center transition-all duration-500 ease-out flex flex-col items-center justify-center ${
-                isStaggered ? 'mt-8 sm:mt-12 md:mt-20' : 'mb-8 sm:mb-12 md:mb-20'
-              }`}
-            >
-              <a 
-                href={`/posts/${slug}`} 
-                class="post-transition-link inline-flex flex-col items-start relative group overflow-hidden rounded-none bg-transparent transition-all duration-500 hover:-translate-y-2 max-w-full"
-              >
-                
-                <!-- Date above top-left corner of image on hover / active -->
-                <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400 mb-2 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 text-left h-4 w-full">
-                  {formattedDate}
-                </div>
-
-                <!-- Shrinkwrapped Image Wrapper with CRT TV Frame Effects -->
-                {image && (
-                  <div class="relative inline-block overflow-hidden bg-transparent rounded-none max-w-full crt-tv-wrapper">
-                    
-                    <!-- CRT Screen Glass Bezel Vignette Shadow -->
-                    <div class="absolute inset-0 pointer-events-none z-20 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-400 crt-screen-vignette"></div>
-                    
-                    <!-- CRT Screen Scanline Texture Layer -->
-                    <div class="absolute inset-0 pointer-events-none z-10 opacity-30 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-400 crt-scanlines"></div>
-
-                    <!-- Post Header Image -->
-                    <img 
-                      src={image} 
-                      alt={title} 
-                      loading="lazy"
-                      class="block w-auto h-auto max-h-[320px] sm:max-h-[380px] md:max-h-[420px] max-w-full object-contain rounded-none transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                    />
-
-                    <!-- Soft Bottom Gradient for Pure White Title Overlay -->
-                    <div class="absolute inset-0 z-30 bg-gradient-to-t from-black/85 via-black/20 to-transparent sm:from-black/80 sm:via-transparent sm:to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-400 ease-out flex flex-col justify-end p-4 sm:p-5 text-left rounded-none pointer-events-none">
-                      <h3 class="post-hover-title text-base sm:text-lg md:text-xl font-sans leading-snug font-medium text-left text-white uppercase tracking-wider line-clamp-2">
-                        {title}
-                      </h3>
-                    </div>
-
-                  </div>
-                )}
-
-              </a>
-            </article>
-          );
-        })}
-      </div>
-
-      <!-- Sleek Custom Track Line with White < and > Controls -->
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 md:px-12 mt-6 flex items-center gap-4">
+      <!-- STREAM CONTAINER -->
+      <section id="feed" class="w-full pt-12 border-t border-neutral-800">
         
-        <!-- Left Arrow < -->
-        <button 
-          id="track-prev-btn" 
-          aria-label="Scroll left"
-          class="text-white hover:text-neutral-300 font-mono text-sm transition-colors cursor-pointer px-1 py-0.5 select-none font-bold"
-        >
-          &lt;
-        </button>
-
-        <!-- White Track Line & Progress Indicator -->
-        <div 
-          id="track-line-bg" 
-          class="relative flex-1 h-[2px] bg-white/30 cursor-pointer overflow-hidden rounded-full"
-        >
-          <div 
-            id="track-line-progress" 
-            class="absolute top-0 left-0 h-full bg-white w-1/6 transition-all duration-150 ease-out shadow-[0_0_10px_rgba(255,255,255,0.9)]"
-          ></div>
+        <div class="flex items-center justify-between mb-12 sm:mb-16 pb-4 border-b border-neutral-800/60 font-mono">
+          <span class="text-xs uppercase tracking-[0.25em] text-neutral-400">
+            [ Digital Garden & Posts ]
+          </span>
+          <span class="text-xs uppercase tracking-[0.2em] text-neutral-500">
+            {feed.length} {feed.length === 1 ? 'Entry' : 'Entries'}
+          </span>
         </div>
 
-        <!-- Right Arrow > -->
-        <button 
-          id="track-next-btn" 
-          aria-label="Scroll right"
-          class="text-white hover:text-neutral-300 font-mono text-sm transition-colors cursor-pointer px-1 py-0.5 select-none font-bold"
-        >
-          &gt;
-        </button>
+        <!-- 1. FEATURED ENTRY -->
+        {featuredItem && (
+          <article id="featured-post" class="mb-20 sm:mb-28 glitch-reveal-item">
+            <a
+              href={featuredItem.href}
+              class={`post-transition-link group flex ${
+                featuredItem.isVertical
+                  ? 'flex-col md:flex-row items-center gap-8 md:gap-14'
+                  : 'flex-col items-center gap-8 text-center'
+              }`}
+            >
+              {featuredItem.image && (
+                <div class={`featured-img-container flex items-center justify-center ${
+                  featuredItem.isVertical ? 'w-full md:w-1/2 flex-shrink-0' : 'w-full'
+                }`}>
+                  <div class="relative inline-flex overflow-hidden rounded-none crt-tv-frame select-none">
+                    <div class="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-screen-vignette"></div>
+                    <div class="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-scanlines"></div>
+                    <img
+                      src={featuredItem.image}
+                      alt={featuredItem.title}
+                      loading="eager"
+                      class={`block w-auto h-auto max-w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] ${
+                        featuredItem.isVertical ? 'max-h-[560px]' : 'max-h-[480px]'
+                      }`}
+                    />
+                  </div>
+                </div>
+              )}
 
-      </div>
+              <div class={`featured-content-container flex flex-col gap-4 flex-1 w-full ${
+                !featuredItem.isVertical ? 'max-w-3xl items-center text-center' : 'text-left'
+              }`}>
+                <div class="flex flex-wrap items-center justify-between gap-3 text-xs font-mono tracking-widest text-neutral-400 w-full">
+                  <span class="border border-neutral-700 px-2.5 py-1 text-[10px] text-white uppercase tracking-[0.2em]">
+                    [ FEATURED {featuredItem.type} ]
+                  </span>
+                  <span>{formatDate(featuredItem.date)}</span>
+                </div>
 
-    </section>
+                <h2 class="text-2xl sm:text-4xl md:text-5xl font-mono uppercase tracking-wide text-white group-hover:text-neutral-300 transition-colors leading-tight">
+                  {featuredItem.title}
+                </h2>
 
-    <!-- FOOTER: Centered Copyright Only on Unified Dark Canvas -->
-    <footer class="border-t border-neutral-800 bg-neutral-950 py-12 px-6">
-      <div class="max-w-6xl mx-auto flex items-center justify-center text-xs text-neutral-400 font-mono text-center">
-        <span>© {new Date().getFullYear()} darlalovly</span>
-      </div>
-    </footer>
+                {featuredItem.excerpt && (
+                  <p class="text-base sm:text-lg text-neutral-300 font-sans leading-relaxed max-w-2xl">
+                    {featuredItem.excerpt}
+                  </p>
+                )}
 
+                <div class="pt-2 text-xs font-mono uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors flex items-center gap-2">
+                  <span>View Post</span>
+                  <span class="transition-transform duration-300 group-hover:translate-x-1.5">&rarr;</span>
+                </div>
+              </div>
+            </a>
+          </article>
+        )}
+
+        <!-- 2. STREAM ITEMS -->
+        <div class="flex flex-col gap-16 sm:gap-24 w-full">
+          {streamItems.map((entry, index) => {
+            const formattedDate = formatDate(entry.date);
+            const isReversed = index % 2 === 1;
+
+            return (
+              <article class="glitch-reveal-item group flex flex-col border-b border-neutral-800/60 pb-16 last:border-0 last:pb-0">
+                <a
+                  href={entry.href}
+                  class={`post-transition-link flex flex-col ${
+                    isReversed ? 'md:flex-row-reverse' : 'md:flex-row'
+                  } items-center gap-8 md:gap-14 justify-between`}
+                >
+                  <div class="flex flex-col gap-4 flex-1 w-full text-left">
+                    <div class="flex items-center gap-3 text-xs font-mono tracking-widest text-neutral-400">
+                      <span class="border border-neutral-800 px-2 py-0.5 text-[10px] text-neutral-300">
+                        {entry.type}
+                      </span>
+                      {formattedDate && <span>{formattedDate}</span>}
+                    </div>
+
+                    <h2 class="text-xl sm:text-2xl md:text-3xl font-mono uppercase tracking-wide text-white group-hover:text-neutral-300 transition-colors leading-snug">
+                      {entry.title}
+                    </h2>
+
+                    {entry.excerpt && (
+                      <p class="text-sm sm:text-base text-neutral-300 font-sans leading-relaxed line-clamp-3">
+                        {entry.excerpt}
+                      </p>
+                    )}
+
+                    <div class="pt-1 text-xs font-mono uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors flex items-center gap-2">
+                      <span>View Post</span>
+                      <span class="transition-transform duration-300 group-hover:translate-x-1.5">&rarr;</span>
+                    </div>
+                  </div>
+
+                  {entry.image && (
+                    <div class="w-full md:w-1/2 flex-shrink-0 flex items-center justify-center">
+                      <div class="relative inline-flex overflow-hidden rounded-none crt-tv-frame select-none">
+                        <div class="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-screen-vignette"></div>
+                        <div class="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-scanlines"></div>
+                        <img
+                          src={entry.image}
+                          alt={entry.title}
+                          loading="lazy"
+                          class={`block w-auto h-auto max-w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] ${
+                            entry.orientation === 'portrait' ? 'max-h-[480px]' : 'max-h-[360px]'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </a>
+              </article>
+            );
+          })}
+
+          {feed.length === 0 && (
+            <div class="py-20 text-center text-xs font-mono uppercase tracking-[0.25em] text-neutral-500">
+              [ No entries cataloged ]
+            </div>
+          )}
+        </div>
+      </section>
+
+    </div>
   </div>
 </BaseLayout>
 
-<!-- Client Script for Track Line, CRT Transition & Audio Buzz -->
 <script>
-  import { navigate } from 'astro:transitions/client';
+  function setupIndexInteractions() {
+    const featuredCard = document.getElementById('featured-post');
+    const featuredLink = featuredCard?.querySelector('a');
+    const featuredImg = featuredCard?.querySelector('img');
+    const featuredImgContainer = featuredCard?.querySelector('.featured-img-container');
+    const featuredContent = featuredCard?.querySelector('.featured-content-container');
 
-  class CRTTransitionAudio {
-    ctx: AudioContext | null = null;
-
-    init() {
-      if (!this.ctx) {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioCtx) {
-          this.ctx = new AudioCtx();
+    if (featuredLink && featuredImg && featuredImgContainer && featuredContent) {
+      const adjustFeaturedLayout = () => {
+        const isImgVertical = featuredImg.naturalHeight > featuredImg.naturalWidth;
+        if (isImgVertical) {
+          featuredLink.classList.remove('flex-col', 'items-center', 'text-center');
+          featuredLink.classList.add('flex-col', 'md:flex-row', 'items-center', 'gap-8', 'md:gap-14');
+          featuredImgContainer.classList.remove('w-full');
+          featuredImgContainer.classList.add('w-full', 'md:w-1/2', 'flex-shrink-0');
+          featuredContent.classList.remove('items-center', 'text-center', 'max-w-3xl');
+          featuredContent.classList.add('text-left');
+          featuredImg.classList.remove('max-h-[480px]');
+          featuredImg.classList.add('max-h-[560px]');
+        } else {
+          featuredLink.classList.remove('md:flex-row', 'md:gap-14');
+          featuredLink.classList.add('flex-col', 'items-center', 'gap-8', 'text-center');
+          featuredImgContainer.classList.remove('md:w-1/2', 'flex-shrink-0');
+          featuredImgContainer.classList.add('w-full');
+          featuredContent.classList.remove('text-left');
+          featuredContent.classList.add('items-center', 'text-center', 'max-w-3xl');
+          featuredImg.classList.remove('max-h-[560px]');
+          featuredImg.classList.add('max-h-[480px]');
         }
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume().catch(() => {});
-      }
-    }
+      };
 
-    createNoiseBuffer(duration: number) {
-      if (!this.ctx) return null;
-      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      return buffer;
-    }
-
-    // Sound 1: CRT Power-Off Whine, 60Hz Collapse & Flyback Discharge Pop
-    playPowerOff() {
-      this.init();
-      if (!this.ctx) return;
-      const now = this.ctx.currentTime;
-
-      const buffer = this.createNoiseBuffer(0.45);
-      if (buffer) {
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-
-        const noiseFilter = this.ctx.createBiquadFilter();
-        noiseFilter.type = 'bandpass';
-        noiseFilter.frequency.setValueAtTime(1200, now);
-        noiseFilter.frequency.exponentialRampToValueAtTime(80, now + 0.4);
-
-        const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.28, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(this.ctx.destination);
-        noise.start(now);
-        noise.stop(now + 0.45);
-      }
-
-      const osc = this.ctx.createOscillator();
-      const oscGain = this.ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(120, now);
-      osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
-
-      oscGain.gain.setValueAtTime(0.22, now);
-      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-
-      osc.connect(oscGain);
-      oscGain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.45);
-
-      const flyback = this.ctx.createOscillator();
-      const flybackGain = this.ctx.createGain();
-      flyback.type = 'sine';
-      flyback.frequency.setValueAtTime(12500, now);
-      flyback.frequency.exponentialRampToValueAtTime(200, now + 0.4);
-
-      flybackGain.gain.setValueAtTime(0.18, now);
-      flybackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-
-      flyback.connect(flybackGain);
-      flybackGain.connect(this.ctx.destination);
-      flyback.start(now);
-      flyback.stop(now + 0.45);
-    }
-
-    // Sound 2: Mechanical Rotary VHF Channel-Click Clunk & Static Zap
-    playRotaryChannelClick() {
-      this.init();
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-
-      [0, 0.045].forEach((offset) => {
-        if (!this.ctx) return;
-        const clickOsc = this.ctx.createOscillator();
-        const clickGain = this.ctx.createGain();
-        clickOsc.type = 'sine';
-        clickOsc.frequency.setValueAtTime(140, t + offset);
-        clickOsc.frequency.exponentialRampToValueAtTime(45, t + offset + 0.05);
-
-        clickGain.gain.setValueAtTime(0.32, t + offset);
-        clickGain.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.05);
-
-        clickOsc.connect(clickGain);
-        clickGain.connect(this.ctx.destination);
-        clickOsc.start(t + offset);
-        clickOsc.stop(t + offset + 0.06);
-      });
-
-      const noiseBuffer = this.createNoiseBuffer(0.34);
-      if (noiseBuffer) {
-        const noise = this.ctx.createBufferSource();
-        const filter = this.ctx.createBiquadFilter();
-        const noiseGain = this.ctx.createGain();
-
-        noise.buffer = noiseBuffer;
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(2200, t);
-        filter.Q.setValueAtTime(1.8, t);
-
-        noiseGain.gain.setValueAtTime(0.24, t + 0.04);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
-
-        noise.connect(filter);
-        filter.connect(noiseGain);
-        noiseGain.connect(this.ctx.destination);
-        noise.start(t + 0.04);
+      if (featuredImg.complete && featuredImg.naturalWidth > 0) {
+        adjustFeaturedLayout();
+      } else {
+        featuredImg.addEventListener('load', adjustFeaturedLayout);
       }
     }
 
-    // Sound 3: 60Hz Magnetic Degaussing Resonance Thump
-    playDegaussThump() {
-      this.init();
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-
-      const degaussOsc = this.ctx.createOscillator();
-      const degaussGain = this.ctx.createGain();
-      degaussOsc.type = 'sawtooth';
-      degaussOsc.frequency.setValueAtTime(120, t);
-      degaussOsc.frequency.exponentialRampToValueAtTime(60, t + 0.42);
-
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(280, t);
-      filter.frequency.exponentialRampToValueAtTime(90, t + 0.42);
-
-      degaussGain.gain.setValueAtTime(0.35, t);
-      degaussGain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
-
-      degaussOsc.connect(filter);
-      filter.connect(degaussGain);
-      degaussGain.connect(this.ctx.destination);
-      degaussOsc.start(t);
-      degaussOsc.stop(t + 0.46);
-
-      const subOsc = this.ctx.createOscillator();
-      const subGain = this.ctx.createGain();
-      subOsc.type = 'triangle';
-      subOsc.frequency.setValueAtTime(95, t);
-      subOsc.frequency.exponentialRampToValueAtTime(32, t + 0.16);
-
-      subGain.gain.setValueAtTime(0.4, t);
-      subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-
-      subOsc.connect(subGain);
-      subGain.connect(this.ctx.destination);
-      subOsc.start(t);
-      subOsc.stop(t + 0.18);
-    }
-  }
-
-  const audioEngine = new CRTTransitionAudio();
-
-  const INDEX_TRANSITION_MODES = [
-    {
-      name: 'mode-crt-power-off',
-      delay: 480,
-      sound: () => audioEngine.playPowerOff()
-    },
-    {
-      name: 'mode-rotary-click',
-      delay: 340,
-      sound: () => audioEngine.playRotaryChannelClick()
-    },
-    {
-      name: 'mode-degauss-thump',
-      delay: 420,
-      sound: () => audioEngine.playDegaussThump()
-    }
-  ];
-
-  const STORAGE_KEY = 'darlalovly_last_index_transition';
-
-  function getNextNonRepeatingIndexEffect() {
-    const lastMode = sessionStorage.getItem(STORAGE_KEY);
-    const candidatePool = INDEX_TRANSITION_MODES.filter((m) => m.name !== lastMode);
-    const chosenEffect = candidatePool[Math.floor(Math.random() * candidatePool.length)] || INDEX_TRANSITION_MODES[0];
-    sessionStorage.setItem(STORAGE_KEY, chosenEffect.name);
-    return chosenEffect;
-  }
-
-  document.addEventListener('astro:page-load', () => {
-    const container = document.getElementById('posts-scroll-container');
-    const trackBg = document.getElementById('track-line-bg');
-    const trackProgress = document.getElementById('track-line-progress');
-    const prevBtn = document.getElementById('track-prev-btn');
-    const nextBtn = document.getElementById('track-next-btn');
-    const scrollRightBtn = document.getElementById('scroll-right-btn');
-    const crtOverlay = document.getElementById('crt-off-overlay');
-
-    // Reset overlay state upon page navigation
-    if (crtOverlay) {
-      crtOverlay.className = 'fixed inset-0 pointer-events-none z-[100] opacity-0 flex items-center justify-center overflow-hidden';
-    }
-
-    // Attach CRT shutdown transition and sound to post links
-    const postLinks = document.querySelectorAll('.post-transition-link');
-    postLinks.forEach((link) => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetHref = link.getAttribute('href');
-        if (!targetHref) return;
-
-        const effect = getNextNonRepeatingIndexEffect();
-        try {
-          effect.sound();
-        } catch {
-          // Gracefully handles mobile audio restrictions
-        }
-
-        if (crtOverlay) {
-          crtOverlay.className = `fixed inset-0 pointer-events-none z-[100] flex items-center justify-center overflow-hidden is-shutting-down ${effect.name}`;
-        }
-
-        setTimeout(() => {
-          navigate(targetHref);
-        }, effect.delay);
-      });
-    });
-
-    if (!container) return;
-
-    // Update progress bar
-    const updateProgress = () => {
-      const maxScroll = container.scrollWidth - container.clientWidth;
-      if (maxScroll <= 0) return;
-      const percentage = (container.scrollLeft / maxScroll) * 100;
-      if (trackProgress) {
-        trackProgress.style.width = `${Math.max(8, percentage)}%`;
-      }
-    };
-
-    container.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('resize', updateProgress, { passive: true });
-    updateProgress();
-
-    // Scroll by amount
-    const scrollByAmount = (distance: number) => {
-      container.scrollBy({ left: distance, behavior: 'smooth' });
-    };
-
-    if (prevBtn) prevBtn.addEventListener('click', () => scrollByAmount(-320));
-    if (nextBtn) nextBtn.addEventListener('click', () => scrollByAmount(320));
-    if (scrollRightBtn) scrollRightBtn.addEventListener('click', () => scrollByAmount(320));
-
-    // Track click to jump
-    if (trackBg) {
-      trackBg.addEventListener('click', (e) => {
-        const rect = trackBg.getBoundingClientRect();
-        const clickRatio = (e.clientX - rect.left) / rect.width;
-        const maxScroll = container.scrollWidth - container.clientWidth;
-        container.scrollTo({ left: clickRatio * maxScroll, behavior: 'smooth' });
-      });
-    }
-
-    // Scroll reveal observer
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -505,241 +346,38 @@ const formatDate = (dateVal: string | Date) => {
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.1 }
     );
 
-    document.querySelectorAll('.glitch-reveal-item').forEach((item) => {
-      observer.observe(item);
-    });
-  });
+    document.querySelectorAll('.glitch-reveal-item').forEach((item) => observer.observe(item));
+  }
+
+  document.addEventListener('astro:page-load', setupIndexInteractions);
 </script>
 
-<!-- Global CSS overrides to force 100% black page canvas & clean logo display -->
-<style is:global>
-  html, body {
-    background-color: #0a0a0a !important;
-    color: #ffffff !important;
-  }
-
-  /* Ensure all layout wrappers inside BaseLayout stay deep black */
-  body > div, body > main, header, nav, footer {
-    background-color: #0a0a0a !important;
-  }
-
-  /* Header logo natural display without color inversion */
-  header nav img, nav img, .site-logo, .logo, [class*="logo"] img {
-    filter: none !important;
-    transition: opacity 0.3s ease-in-out;
-  }
-  header nav img:hover, nav img:hover, .site-logo:hover, .logo:hover {
-    opacity: 0.8;
-  }
-</style>
-
 <style>
-  /* CRT TV Multi-Mode Animation Overlays */
-  #crt-off-overlay.is-shutting-down {
-    pointer-events: auto !important;
-    opacity: 1;
-    animation: crt-fade-black 0.52s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  .dot-bg {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: center top;
   }
 
-  .is-shutting-down .tv-scanlines {
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.75) 0px,
-      rgba(0, 0, 0, 0.75) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-    pointer-events: none;
-  }
-
-  /* Mode 1: CRT TV Power-Off Beam Collapse */
-  .mode-crt-power-off .crt-static-burst {
-    background-image: 
-      repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.7) 0, rgba(255,255,255,0.7) 1px, transparent 1px, transparent 100%),
-      repeating-linear-gradient(0deg, rgba(255,255,255,0.25) 0px, rgba(255,255,255,0.25) 1px, transparent 1px, transparent 3px);
-    background-size: 5px 5px, 100% 3px;
-    mix-blend-mode: screen;
-    animation: crt-static-jitter 0.18s steps(3) infinite, crt-static-fade 0.42s ease-out forwards;
-  }
-
-  .mode-crt-power-off .crt-collapse-line {
-    height: 100%;
-    animation: crt-beam-collapse 0.48s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-    box-shadow: 0 0 35px rgba(255, 255, 255, 1), 0 0 70px rgba(255, 255, 255, 0.9);
-  }
-
-  @keyframes crt-beam-collapse {
-    0% {
-      height: 100%;
-      transform: scale(1, 1);
-      background: transparent;
-    }
-    20% {
-      height: 3px;
-      transform: scale(1, 1);
-      background: #ffffff;
-      opacity: 1;
-    }
-    60% {
-      height: 2px;
-      transform: scale(1, 0.85);
-      background: #ffffff;
-      opacity: 1;
-    }
-    85% {
-      height: 2px;
-      transform: scale(0.03, 0.85);
-      background: #ffffff;
-      opacity: 1;
-    }
-    100% {
-      height: 0px;
-      transform: scale(0, 0);
-      background: #ffffff;
-      opacity: 0;
-    }
-  }
-
-  @keyframes crt-static-jitter {
-    0% { transform: translate(0, 0); }
-    33% { transform: translate(-3px, 2px); }
-    66% { transform: translate(3px, -2px); }
-    100% { transform: translate(0, 0); }
-  }
-
-  @keyframes crt-static-fade {
-    0% { opacity: 0.95; }
-    50% { opacity: 0.75; }
-    100% { opacity: 0; }
-  }
-
-  @keyframes crt-fade-black {
-    0% { background-color: rgba(0, 0, 0, 0); }
-    25% { background-color: rgba(0, 0, 0, 0.85); }
-    100% { background-color: rgba(0, 0, 0, 1); }
-  }
-
-  /* Mode 2: Rotary Channel Click & High-Contrast Static Zap */
-  .mode-rotary-click .crt-static-burst {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='rotaryNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23rotaryNoise)'/%3E%3C/svg%3E");
-    background-size: 120px 120px;
-    filter: contrast(240%) grayscale(100%) brightness(55%);
-    opacity: 0.85;
-    animation: rotary-zap 0.08s steps(3) infinite;
-  }
-
-  .mode-rotary-click .crt-screen-flash {
-    animation: flash-burst 0.12s ease-out forwards;
-  }
-
-  @keyframes rotary-zap {
-    0% { transform: translate(0, 0) skewX(0deg); }
-    33% { transform: translate(-6px, 3px) skewX(-2deg); }
-    66% { transform: translate(6px, -3px) skewX(2deg); }
-    100% { transform: translate(0, 0) skewX(0deg); }
-  }
-
-  @keyframes flash-burst {
-    0% { opacity: 0.35; }
-    100% { opacity: 0; }
-  }
-
-  /* Mode 3: 60Hz Magnetic Degaussing Resonance Thump & Radial Ripple */
-  .mode-degauss-thump .degauss-warp-mesh {
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-    animation: degauss-ripple 0.38s ease-out forwards;
-  }
-
-  .mode-degauss-thump .crt-static-burst {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='degaussNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23degaussNoise)'/%3E%3C/svg%3E");
-    background-size: 150px 150px;
-    filter: contrast(180%) grayscale(100%) brightness(35%);
-    opacity: 0.55;
-    animation: degauss-shake 0.06s steps(2) infinite;
-  }
-
-  @keyframes degauss-ripple {
-    0% { transform: scale(0.6); opacity: 0.9; }
-    50% { transform: scale(1.2); opacity: 0.4; }
-    100% { transform: scale(1); opacity: 0; }
-  }
-
-  @keyframes degauss-shake {
-    0% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(-4px, 3px) scale(1.02); }
-    50% { transform: translate(4px, -3px) scale(0.98); }
-    75% { transform: translate(-2px, -2px) scale(1.01); }
-    100% { transform: translate(0, 0) scale(1); }
-  }
-
-  /* Animated Analog Static / High-Noise Canvas Overlay */
-  .animated-noise-overlay {
-    background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 1px, transparent 1px), radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 1px, transparent 1px);
-    background-size: 6px 6px, 8px 8px;
-    opacity: 0.25;
-    mix-blend-mode: screen;
-    animation: grain-motion 0.25s steps(4) infinite;
-  }
-
-  @keyframes grain-motion {
-    0% { transform: translate(0, 0); }
-    25% { transform: translate(-3px, 2px); }
-    50% { transform: translate(3px, -1px); }
-    75% { transform: translate(-2px, -3px); }
-    100% { transform: translate(2px, 1px); }
-  }
-
-  /* CRT Screen Post Frame Elevation on Hover */
-  .crt-tv-wrapper {
-    transition: all 0.4s ease-out;
-  }
-
-  .group:hover .crt-tv-wrapper {
-    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.9), 0 0 16px rgba(255, 255, 255, 0.12);
-    transform: translateY(-4px);
-  }
-
-  /* CRT TV Glass Bezel Vignette Shadow on Image Hover */
   .crt-screen-vignette {
-    box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.85), inset 0 0 12px rgba(0, 0, 0, 0.95);
+    box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.85), inset 0 0 10px rgba(0, 0, 0, 0.95);
   }
 
-  /* CRT TV Fine Scanline Lines Overlay */
   .crt-scanlines {
     background: linear-gradient(
       rgba(18, 16, 16, 0) 50%, 
-      rgba(0, 0, 0, 0.35) 50%
+      rgba(0, 0, 0, 0.45) 50%
     );
     background-size: 100% 4px;
   }
 
-  /* Hide standard scrollbars across browsers */
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  .group:hover .crt-tv-frame img {
+    filter: brightness(1.04) contrast(1.04);
   }
 
-  /* Ensure post hover title is strictly pure white text */
-  .post-hover-title {
-    color: #ffffff !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-  }
-
-  /* Futuristic Spaced Narrow Caps Styling */
-  .futuristic-narrow-caps {
-    font-family: 'Arial Narrow', 'SF Compact Text', 'Trebuchet MS', 'Franklin Gothic Medium', 'Arial Nova', sans-serif-condensed, sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    font-weight: 500;
-  }
-
-  /* Fluid extra-large title sizing with relaxed letter-spacing */
   .glitch-title {
     position: relative;
     display: inline-block;
@@ -752,10 +390,7 @@ const formatDate = (dateVal: string | Date) => {
     color: #ffffff !important;
     text-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
   }
-
-  /* Monochromatic TV Static Glitch Pseudo Layers */
-  .glitch-title::before,
-  .glitch-title::after {
+  .glitch-title::before, .glitch-title::after {
     content: attr(data-text);
     position: absolute;
     top: 0;
@@ -765,134 +400,51 @@ const formatDate = (dateVal: string | Date) => {
     background: transparent;
     pointer-events: none;
   }
-
-  /* Monochromatic TV Static Shift 1 (Bright Silver / Light Gray) */
   .glitch-title::before {
     left: 2px;
     text-shadow: -2px 0 #a3a3a3, 1px 0 #e5e5e5;
     clip-path: inset(0 0 100% 0);
     animation: tv-static-glitch-1 3.2s infinite linear alternate-reverse;
   }
-
-  /* Monochromatic TV Static Shift 2 (Pure White) */
   .glitch-title::after {
     left: -2px;
     text-shadow: 2px 0 #ffffff, -1px 0 #d4d4d4;
     clip-path: inset(0 0 100% 0);
     animation: tv-static-glitch-2 2.6s infinite linear alternate-reverse;
   }
-
-  /* Keyframe animations for old television set static slicing */
   @keyframes tv-static-glitch-1 {
-    0%, 80%, 100% {
-      clip-path: inset(0 0 100% 0);
-      transform: translate(0);
-      opacity: 0.9;
-    }
-    82% {
-      clip-path: inset(20% 0 50% 0);
-      transform: translate(-3px, 1px);
-      opacity: 0.75;
-    }
-    86% {
-      clip-path: inset(60% 0 15% 0);
-      transform: translate(3px, -1px);
-      opacity: 0.85;
-    }
-    90% {
-      clip-path: inset(10% 0 70% 0);
-      transform: translate(-2px, 2px);
-      opacity: 0.6;
-    }
-    95% {
-      clip-path: inset(75% 0 8% 0);
-      transform: translate(2px, -2px);
-      opacity: 0.9;
-    }
+    0%, 80%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); opacity: 0.9; }
+    82% { clip-path: inset(20% 0 50% 0); transform: translate(-3px, 1px); opacity: 0.75; }
+    86% { clip-path: inset(60% 0 15% 0); transform: translate(3px, -1px); opacity: 0.85; }
+    90% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 2px); opacity: 0.6; }
+    95% { clip-path: inset(75% 0 8% 0); transform: translate(2px, -2px); opacity: 0.9; }
   }
-
   @keyframes tv-static-glitch-2 {
-    0%, 75%, 100% {
-      clip-path: inset(0 0 100% 0);
-      transform: translate(0);
-      opacity: 0.9;
-    }
-    78% {
-      clip-path: inset(40% 0 35% 0);
-      transform: translate(4px, -1px);
-      opacity: 0.7;
-    }
-    83% {
-      clip-path: inset(12% 0 72% 0);
-      transform: translate(-3px, 1px);
-      opacity: 0.8;
-    }
-    88% {
-      clip-path: inset(68% 0 12% 0);
-      transform: translate(2px, -2px);
-      opacity: 0.65;
-    }
-    93% {
-      clip-path: inset(25% 0 60% 0);
-      transform: translate(-2px, 1px);
-      opacity: 0.85;
-    }
+    0%, 75%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); opacity: 0.9; }
+    78% { clip-path: inset(40% 0 35% 0); transform: translate(4px, -1px); opacity: 0.7; }
+    83% { clip-path: inset(12% 0 72% 0); transform: translate(-3px, 1px); opacity: 0.8; }
+    88% { clip-path: inset(68% 0 12% 0); transform: translate(2px, -2px); opacity: 0.65; }
+    93% { clip-path: inset(25% 0 60% 0); transform: translate(-2px, 1px); opacity: 0.85; }
   }
 
-  /* Initial state for scroll reveal items */
   .glitch-reveal-item {
     opacity: 0;
     transform: translateY(24px);
     will-change: opacity, transform, filter;
   }
-
-  /* Triggered state on scroll */
   .glitch-reveal-item.is-visible {
     animation: static-glitch-reveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-
-  /* Static Glitch-in Animation for Quotes */
   @keyframes static-glitch-reveal {
-    0% {
-      opacity: 0;
-      transform: translateY(24px) skewX(6deg);
-      filter: blur(4px) contrast(150%);
-    }
-    20% {
-      opacity: 0.4;
-      transform: translateY(16px) skewX(-4deg) scaleX(1.02);
-      filter: blur(2px) grayscale(100%);
-    }
-    40% {
-      opacity: 0.7;
-      transform: translateY(8px) skewX(2deg);
-      filter: blur(1px);
-    }
-    60% {
-      opacity: 0.9;
-      transform: translateY(2px) skewX(-1deg);
-      filter: blur(0px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0) skewX(0deg);
-      filter: blur(0);
-    }
+    0% { opacity: 0; transform: translateY(24px) skewX(6deg); filter: blur(4px) contrast(150%); }
+    20% { opacity: 0.4; transform: translateY(16px) skewX(-4deg) scaleX(1.02); filter: blur(2px) grayscale(100%); }
+    40% { opacity: 0.7; transform: translateY(8px) skewX(2deg); filter: blur(1px); }
+    60% { opacity: 0.9; transform: translateY(2px) skewX(-1deg); filter: blur(0px); }
+    100% { opacity: 1; transform: translateY(0) skewX(0deg); filter: blur(0); }
   }
-
-  /* Fade in for hero */
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
-  .animate-fade-in {
-    animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
+  .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 </style>

@@ -1,63 +1,400 @@
 ---
+// File: src/layouts/BaseLayout.astro
+
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import SEO from '../components/SEO.astro';
 
 interface Props {
   title?: string;
   description?: string;
   image?: string;
   canonicalURL?: URL | string;
+  type?: 'website' | 'article';
+  publishedTime?: string | Date;
+  modifiedTime?: string | Date;
+  author?: string;
+  noindex?: boolean;
+  enableAudioTransition?: boolean;
 }
 
 const { 
   title = "darlalovly", 
-  description = "A daily digital garden and field notes by Darla.", 
+  description = "A personal digital garden of wanderings, unexpected detours, and visual archives.", 
   image = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp",
-  canonicalURL 
+  canonicalURL,
+  type = 'website',
+  publishedTime,
+  modifiedTime,
+  author = 'Darla',
+  noindex = false,
+  enableAudioTransition = false,
 } = Astro.props;
 
 const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/darlalovly-logo.webp";
-const canonicalHref = canonicalURL ? canonicalURL.toString() : undefined;
+
+const navSections = [
+  {
+    label: 'Travel & Sights',
+    children: [
+      { label: 'Roadside History', href: '/category/roadside-history' },
+      { label: 'Museums & Art', href: '/category/museums-art' },
+      { label: 'City Guides', href: '/category/city-guides' },
+    ],
+  },
+  {
+    label: 'Food & Drink',
+    children: [
+      { label: 'Restaurant Reviews', href: '/category/restaurant-reviews' },
+      { label: 'Coffee & Cocktails', href: '/category/coffee-cocktails' },
+    ],
+  },
+  {
+    label: 'Recipes',
+    href: '/recipes',
+  },
+  {
+    label: 'Events',
+    href: '/category/events',
+  },
+  {
+    label: 'Musings',
+    href: '/category/musings',
+  },
+  {
+    label: 'Destinations',
+    children: [
+      { label: 'Colorado', href: '/destinations/colorado' },
+      { label: 'Louisiana', href: '/destinations/louisiana' },
+      { label: 'South Dakota', href: '/destinations/south-dakota' },
+      { label: 'East Coast', href: '/destinations/east-coast' },
+    ],
+  },
+];
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <SEO 
+      title={title}
+      description={description}
+      image={image}
+      canonicalURL={canonicalURL}
+      type={type}
+      publishedTime={publishedTime}
+      modifiedTime={modifiedTime}
+      author={author}
+      noindex={noindex}
+    />
+    <ClientRouter />
     <link rel="icon" type="image/webp" href={logoUrl} />
-    <title>{title}</title>
-    {description && <meta name="description" content={description} />}
-    {canonicalHref && <link rel="canonical" href={canonicalHref} />}
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
-    {description && <meta property="og:description" content={description} />}
-    {image && <meta property="og:image" content={image} />}
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content={title} />
-    {description && <meta property="twitter:description" content={description} />}
-    {image && <meta property="twitter:image" content={image} />}
   </head>
-  <body class="bg-neutral-950 text-neutral-100 antialiased min-h-screen flex flex-col">
-    <header class="w-full border-b border-neutral-800/60 py-4 bg-neutral-950">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <a href="/" class="hover:opacity-75 transition-opacity">
-          <img src={logoUrl} alt="darlalovly" class="h-10 sm:h-12 w-auto object-contain" />
+  <body 
+    data-audio-transitions={enableAudioTransition ? "true" : "false"}
+    class="selection:bg-white selection:text-neutral-900 bg-neutral-950 text-neutral-100 min-h-screen flex flex-col justify-between"
+  >
+    <!-- Fixed Analog Static Layer -->
+    <div class="fixed inset-0 pointer-events-none z-50 animated-noise-overlay" aria-hidden="true"></div>
+
+    <!-- Multi-Mode Analog & CRT Transition Overlay -->
+    <div id="crt-off-overlay" class="fixed inset-0 pointer-events-none z-[100] opacity-0 flex items-center justify-center overflow-hidden" aria-hidden="true">
+      <div class="crt-screen-flash absolute inset-0 bg-white opacity-0 pointer-events-none"></div>
+      <div class="crt-static-burst absolute inset-0 pointer-events-none"></div>
+      <div class="crt-collapse-line w-full pointer-events-none"></div>
+      <div class="degauss-warp-mesh absolute inset-0 pointer-events-none"></div>
+      <div class="tv-scanlines absolute inset-0 pointer-events-none"></div>
+    </div>
+
+    <!-- Master Global Navigation Header -->
+    <header class="w-full border-b border-neutral-800/80 bg-neutral-950 sticky top-0 z-40 backdrop-blur-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+        <a href="/" class="site-logo-link flex items-center hover:opacity-80 transition-opacity" aria-label="darlalovly home">
+          <img src={logoUrl} alt="darlalovly" class="site-logo h-9 sm:h-11 w-auto object-contain" />
         </a>
+
+        <button
+          id="menu-open-btn"
+          type="button"
+          aria-expanded="false"
+          aria-controls="site-menu-overlay"
+          class="text-xs font-mono uppercase tracking-[0.25em] text-neutral-300 hover:text-white transition-colors cursor-pointer select-none py-2 px-1"
+        >
+          Menu
+        </button>
       </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Global Fullscreen Categorized Navigation Overlay -->
+    <div
+      id="site-menu-overlay"
+      class="fixed inset-0 z-50 bg-neutral-950/95 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-between"
+      aria-hidden="true"
+    >
+      <div class="w-full border-b border-neutral-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+          <a href="/" class="site-logo-link flex items-center select-none" aria-label="darlalovly home">
+            <img src={logoUrl} alt="darlalovly" class="site-logo h-9 sm:h-11 w-auto object-contain" />
+          </a>
+
+          <button
+            id="menu-close-btn"
+            type="button"
+            aria-label="Close menu"
+            class="text-xs font-mono uppercase tracking-[0.25em] text-neutral-400 hover:text-white transition-colors cursor-pointer select-none py-2 px-1"
+          >
+            [ Close ]
+          </button>
+        </div>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto px-4 sm:px-6 py-12 max-w-6xl mx-auto w-full">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-12">
+          {navSections.map((section) => (
+            <div class="flex flex-col gap-4 border-l border-neutral-800 pl-4">
+              {section.href ? (
+                <a
+                  href={section.href}
+                  class="menu-nav-link text-base font-mono uppercase tracking-widest text-white hover:text-neutral-400 transition-colors"
+                >
+                  {section.label}
+                </a>
+              ) : (
+                <span class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-500">
+                  [ {section.label} ]
+                </span>
+              )}
+
+              {section.children && (
+                <ul class="flex flex-col gap-2.5">
+                  {section.children.map((child) => (
+                    <li>
+                      <a
+                        href={child.href}
+                        class="menu-nav-link text-sm font-mono uppercase tracking-wider text-neutral-300 hover:text-white transition-colors"
+                      >
+                        {child.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      <div class="border-t border-neutral-900 py-6 px-4 sm:px-6 text-center text-xs font-mono uppercase tracking-[0.2em] text-neutral-600">
+        <span>Navigation Index</span>
+      </div>
+    </div>
+
+    <!-- Main Content Slot -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col">
       <slot />
     </main>
 
+    <!-- Master Global Footer -->
+    <footer class="border-t border-neutral-800 bg-neutral-950 py-10 px-6 flex flex-col items-center justify-center">
+      <div class="max-w-6xl mx-auto flex items-center justify-center text-xs text-neutral-500 font-mono text-center">
+        <span>© {new Date().getFullYear()} darlalovly</span>
+      </div>
+    </footer>
+
     <script>
+      import { navigate } from 'astro:transitions/client';
+
+      class CRTTransitionAudio {
+        ctx: AudioContext | null = null;
+
+        init() {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+          }
+        }
+
+        createNoiseBuffer(duration: number) {
+          if (!this.ctx) return null;
+          const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+          return buffer;
+        }
+
+        playPowerOff() {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+
+          const buffer = this.createNoiseBuffer(0.45);
+          if (buffer) {
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseFilter = this.ctx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.setValueAtTime(1200, now);
+            noiseFilter.frequency.exponentialRampToValueAtTime(80, now + 0.4);
+
+            const noiseGain = this.ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.25, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(this.ctx.destination);
+            noise.start(now);
+            noise.stop(now + 0.45);
+          }
+
+          const osc = this.ctx.createOscillator();
+          const oscGain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+          oscGain.gain.setValueAtTime(0.2, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+          osc.connect(oscGain);
+          oscGain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        }
+
+        playDegaussWarp() {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+
+          const osc = this.ctx.createOscillator();
+          const oscGain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(60, now);
+          osc.frequency.linearRampToValueAtTime(180, now + 0.15);
+          osc.frequency.exponentialRampToValueAtTime(20, now + 0.4);
+
+          oscGain.gain.setValueAtTime(0.28, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+          osc.connect(oscGain);
+          oscGain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.42);
+        }
+
+        playBeamHum() {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+
+          const flyback = this.ctx.createOscillator();
+          const flybackGain = this.ctx.createGain();
+          flyback.type = 'sine';
+          flyback.frequency.setValueAtTime(14000, now);
+          flyback.frequency.exponentialRampToValueAtTime(120, now + 0.38);
+          flybackGain.gain.setValueAtTime(0.15, now);
+          flybackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+          flyback.connect(flybackGain);
+          flybackGain.connect(this.ctx.destination);
+          flyback.start(now);
+          flyback.stop(now + 0.4);
+        }
+      }
+
+      const audioEngine = new CRTTransitionAudio();
+
+      function setupGlobalEngine() {
+        const openBtn = document.getElementById('menu-open-btn');
+        const closeBtn = document.getElementById('menu-close-btn');
+        const overlay = document.getElementById('site-menu-overlay');
+        const links = document.querySelectorAll('.menu-nav-link');
+
+        const openMenu = () => {
+          if (!overlay || !openBtn) return;
+          overlay.classList.remove('opacity-0', 'pointer-events-none');
+          overlay.classList.add('opacity-100', 'pointer-events-auto');
+          openBtn.setAttribute('aria-expanded', 'true');
+          overlay.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        };
+
+        const closeMenu = () => {
+          if (!overlay || !openBtn) return;
+          overlay.classList.remove('opacity-100', 'pointer-events-auto');
+          overlay.classList.add('opacity-0', 'pointer-events-none');
+          openBtn.setAttribute('aria-expanded', 'false');
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        };
+
+        if (openBtn) openBtn.onclick = openMenu;
+        if (closeBtn) closeBtn.onclick = closeMenu;
+        links.forEach((link) => link.addEventListener('click', closeMenu));
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && overlay && !overlay.classList.contains('pointer-events-none')) {
+            closeMenu();
+          }
+        });
+
+        const isAudioActive = document.body.dataset.audioTransitions === 'true';
+        const crtOverlay = document.getElementById('crt-off-overlay');
+        if (crtOverlay) {
+          crtOverlay.className = 'fixed inset-0 pointer-events-none z-[100] opacity-0 flex items-center justify-center overflow-hidden';
+        }
+
+        const transitionLinks = document.querySelectorAll('a.post-transition-link, a[data-transition="true"]');
+        transitionLinks.forEach((link) => {
+          link.addEventListener('click', (e) => {
+            const targetHref = link.getAttribute('href');
+            if (!targetHref || targetHref.startsWith('#')) return;
+
+            e.preventDefault();
+
+            if (isAudioActive) {
+              const audioVariants = ['power-off', 'degauss', 'beam-hum'];
+              const chosen = audioVariants[Math.floor(Math.random() * audioVariants.length)];
+              try {
+                if (chosen === 'power-off') audioEngine.playPowerOff();
+                else if (chosen === 'degauss') audioEngine.playDegaussWarp();
+                else audioEngine.playBeamHum();
+              } catch {}
+
+              if (crtOverlay) {
+                crtOverlay.className = `fixed inset-0 pointer-events-none z-[100] flex items-center justify-center overflow-hidden is-shutting-down mode-crt-${chosen}`;
+              }
+            } else {
+              const silentModes = [
+                'mode-scanline-sweep',
+                'mode-static-burst-silent',
+                'mode-horizontal-shutter',
+                'mode-vertical-curtain',
+                'mode-lens-defocus',
+                'mode-analog-fade'
+              ];
+              const chosenMode = silentModes[Math.floor(Math.random() * silentModes.length)];
+              if (crtOverlay) {
+                crtOverlay.className = `fixed inset-0 pointer-events-none z-[100] flex items-center justify-center overflow-hidden is-shutting-down ${chosenMode}`;
+              }
+            }
+
+            setTimeout(() => {
+              navigate(targetHref);
+            }, 420);
+          });
+        });
+      }
+
+      document.addEventListener('astro:page-load', setupGlobalEngine);
+
       document.addEventListener('contextmenu', async (e: MouseEvent) => {
         const target = e.target as HTMLElement | null;
-        if (target && target.tagName === 'IMG') {
+        if (target && target.tagName === 'IMG' && !target.classList.contains('site-logo')) {
           e.preventDefault();
           const img = target as HTMLImageElement;
           
@@ -101,3 +438,103 @@ const canonicalHref = canonicalURL ? canonicalURL.toString() : undefined;
     </script>
   </body>
 </html>
+
+<style>
+  .animated-noise-overlay {
+    background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 1px, transparent 1px), radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 1px, transparent 1px);
+    background-size: 6px 6px, 8px 8px;
+    opacity: 0.18;
+    mix-blend-mode: screen;
+    animation: grain-motion 0.25s steps(4) infinite;
+  }
+  @keyframes grain-motion {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(-3px, 2px); }
+    50% { transform: translate(3px, -1px); }
+    75% { transform: translate(-2px, -3px); }
+    100% { transform: translate(2px, 1px); }
+  }
+
+  #crt-off-overlay.is-shutting-down {
+    pointer-events: auto !important;
+    opacity: 1;
+    animation: crt-fade-black 0.46s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+  .is-shutting-down .tv-scanlines {
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.75) 0px, rgba(0, 0, 0, 0.75) 1px, transparent 1px, transparent 3px);
+  }
+
+  /* Audio-backed index transitions */
+  .mode-crt-power-off .crt-collapse-line {
+    height: 100%;
+    animation: crt-beam-collapse 0.44s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    box-shadow: 0 0 35px rgba(255, 255, 255, 1), 0 0 70px rgba(255, 255, 255, 0.9);
+  }
+  .mode-crt-degauss .degauss-warp-mesh {
+    animation: degauss-warp 0.42s ease-out forwards;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.85) 100%);
+  }
+  .mode-crt-beam-hum .crt-screen-flash {
+    animation: flash-beam 0.4s ease-out forwards;
+  }
+
+  /* 6 Silent transitions for subpages & posts */
+  .mode-scanline-sweep .tv-scanlines {
+    animation: scanline-sweep 0.4s ease-out forwards;
+  }
+  .mode-static-burst-silent .crt-static-burst {
+    background-image: repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 1px, transparent 1px, transparent 100%);
+    background-size: 4px 4px;
+    animation: crt-static-fade 0.38s ease-out forwards;
+  }
+  .mode-horizontal-shutter {
+    animation: shutter-horiz 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .mode-vertical-curtain {
+    animation: curtain-vert 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .mode-lens-defocus {
+    backdrop-filter: blur(12px) contrast(140%);
+    animation: crt-fade-black 0.42s ease-out forwards;
+  }
+  .mode-analog-fade {
+    animation: crt-fade-black 0.38s ease-in-out forwards;
+  }
+
+  @keyframes crt-beam-collapse {
+    0% { height: 100%; transform: scale(1, 1); background: transparent; }
+    25% { height: 3px; transform: scale(1, 1); background: #ffffff; opacity: 1; }
+    70% { height: 2px; transform: scale(0.04, 0.85); background: #ffffff; opacity: 1; }
+    100% { height: 0px; transform: scale(0, 0); background: #ffffff; opacity: 0; }
+  }
+  @keyframes degauss-warp {
+    0% { transform: scale(1) rotate(0deg); opacity: 0; }
+    40% { transform: scale(1.05) rotate(1deg); opacity: 0.8; }
+    100% { transform: scale(0.98) rotate(0deg); opacity: 1; }
+  }
+  @keyframes flash-beam {
+    0% { opacity: 0; }
+    30% { opacity: 0.8; }
+    100% { opacity: 0; }
+  }
+  @keyframes scanline-sweep {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  @keyframes shutter-horiz {
+    0% { clip-path: inset(0 0 0 0); }
+    100% { clip-path: inset(0 50% 0 50%); }
+  }
+  @keyframes curtain-vert {
+    0% { clip-path: inset(0 0 0 0); }
+    100% { clip-path: inset(50% 0 50% 0); }
+  }
+  @keyframes crt-static-fade {
+    0% { opacity: 0.8; }
+    100% { opacity: 0; }
+  }
+  @keyframes crt-fade-black {
+    0% { background-color: rgba(0, 0, 0, 0); }
+    100% { background-color: rgba(0, 0, 0, 1); }
+  }
+</style>

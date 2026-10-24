@@ -1,5 +1,7 @@
 darlalovly/
 ├── .wrangler/
+│   ├── deploy/
+│   │   └── config.json
 │   └── state/
 │       └── v3/
 │           ├── cache/
@@ -220,53 +222,84 @@ darlalovly/
 │   │       │   ├── 2026-10-06-coffee-spot-header.webp
 │   │       │   ├── 2026-10-06-coffee-spot-nature-sounds.mp4
 │   │       │   └── 2026-10-06-coffee-spot.webp
-│   │       └── 2026-10-07-st-aloysius/
-│   │           └── 2026-10-07-st-aloysius.webp
+│   │       ├── 2026-10-07-st-aloysius/
+│   │       │   └── 2026-10-07-st-aloysius.webp
+│   │       └── 2026-10-15-red-river-revel/
+│   │           ├── red-river-revel-bte1.webp
+│   │           ├── red-river-revel-bte2.webp
+│   │           ├── red-river-revel-ccbo.webp
+│   │           ├── red-river-revel-header.webp
+│   │           ├── red-river-revel-jw1.webp
+│   │           ├── red-river-revel-jw2.webp
+│   │           └── red-river-revel-vendors.webp
 │   └── favicon.ico
+├── scripts/
+│   ├── reorganize-r2-media.ts
+│   ├── verify-image-urls.ts
+│   └── verify-r2-media.ts
 ├── src/
 │   ├── assets/
 │   │   ├── astro.svg
 │   │   └── background.svg
 │   ├── components/
+│   │   ├── Header.astro
+│   │   ├── SEO.astro
 │   │   └── Welcome.astro
 │   ├── content/
-│   │   └── field_notes/
-│   │       ├── 2026-03-13-first-day-in-philly.md
-│   │       ├── 2026-03-13-philly-chinatown.md
-│   │       ├── 2026-03-14-philly-day-2.md
-│   │       ├── 2026-05-22-nyc-grays-papaya-statue-of-liberty.md
-│   │       ├── 2026-06-13-the-speakeasy.md
-│   │       ├── 2026-07-28-infinity-comics.md
-│   │       ├── 2026-08-22-monster-day.md
-│   │       ├── 2026-08-26-nebraska-moon.md
-│   │       ├── 2026-08-31-art-alley.md
-│   │       ├── 2026-09-04-mt-rushmore.md
-│   │       ├── 2026-09-04-rapid-city-library.md
-│   │       ├── 2026-09-05-rc-stockgrowers.md
-│   │       ├── 2026-09-11-sundance-kid.md
-│   │       ├── 2026-09-12-turkish-cafe-co.md
-│   │       ├── 2026-09-18-musical-legacy.md
-│   │       ├── 2026-09-19-highland-jazz-and-blues-festival.md
-│   │       ├── 2026-09-21-bonnie-and-clyde-ambush-museum.md
-│   │       ├── 2026-09-25-chickofish.md
-│   │       ├── 2026-10-01-monumental-memories.md
-│   │       ├── 2026-10-02-crazy-horse-memorial.md
-│   │       ├── 2026-10-02-mount-rushmore-up-close.md
-│   │       ├── 2026-10-04-meekers-southwest-benedict.md
-│   │       ├── 2026-10-06-coffee-spot.md
-│   │       └── 2026-10-07-st-aloysius.md
+│   │   ├── posts/
+│   │   │   ├── 2026-02-04-cilantro-lime-chicken.md
+│   │   │   ├── 2026-02-04-murals-bikes.md
+│   │   │   ├── 2026-03-13-first-day-in-philly.md
+│   │   │   ├── 2026-03-13-philly-chinatown.md
+│   │   │   ├── 2026-03-14-philly-day-2.md
+│   │   │   ├── 2026-05-22-nyc-grays-papaya-statue-of-liberty.md
+│   │   │   ├── 2026-06-13-the-speakeasy.md
+│   │   │   ├── 2026-07-28-infinity-comics.md
+│   │   │   ├── 2026-08-22-monster-day.md
+│   │   │   ├── 2026-08-26-nebraska-moon.md
+│   │   │   ├── 2026-08-31-art-alley.md
+│   │   │   ├── 2026-09-04-mt-rushmore.md
+│   │   │   ├── 2026-09-04-rapid-city-library.md
+│   │   │   ├── 2026-09-05-rc-stockgrowers.md
+│   │   │   ├── 2026-09-11-sundance-kid.md
+│   │   │   ├── 2026-09-12-turkish-cafe-co.md
+│   │   │   ├── 2026-09-18-musical-legacy.md
+│   │   │   ├── 2026-09-19-highland-jazz-and-blues-festival.md
+│   │   │   ├── 2026-09-21-bonnie-and-clyde-ambush-museum.md
+│   │   │   ├── 2026-09-25-chickofish.md
+│   │   │   ├── 2026-10-01-monumental-memories.md
+│   │   │   ├── 2026-10-02-crazy-horse-memorial.md
+│   │   │   ├── 2026-10-02-mount-rushmore-up-close.md
+│   │   │   ├── 2026-10-04-meekers-southwest-benedict.md
+│   │   │   ├── 2026-10-06-coffee-spot.md
+│   │   │   ├── 2026-10-07-st-aloysius.md
+│   │   │   └── 2026-10-15-red-river-revel.md
+│   │   └── recipes/
+│   │       ├── bananas-foster-flan-cake.md
+│   │       ├── bbq-spice-rub.md
+│   │       ├── blueberry-croissant-bread-pudding-with-amaretto-cream-sauce.md
+│   │       ├── chocolate-dr-pepper-cake-recipe.md
+│   │       ├── homemade-buttermilk-biscuit-recipe-a-southern-classic.md
+│   │       ├── italian-shrimp-recipe.md
+│   │       ├── mango-mojito.md
+│   │       ├── salted-caramel-walnut-pull-apart-bread-recipe.md
+│   │       └── zucchini-bread-recipe.md
 │   ├── layouts/
 │   │   ├── BaseLayout.astro
 │   │   ├── FieldNoteLayout.astro
 │   │   └── Layout.astro
 │   ├── pages/
 │   │   ├── posts/
-│   │   │   └── [...slug].astro
+│   │   │   └── [slug].astro
+│   │   ├── recipes/
+│   │   │   ├── [slug].astro
+│   │   │   └── index.astro
 │   │   └── index.astro
 │   ├── styles/
 │   │   └── global.css
 │   ├── content.config.ts
 │   └── middleware.ts
+├── .env
 ├── .gitignore
 ├── AGENTS.md
 ├── astro.config.mjs

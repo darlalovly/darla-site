@@ -1,0 +1,108 @@
+---
+// File: src/pages/recipes/index.astro
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+const allRecipes: CollectionEntry<'recipes'>[] = await getCollection('recipes');
+
+const publishedRecipes = allRecipes
+  .filter((r) => !r.data.isDraft && !r.data.draft)
+  .sort((a, b) => {
+    const dateA = a.data.date ? new Date(a.data.date).valueOf() : 0;
+    const dateB = b.data.date ? new Date(b.data.date).valueOf() : 0;
+    return dateB - dateA;
+  });
+
+const archiveTitle = "Recipes";
+const archiveNote = "A curated index of recipes and kitchen notes that make my house smell like home.";
+const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
+
+const resolveImageUrl = (imgKey?: string): string | undefined => {
+  if (!imgKey) return undefined;
+  if (imgKey.startsWith('http://') || imgKey.startsWith('https://') || imgKey.startsWith('/')) {
+    return imgKey;
+  }
+  const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
+  return `${cleanBase}${imgKey.replace(/^\/+/, '')}`;
+};
+
+const formatDate = (date: Date | string | undefined) => {
+  if (!date) return "Date Pending";
+  return new Date(date).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+---
+
+<BaseLayout 
+  title="Recipes | darlalovly"
+  description={archiveNote}
+>
+  <div class="w-full max-w-4xl mx-auto pb-16">
+    <header class="mb-14 border-b border-neutral-800 pb-10 flex flex-col items-start gap-4">
+      <div class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400">
+        [ {publishedRecipes.length} {publishedRecipes.length === 1 ? 'recipe' : 'recipes'} ]
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-mono uppercase tracking-widest text-white m-0">
+        {archiveTitle}
+      </h1>
+      <p class="text-sm sm:text-base text-neutral-300 font-mono tracking-wide max-w-2xl leading-relaxed m-0">
+        {archiveNote}
+      </p>
+    </header>
+
+    <div class="flex flex-col gap-10">
+      {publishedRecipes.map((recipe) => {
+        const recipeSlug = recipe.id ? recipe.id.replace(/\.(md|mdx)$/, '') : '';
+        const thumbUrl = resolveImageUrl(recipe.data.thumbnailKey || (recipe.data.gallery && recipe.data.gallery[0]));
+        
+        return (
+          <article class="border border-neutral-800/80 bg-neutral-900/40 p-6 sm:p-8 transition-colors hover:border-neutral-600">
+            <a href={`/recipes/${recipeSlug}`} class="group flex flex-col md:flex-row gap-6 sm:gap-8 items-start">
+              {thumbUrl && (
+                <div class="w-full md:w-64 flex-shrink-0 overflow-hidden bg-neutral-900 rounded-sm">
+                  <img 
+                    src={thumbUrl} 
+                    alt={recipe.data.title}
+                    loading="lazy"
+                    class="w-full h-48 md:h-44 object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+              )}
+
+              <div class="flex flex-col flex-1 gap-3">
+                <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">
+                  Published: {formatDate(recipe.data.date)}
+                </div>
+
+                <h2 class="text-xl sm:text-2xl font-mono uppercase tracking-wide text-white group-hover:text-neutral-300 transition-colors m-0">
+                  {recipe.data.recipeName || recipe.data.title}
+                </h2>
+
+                {recipe.data.recipeExcerpt && (
+                  <p class="text-sm text-neutral-300 line-clamp-3 leading-relaxed m-0">
+                    {recipe.data.recipeExcerpt}
+                  </p>
+                )}
+
+                <div class="pt-2 text-xs font-mono uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors">
+                  View Recipe &rarr;
+                </div>
+              </div>
+            </a>
+          </article>
+        );
+      })}
+
+      {publishedRecipes.length === 0 && (
+        <div class="py-16 text-center text-sm font-mono uppercase tracking-widest text-neutral-500">
+          [ No recipes published yet ]
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

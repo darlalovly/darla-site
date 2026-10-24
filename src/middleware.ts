@@ -1,25 +1,27 @@
+// File: src/middleware.ts
 import { defineMiddleware } from "astro:middleware";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const url = new URL(context.request.url);
+  const { pathname, hostname } = context.url;
 
-  if (
-    url.pathname.startsWith("/_astro/") ||
-    url.pathname.startsWith("/_image") ||
-    url.pathname.startsWith("/images/") ||
-    url.pathname.startsWith("/icons/") ||
-    url.pathname.startsWith("/favicon") ||
-    /\.(webp|jpg|jpeg|png|gif|svg|ico|mp4|css|js|woff|woff2|ttf|eot)$/i.test(url.pathname)
+   if (
+    pathname.startsWith("/_astro/") ||
+    pathname.startsWith("/_image") ||
+    pathname.startsWith("/images/") ||
+    pathname.startsWith("/icons/") ||
+    pathname.startsWith("/favicon") ||
+    /\.(webp|jpg|jpeg|png|gif|svg|ico|mp4|css|js|woff|woff2|ttf|eot)$/i.test(pathname)
   ) {
-    return await next();
+    return next();
   }
 
   if (
-    url.hostname === "localhost" ||
-    url.hostname === "127.0.0.1" ||
-    url.hostname === "::1"
+    import.meta.env.DEV ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
   ) {
-    return await next();
+    return next();
   }
 
   const previewUsersEnv =
@@ -44,10 +46,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
         const decoded = atob(encoded);
         const [username, password] = decoded.split(":");
         if (username && allowedUsers[username] === password) {
-          return await next();
+          return next();
         }
-      } catch {
-      }
+      } catch {}
     }
   }
 

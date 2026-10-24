@@ -1,0 +1,296 @@
+---
+// File: src/pages/recipes/[slug].astro
+
+export const prerender = true;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, getEntry, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry?: CollectionEntry<'recipes'>;
+}
+
+export async function getStaticPaths() {
+  const recipes = await getCollection('recipes');
+  return recipes.map((entry) => ({
+    params: { slug: entry.id.replace(/\.(md|mdx)$/, '') },
+    props: { entry },
+  }));
+}
+
+const { slug } = Astro.params;
+let { entry } = Astro.props;
+
+if (!entry && slug) {
+  entry = (await getEntry('recipes', slug)) ?? (await getEntry('recipes', `${slug}.md`));
+}
+
+if (!entry) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
+const { Content } = await render(entry);
+
+const allRecipes = await getCollection('recipes');
+const publishedRecipes = allRecipes
+  .filter((r) => !r.data.isDraft && !r.data.draft)
+  .sort((a, b) => (b.data.date?.valueOf() || 0) - (a.data.date?.valueOf() || 0));
+
+const currentId = entry.id.replace(/\.(md|mdx)$/, '');
+const currentIndex = publishedRecipes.findIndex((r) => r.id.replace(/\.(md|mdx)$/, '') === currentId);
+const prevRecipe = publishedRecipes[currentIndex + 1];
+const nextRecipe = publishedRecipes[currentIndex - 1];
+
+const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
+
+const resolveImageUrl = (imgKey?: string): string | undefined => {
+  if (!imgKey) return undefined;
+  if (imgKey.startsWith('http://') || imgKey.startsWith('https://') || imgKey.startsWith('/')) {
+    return imgKey;
+  }
+  const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
+  return `${cleanBase}${imgKey.replace(/^\/+/, '')}`;
+};
+
+const featureImageKey = entry.data.thumbnailKey || (entry.data.gallery && entry.data.gallery[0]);
+const resolvedFeatureImage = resolveImageUrl(featureImageKey);
+
+const cleanText = (str: string | undefined) => {
+  if (!str) return "";
+  return str
+    .replace(/<\/?[^>]+(>|$)/g, "")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^\d+\.\s+/, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+};
+
+const displayDate = entry.data.date
+  ? new Date(entry.data.date).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  : "";
+
+const prevThumb = prevRecipe ? resolveImageUrl(prevRecipe.data.thumbnailKey || (prevRecipe.data.gallery && prevRecipe.data.gallery[0])) : undefined;
+const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (nextRecipe.data.gallery && nextRecipe.data.gallery[0])) : undefined;
+---
+
+<BaseLayout 
+  title={`${entry.data.recipeName || entry.data.title} | Recipes`}
+  description={entry.data.recipeExcerpt || entry.data.seoDescription}
+  image={resolvedFeatureImage}
+  type="article"
+  publishedTime={entry.data.date}
+>
+  <article class="w-full max-w-4xl mx-auto flex flex-col gap-12 pb-16">
+    
+    <!-- Recipe Header -->
+    <header class="flex flex-col gap-6 border-b border-neutral-800 pb-10">
+      <nav class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400 flex items-center gap-2">
+        <a href="/" class="hover:text-white transition-colors">Home</a>
+        <span>/</span>
+        <a href="/recipes" class="hover:text-white transition-colors">Recipes</a>
+        <span>/</span>
+        <span class="text-neutral-200">{entry.data.recipeName || entry.data.title}</span>
+      </nav>
+
+      <div class="flex flex-col gap-3">
+        <div class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400">[ RECIPE ]</div>
+        <h1 class="text-3xl sm:text-5xl font-mono uppercase tracking-wide text-white leading-tight m-0">
+          {entry.data.title}
+        </h1>
+        {displayDate && (
+          <p class="text-xs font-mono uppercase tracking-widest text-neutral-400 m-0">
+            Published on {displayDate}
+          </p>
+        )}
+      </div>
+
+      {entry.data.recipeExcerpt && (
+        <p class="text-base sm:text-lg text-neutral-300 leading-relaxed max-w-2xl font-sans m-0" set:html={cleanText(entry.data.recipeExcerpt)} />
+      )}
+
+      {resolvedFeatureImage && (
+        <div class="w-full overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800/80 mt-2">
+          <img
+            src={resolvedFeatureImage}
+            alt={entry.data.title}
+            class="w-full h-auto max-h-[540px] object-cover rounded-xl block"
+          />
+        </div>
+      )}
+
+      <div class="pt-2">
+        <a
+          href="#recipe-card"
+          class="inline-block border border-neutral-700 rounded-sm px-5 py-2.5 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white hover:border-white transition-colors"
+        >
+          Jump to Recipe &darr;
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Prose Body Content -->
+    <div class="prose prose-invert max-w-none text-neutral-200 font-sans leading-relaxed">
+      <Content />
+    </div>
+
+    <!-- Structured Recipe Card -->
+    <section id="recipe-card" class="border border-neutral-800 rounded-xl bg-neutral-900/50 p-6 sm:p-10 flex flex-col gap-8">
+      <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-800 pb-6">
+        <div class="flex flex-col gap-1">
+          <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ RECIPE CARD ]</div>
+          <h2 class="text-2xl sm:text-3xl font-mono uppercase tracking-wide text-white m-0">
+            {entry.data.recipeName || entry.data.title}
+          </h2>
+        </div>
+        <button
+          onclick="window.print()"
+          class="cursor-pointer border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white hover:border-white transition-colors rounded-sm"
+        >
+          Print
+        </button>
+      </header>
+
+      <!-- Meta Timing Information -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs font-mono uppercase tracking-wider text-neutral-300 border-b border-neutral-800 pb-6">
+        {entry.data.prepTime && <div><span class="text-neutral-500">PREP:</span> {entry.data.prepTime}</div>}
+        {entry.data.cookTime && <div><span class="text-neutral-500">COOK:</span> {entry.data.cookTime}</div>}
+        {entry.data.servings && <div><span class="text-neutral-500">YIELD:</span> {entry.data.servings} Servings</div>}
+      </div>
+
+      <!-- Ingredients & Instructions Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div class="flex flex-col gap-4">
+          <h3 class="text-lg font-mono uppercase tracking-widest text-white border-b border-neutral-800 pb-2 m-0">
+            Ingredients
+          </h3>
+          <ul class="flex flex-col gap-2.5 text-sm text-neutral-300 font-sans p-0 list-none">
+            {entry.data.recipeIngredients?.split('\n').filter((l) => l.trim()).map((item) => (
+              <li class={item.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(item)} />
+            ))}
+          </ul>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <h3 class="text-lg font-mono uppercase tracking-widest text-white border-b border-neutral-800 pb-2 m-0">
+            Instructions
+          </h3>
+          <ol class="flex flex-col gap-4 text-sm text-neutral-300 font-sans list-decimal list-inside p-0">
+            {entry.data.recipeInstructions?.split('\n').filter((l) => l.trim()).map((step) => (
+              <li class="leading-relaxed" set:html={cleanText(step)} />
+            ))}
+          </ol>
+        </div>
+      </div>
+
+      {entry.data.recipeNotes && (
+        <div class="mt-4 border-t border-neutral-800 pt-6 flex flex-col gap-3">
+          <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ KITCHEN NOTES ]</div>
+          <ul class="flex flex-col gap-2 text-sm text-neutral-300 font-sans p-0 list-none">
+            {entry.data.recipeNotes.split('\n').filter((l) => l.trim() !== '').map((note) => (
+              <li class={note.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(note)} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+
+    <!-- Mosaic Gallery Section -->
+    {entry.data.gallery && entry.data.gallery.length > 0 && (
+      <section class="flex flex-col gap-6 border-t border-neutral-800 pt-10">
+        <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ GALLERY ]</div>
+        <div class="columns-1 sm:columns-2 md:columns-3 gap-5 [column-fill:_balance]">
+          {entry.data.gallery.map((img) => {
+            const galleryUrl = resolveImageUrl(img);
+            return (
+              <figure class="mb-5 break-inside-avoid overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800/80 group">
+                <img
+                  src={galleryUrl}
+                  alt={`${entry.data.title} photograph`}
+                  loading="lazy"
+                  class="w-full h-auto object-contain rounded-xl block transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                />
+              </figure>
+            );
+          })}
+        </div>
+      </section>
+    )}
+
+    <!-- Previous / Next Minimal Arrow Navigation -->
+    <nav class="relative border-t border-b border-neutral-800/80 py-12 my-6 flex flex-col sm:flex-row items-center justify-between gap-8 select-none" aria-label="Recipe navigation">
+      {prevRecipe ? (
+        <div class="relative group flex items-center w-full sm:w-1/2">
+          {prevThumb && (
+            <div class="absolute bottom-full mb-4 left-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+              <div class="relative overflow-hidden rounded-xl crt-tv-frame w-48 h-32 bg-neutral-900 border border-neutral-700/60 shadow-2xl">
+                <div class="absolute inset-0 pointer-events-none z-20 crt-screen-vignette"></div>
+                <div class="absolute inset-0 pointer-events-none z-10 crt-scanlines"></div>
+                <img src={prevThumb} alt={prevRecipe.data.title} class="w-full h-full object-cover rounded-xl" />
+              </div>
+            </div>
+          )}
+          <a 
+            href={`/recipes/${prevRecipe.id.replace(/\.(md|mdx)$/, '')}`}
+            class="post-transition-link flex items-center gap-4 text-left group"
+          >
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white flex-shrink-0 transition-transform duration-300 group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span class="text-xs sm:text-sm font-mono uppercase tracking-[0.14em] text-neutral-300 group-hover:text-white transition-colors leading-snug">
+              {prevRecipe.data.recipeName || prevRecipe.data.title}
+            </span>
+          </a>
+        </div>
+      ) : <div class="w-full sm:w-1/2" />}
+
+      {nextRecipe ? (
+        <div class="relative group flex items-center justify-end w-full sm:w-1/2 ml-auto">
+          {nextThumb && (
+            <div class="absolute bottom-full mb-4 right-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+              <div class="relative overflow-hidden rounded-xl crt-tv-frame w-48 h-32 bg-neutral-900 border border-neutral-700/60 shadow-2xl">
+                <div class="absolute inset-0 pointer-events-none z-20 crt-screen-vignette"></div>
+                <div class="absolute inset-0 pointer-events-none z-10 crt-scanlines"></div>
+                <img src={nextThumb} alt={nextRecipe.data.title} class="w-full h-full object-cover rounded-xl" />
+              </div>
+            </div>
+          )}
+          <a 
+            href={`/recipes/${nextRecipe.id.replace(/\.(md|mdx)$/, '')}`}
+            class="post-transition-link flex items-center justify-end gap-4 text-right group"
+          >
+            <span class="text-xs sm:text-sm font-mono uppercase tracking-[0.14em] text-neutral-300 group-hover:text-white transition-colors leading-snug">
+              {nextRecipe.data.recipeName || nextRecipe.data.title}
+            </span>
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white flex-shrink-0 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      ) : <div class="w-full sm:w-1/2" />}
+    </nav>
+
+  </article>
+</BaseLayout>
+
+<style>
+  .crt-screen-vignette {
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.85), inset 0 0 6px rgba(0, 0, 0, 0.95);
+  }
+
+  .crt-scanlines {
+    background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%, 
+      rgba(0, 0, 0, 0.45) 50%
+    );
+    background-size: 100% 4px;
+  }
+</style>

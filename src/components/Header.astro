@@ -1,0 +1,197 @@
+---
+// File: src/components/Header.astro
+
+interface SubItem {
+  label: string;
+  href: string;
+}
+
+interface NavSection {
+  label: string;
+  href?: string;
+  children?: SubItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    label: 'Travel & Sights',
+    children: [
+      { label: 'Roadside History', href: '/category/roadside-history' },
+      { label: 'Museums & Art', href: '/category/museums-art' },
+      { label: 'City Guides', href: '/category/city-guides' },
+    ],
+  },
+  {
+    label: 'Food & Drink',
+    children: [
+      { label: 'Restaurant Reviews', href: '/category/restaurant-reviews' },
+      { label: 'Coffee & Cocktails', href: '/category/coffee-cocktails' },
+    ],
+  },
+  {
+    label: 'Recipes',
+    href: '/recipes',
+  },
+  {
+    label: 'Events',
+    href: '/category/events',
+  },
+  {
+    label: 'Musings',
+    href: '/category/musings',
+  },
+  {
+    label: 'Destinations',
+    children: [
+      { label: 'Colorado', href: '/destinations/colorado' },
+      { label: 'Louisiana', href: '/destinations/louisiana' },
+      { label: 'South Dakota', href: '/destinations/south-dakota' },
+      { label: 'East Coast', href: '/destinations/east-coast' },
+    ],
+  },
+];
+---
+
+<!-- Top Navigation Bar: Fleur-de-lis Logo (Left) and Menu Trigger (Right) -->
+<header class="w-full absolute top-0 left-0 right-0 z-40">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-20 sm:h-24 flex items-center justify-between">
+    <a href="/" class="site-logo-link flex items-center select-none" aria-label="darlalovly home">
+      <img
+        src="/images/logo.png"
+        alt="darlalovly fleur-de-lis logo"
+        class="site-logo h-12 sm:h-14 w-auto object-contain transition-opacity duration-300 hover:opacity-80"
+      />
+    </a>
+
+    <button
+      id="menu-open-btn"
+      type="button"
+      aria-expanded="false"
+      aria-controls="site-menu-overlay"
+      class="text-xs font-mono uppercase tracking-[0.25em] text-neutral-300 hover:text-white transition-colors cursor-pointer select-none py-2 px-1"
+    >
+      Menu
+    </button>
+  </div>
+</header>
+
+<!-- Fullscreen Categorized Navigation Overlay -->
+<div
+  id="site-menu-overlay"
+  class="fixed inset-0 z-50 bg-neutral-950/95 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-between"
+  aria-hidden="true"
+>
+  <div class="w-full border-b border-neutral-900">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-20 sm:h-24 flex items-center justify-between">
+      <a href="/" class="site-logo-link flex items-center select-none" aria-label="darlalovly home">
+        <img
+          src="/images/logo.png"
+          alt="darlalovly fleur-de-lis logo"
+          class="site-logo h-12 sm:h-14 w-auto object-contain transition-opacity duration-300 hover:opacity-80"
+        />
+      </a>
+
+      <button
+        id="menu-close-btn"
+        type="button"
+        aria-label="Close menu"
+        class="text-xs font-mono uppercase tracking-[0.25em] text-neutral-400 hover:text-white transition-colors cursor-pointer select-none py-2 px-1"
+      >
+        [ Close ]
+      </button>
+    </div>
+  </div>
+
+  <nav class="flex-1 overflow-y-auto px-4 sm:px-6 py-12 max-w-6xl mx-auto w-full">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-12">
+      {navSections.map((section) => (
+        <div class="flex flex-col gap-4 border-l border-neutral-800 pl-4">
+          {section.href ? (
+            <a
+              href={section.href}
+              class="menu-nav-link text-base font-mono uppercase tracking-widest text-white hover:text-neutral-400 transition-colors"
+            >
+              {section.label}
+            </a>
+          ) : (
+            <span class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-500">
+              [ {section.label} ]
+            </span>
+          )}
+
+          {section.children && (
+            <ul class="flex flex-col gap-2.5">
+              {section.children.map((child) => (
+                <li>
+                  <a
+                    href={child.href}
+                    class="menu-nav-link text-sm font-mono uppercase tracking-wider text-neutral-300 hover:text-white transition-colors"
+                  >
+                    {child.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+  </nav>
+
+  <div class="border-t border-neutral-900 py-6 px-4 sm:px-6 text-center text-xs font-mono uppercase tracking-[0.2em] text-neutral-600">
+    <span>Navigation Index</span>
+  </div>
+</div>
+
+<script>
+  function setupMenuOverlay() {
+    const openBtn = document.getElementById('menu-open-btn');
+    const closeBtn = document.getElementById('menu-close-btn');
+    const overlay = document.getElementById('site-menu-overlay');
+    const links = document.querySelectorAll('.menu-nav-link');
+
+    document.querySelectorAll<HTMLImageElement>('img.site-logo').forEach((img) => {
+      img.onerror = () => {
+        const fallbacks = ['/images/logo.svg', '/images/logo.webp', '/logo.png', '/favicon.svg'];
+        const currentStep = parseInt(img.dataset.step || '0', 10);
+        if (currentStep < fallbacks.length) {
+          img.dataset.step = String(currentStep + 1);
+          img.src = fallbacks[currentStep];
+        }
+      };
+    });
+
+    if (!openBtn || !closeBtn || !overlay) return;
+
+    const openMenu = () => {
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+      overlay.classList.add('opacity-100', 'pointer-events-auto');
+      openBtn.setAttribute('aria-expanded', 'true');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeMenu = () => {
+      overlay.classList.remove('opacity-100', 'pointer-events-auto');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
+      openBtn.setAttribute('aria-expanded', 'false');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    };
+
+    openBtn.onclick = openMenu;
+    closeBtn.onclick = closeMenu;
+
+    links.forEach((link) => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.classList.contains('pointer-events-none')) {
+        closeMenu();
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupMenuOverlay);
+</script>
