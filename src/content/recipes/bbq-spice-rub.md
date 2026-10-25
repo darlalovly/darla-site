@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/bbq-spice-rub.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,7 +13,7 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-bbq-spice-rub-hero.webp"
+thumbnailKey: "images/recipes/2026-01-19-bbq-spice-rub-recipe/recipe-bbq-spice-rub-hero.webp"
 gallery: []
 
 # ==========================================
@@ -73,20 +75,18 @@ seoFocusKeyword: "BBQ spice rub"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">A Go-To Blend That Never Lets Me Down ❤️</h2>
+## A Go-To Blend That Never Lets Me Down ❤️
 
-<p>I recently shared a post called <a href="/when-recipes-disappear"><strong>When Recipes Disappear</strong></a> about the frustration of losing digital bookmarks and broken links. This BBQ Spice Rub is exactly the reason I started keeping a physical recipe organizer back in 2009. I don't remember exactly where I found the original formula—likely Recipezaar or an old forum—but I knew after the first time I made it that I had better write it down before it vanished like so many others.</p>
+I recently shared a post called [**When Recipes Disappear**](/when-recipes-disappear) about the frustration of losing digital bookmarks and broken links. This BBQ Spice Rub is exactly the reason I started keeping a physical recipe organizer back in 2009. I don't remember exactly where I found the original formula—likely Recipezaar or an old forum—but I knew after the first time I made it that I had better write it down before it vanished like so many others.
 
-<p>This is one of those recipes I’ve been making long enough that it stopped feeling like a "recipe" and started feeling like a kitchen staple. It began as a quick way to season chicken wings when my kids were little and I needed a win on a busy weeknight.</p>
+This is one of those recipes I’ve been making long enough that it stopped feeling like a "recipe" and started feeling like a kitchen staple. It began as a quick way to season chicken wings when my kids were little and I needed a win on a busy weeknight.
 
-<p>It's super flavorful, uncomplicated, and put together with ingredients you likely already have in your pantry. Over time, it became the seasoning I reach for whenever I need something barbecue-adjacent—wings, chicken tenders, burgers, or whatever happens to be in the fridge that day.</p>
+It's super flavorful, uncomplicated, and put together with ingredients you likely already have in your pantry. Over time, it became the seasoning I reach for whenever I need something barbecue-adjacent—wings, chicken tenders, burgers, or whatever happens to be in the fridge that day.
 
-<h2 class="wp-block-heading">Why This Rub Works ????</h2>
+## Why This Rub Works ✨
 
-<p>The balance of the heavy paprika and brown sugar creates a beautiful crust (bark) on the meat, while the celery salt and cumin add a savory depth that keeps it from being too "one-note." It's a formula worth passing on, documented here so it never disappears again.</p>
+The balance of the heavy paprika and brown sugar creates a beautiful crust (bark) on the meat, while the celery salt and cumin add a savory depth that keeps it from being too "one-note." It's a formula worth passing on, documented here so it never disappears again.
 
-<ul>
-  <li><strong>Quick Prep:</strong> Takes less than 5 minutes to whisk together.</li>
-  <li><strong>Shelf Stable:</strong> Stays fresh in a sealed jar for months.</li>
-  <li><strong>Customizable:</strong> Want more heat? Double the cayenne. Want it less sweet? Cut the sugar back to 1/4 cup.</li>
-</ul>
+- **Quick Prep:** Takes less than 5 minutes to whisk together.
+- **Shelf Stable:** Stays fresh in a sealed jar for months.
+- **Customizable:** Want more heat? Double the cayenne. Want it less sweet? Cut the sugar back to 1/4 cup.

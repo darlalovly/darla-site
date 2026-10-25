@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/salted-caramel-walnut-pull-apart-bread-recipe.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,12 +13,12 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-salted-caramel-walnut-pull-apart-bread-hero.webp"
+thumbnailKey: "images/recipes/2025-03-09-salted-caramel-walnut-pull-apart-bread-recipe/recipe-salted-caramel-walnut-pull-apart-bread-hero.webp"
 gallery: 
-  - "recipe-salted-caramel-walnut-pull-apart-bread-001.webp"
-  - "recipe-salted-caramel-walnut-pull-apart-bread-002.webp"
-  - "recipe-salted-caramel-walnut-pull-apart-bread-003.webp"
-  - "recipe-salted-caramel-walnut-pull-apart-bread-004.webp"
+  - "images/recipes/2025-03-09-salted-caramel-walnut-pull-apart-bread-recipe/recipe-salted-caramel-walnut-pull-apart-bread-001.webp"
+  - "images/recipes/2025-03-09-salted-caramel-walnut-pull-apart-bread-recipe/recipe-salted-caramel-walnut-pull-apart-bread-002.webp"
+  - "images/recipes/2025-03-09-salted-caramel-walnut-pull-apart-bread-recipe/recipe-salted-caramel-walnut-pull-apart-bread-003.webp"
+  - "images/recipes/2025-03-09-salted-caramel-walnut-pull-apart-bread-recipe/recipe-salted-caramel-walnut-pull-apart-bread-004.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -71,14 +73,14 @@ seoFocusKeyword: "pull-apart bread"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">A Familiar Treat, Elevated ❤️</h2>
+## A Familiar Treat, Elevated ❤️
 
-<p>Ever wished for a showstopping dessert that didn’t break the bank or require hours of kneading in the kitchen? This Salted Caramel Walnut Pull-Apart Bread is exactly that. It takes the classic Monkey Bread we all loved as kids and gives it a sophisticated upgrade. Imagine warm, buttery bites of biscuit dough, each coated in a fragrant cinnamon-sugar blend and studded with the earthy crunch of toasted walnuts.</p>
+Ever wished for a showstopping dessert that didn’t break the bank or require hours of kneading in the kitchen? This Salted Caramel Walnut Pull-Apart Bread is exactly that. It takes the classic Monkey Bread we all loved as kids and gives it a sophisticated upgrade. Imagine warm, buttery bites of biscuit dough, each coated in a fragrant cinnamon-sugar blend and studded with the earthy crunch of toasted walnuts.
 
-<p>The real star here, though, is the homemade salted caramel. By taking a few extra minutes to whisk together butter, cream, and sea salt, you transform a simple "dump-and-bake" dessert into something that feels like it came from a high-end bakery. It’s gooey, rich, and has just enough salt to keep it from being cloying.</p>
+The real star here, though, is the homemade salted caramel. By taking a few extra minutes to whisk together butter, cream, and sea salt, you transform a simple "dump-and-bake" dessert into something that feels like it came from a high-end bakery. It’s gooey, rich, and has just enough salt to keep it from being cloying.
 
-<h2 class="wp-block-heading">The Beauty of the Shortcut ✨</h2>
+## The Beauty of the Shortcut ✨
 
-<p>We’re unapologetically taking a shortcut here by using canned biscuits as our "secret weapon." It’s what makes this a weeknight-friendly indulgence rather than a day-long project. Because the biscuits are already layered and ready to puff, you get a beautiful, light texture without any of the stress of proofing yeast or worrying about a rise.</p>
+We’re unapologetically taking a shortcut here by using canned biscuits as our "secret weapon." It’s what makes this a weeknight-friendly indulgence rather than a day-long project. Because the biscuits are already layered and ready to puff, you get a beautiful, light texture without any of the stress of proofing yeast or worrying about a rise.
 
-<p>It’s a "miracle" dessert that relies on simple assembly and pure indulgence. Whether you're serving it for a casual Sunday brunch or bringing it to a friend's house for dinner, the result is always the same: people standing around the plate, using tongs (or just their fingers), pulling it apart piece by delicious piece until it's gone.</p>
+It’s a "miracle" dessert that relies on simple assembly and pure indulgence. Whether you're serving it for a casual Sunday brunch or bringing it to a friend's house for dinner, the result is always the same: people standing around the plate, using tongs (or just their fingers), pulling it apart piece by delicious piece until it's gone.

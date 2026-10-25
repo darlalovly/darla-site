@@ -34,12 +34,26 @@ darlalovly/
 │           │       ├── metadata.sqlite-shm
 │           │       └── metadata.sqlite-wal
 │           └── r2/
+│               ├── darlalovly-media/
+│               │   └── blobs/
+│               │       ├── 1423803660a803ec84879d4a6ae79b6c4787031524d8dd4ee755fdea6b6d9254000001a16eb677a9
+│               │       ├── 39e5106b1e04f0d43de5da99bee11398fa9297718d6ad40a982707917dffb0db000001a16eb604bc
+│               │       ├── 5b9b8d3561b7f8af9fdf9ae1f639f45d04866c979426ead0aa5e587832050f5e000001a16eb6aadd
+│               │       ├── 8f69c7a95a28d421c71af6b04f70bba4fac79fc050bda096ac2b90227fb8b7e1000001a16eb63ee1
+│               │       └── 9b2c5fcb90f3b7600eaf9596730f8b30b2c56037ba460d869cdfecd3e92022de000001a16eb5cc07
 │               └── miniflare-R2BucketObject/
+│                   ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite
+│                   ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite-shm
+│                   ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite-wal
+│                   ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite
+│                   ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite-shm
+│                   ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite-wal
 │                   ├── metadata.sqlite
 │                   ├── metadata.sqlite-shm
 │                   └── metadata.sqlite-wal
 ├── public/
 │   ├── icons/
+│   │   ├── darlalovly-logo.svg
 │   │   ├── icon-bluesky.svg
 │   │   ├── icon-facebook.svg
 │   │   ├── icon-instagram.svg
@@ -52,199 +66,13 @@ darlalovly/
 │   │   ├── icon-snapchat.svg
 │   │   ├── icon-threads.svg
 │   │   ├── icon-tumblr.svg
-│   │   ├── icon-x.svg
-│   │   ├── logo-black.svg
-│   │   └── logo-white.svg
-│   ├── images/
-│   │   └── posts/
-│   │       ├── 2026-03-13-chinatown/
-│   │       │   ├── 2026-03-13-chinatown-01.webp
-│   │       │   ├── 2026-03-13-chinatown-02.webp
-│   │       │   ├── 2026-03-13-chinatown-03.webp
-│   │       │   ├── 2026-03-13-chinatown-04.webp
-│   │       │   ├── 2026-03-13-chinatown-05.webp
-│   │       │   ├── 2026-03-13-chinatown-06.webp
-│   │       │   ├── 2026-03-13-chinatown-07.webp
-│   │       │   ├── 2026-03-13-chinatown-qq-mart.webp
-│   │       │   ├── 2026-03-13-community-01.webp
-│   │       │   ├── 2026-03-13-community-02.webp
-│   │       │   ├── 2026-03-13-community-03.webp
-│   │       │   ├── 2026-03-13-community-04.webp
-│   │       │   ├── 2026-03-13-community-05.webp
-│   │       │   └── 2026-03-13-community-06.webp
-│   │       ├── 2026-03-13-first-day-in-philly/
-│   │       │   ├── 2026-03-13-first-day-in-philly-city-hall.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-contrafuerte.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-hard-rock.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-header.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-reading-terminal-candy.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-reading-terminal-falafel.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-reading-terminal-giuntas.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-reading-terminal-goodshalls.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-reading-terminal-halteman.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-reading-terminal-iovine-produce.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-reading-terminal-philbert.webp
-│   │       │   ├── 2026-03-13-first-day-in-philly-water-gives-life.webp
-│   │       │   ├── 2026-03-13-food-on-first-rueban.webp
-│   │       │   └── 2026-03-13-food-on-first.webp
-│   │       ├── 2026-03-14-philly-day-2/
-│   │       │   ├── elfreths-alley-museum.webp
-│   │       │   ├── elfreths-alley-residences.webp
-│   │       │   ├── elfreths-alley-sign.webp
-│   │       │   ├── george-washington-house-quote.webp
-│   │       │   ├── george-washington-house.webp
-│   │       │   ├── little-seven-house.webp
-│   │       │   ├── mr-wish-red-bean-sago-coconut-milk.webp
-│   │       │   ├── ne-flower-boutique.webp
-│   │       │   ├── penzeys-curry.webp
-│   │       │   ├── penzeys-gift-boxes.webp
-│   │       │   ├── penzeys-herbs.webp
-│   │       │   ├── penzeys-merch.webp
-│   │       │   ├── penzeys-mugs.webp
-│   │       │   ├── penzeys-spices.webp
-│   │       │   ├── philadelphia-inquirer.webp
-│   │       │   ├── philly-day-2-header.webp
-│   │       │   ├── philly-steak-pizza-cheesesteak.webp
-│   │       │   ├── philly-steak-pizza-exterior.webp
-│   │       │   └── philly-steak-pizza-interior.webp
-│   │       ├── 2026-05-22-nyc/
-│   │       │   ├── nyc-grays-papaya-closeup.webp
-│   │       │   ├── nyc-grays-papaya.webp
-│   │       │   ├── nyc-skyline.webp
-│   │       │   └── nyc-statue-of-liberty.webp
-│   │       ├── 2026-05-22-planet-harlem/
-│   │       │   ├── nyc-planet-harlem-james-brown.webp
-│   │       │   ├── nyc-planet-harlem-mj.webp
-│   │       │   ├── nyc-planet-harlem-nina-simone.webp
-│   │       │   ├── nyc-planet-harlem-plaque.webp
-│   │       │   └── nyc-planet-harlem-v.mp4
-│   │       ├── 2026-06-13-the-speakeasy/
-│   │       │   ├── chocolate-torte.webp
-│   │       │   ├── drink-menu.webp
-│   │       │   ├── drinks.webp
-│   │       │   └── food-menu.webp
-│   │       ├── 2026-07-28-infinity-comics/
-│   │       │   ├── infinity-comics-exterior.webp
-│   │       │   └── infinity-comics-interior.webp
-│   │       ├── 2026-08-22-monster-day/
-│   │       │   ├── 2026-08-22-monster-day-1.webp
-│   │       │   ├── 2026-08-22-monster-day-2.webp
-│   │       │   ├── 2026-08-22-monster-day-3.webp
-│   │       │   └── 2026-08-22-monster-day-header.webp
-│   │       ├── 2026-08-26-nebraska-moon/
-│   │       │   └── nebraska-moon.webp
-│   │       ├── 2026-08-31-art-alley/
-│   │       │   ├── art-alley-rc-1.webp
-│   │       │   ├── art-alley-rc-2.webp
-│   │       │   ├── art-alley-rc-3.webp
-│   │       │   ├── art-alley-rc-4-detail.webp
-│   │       │   ├── art-alley-rc-4.webp
-│   │       │   ├── art-alley-rc-5.webp
-│   │       │   ├── art-alley-rc-6.webp
-│   │       │   ├── art-alley-rc-7.webp
-│   │       │   ├── art-alley-rc-8.webp
-│   │       │   ├── art-alley-rc-9.webp
-│   │       │   └── art-alley-rc-header.webp
-│   │       ├── 2026-09-04-mt-rushmore/
-│   │       │   ├── mt-rushmore-doane-robinson-tunnel.webp
-│   │       │   ├── mt-rushmore-drive-through-keystone.webp
-│   │       │   ├── mt-rushmore-first-site.webp
-│   │       │   ├── mt-rushmore-magnuson-grand-keystone.webp
-│   │       │   ├── mt-rushmore-scenic-drive.webp
-│   │       │   └── mt-rushmore-zoomed-view.webp
-│   │       ├── 2026-09-04-rapid-city-library/
-│   │       │   ├── rc-library-exterior-statues.webp
-│   │       │   ├── rc-library-exterior.webp
-│   │       │   ├── triceratops-head-front.webp
-│   │       │   ├── triceratops-plaque-skinning.webp
-│   │       │   ├── triceratops-side-view.webp
-│   │       │   └── triceratops-three-quarter.webp
-│   │       ├── 2026-09-05-rc-stockgrowers/
-│   │       │   ├── sd-stockgrowers-night.webp
-│   │       │   └── sd-stockgrowers.webp
-│   │       ├── 2026-09-11-sundance-kid/
-│   │       │   ├── sundance-kid-plaque.webp
-│   │       │   ├── sundance-kid-sitting.webp
-│   │       │   ├── sundance-kid-sundance-square.webp
-│   │       │   ├── sundance-kid-with-plaque.webp
-│   │       │   └── sundance-kid-wyoming-drive.webp
-│   │       ├── 2026-09-12-turkish-cafe-co/
-│   │       │   ├── turkish-cafe-co-interior.webp
-│   │       │   ├── turkish-cafe-co-ricotta-pistachio-cake.webp
-│   │       │   ├── turkish-cafe-co-savories.webp
-│   │       │   ├── turkish-cafe-co-sign.webp
-│   │       │   ├── turkish-cafe-co-sweets-1.webp
-│   │       │   ├── turkish-cafe-co-sweets-2.webp
-│   │       │   └── turkish-cafe-co-sweets-3.webp
-│   │       ├── 2026-09-18-musical-legacy/
-│   │       │   ├── musical-legacy-aj-haynes.webp
-│   │       │   ├── musical-legacy-beausoleil-1.webp
-│   │       │   ├── musical-legacy-beausoleil-2.webp
-│   │       │   ├── musical-legacy-beausoleil.webp
-│   │       │   ├── musical-legacy-ben-sandmel.webp
-│   │       │   ├── musical-legacy-david-doucet.webp
-│   │       │   ├── musical-legacy-dr-michael-white-quartet.webp
-│   │       │   ├── musical-legacy-elvis-presley.webp
-│   │       │   ├── musical-legacy-flyer.webp
-│   │       │   ├── musical-legacy-greg-stafford.webp
-│   │       │   ├── musical-legacy-james-burton.webp
-│   │       │   └── musical-legacy-stage.webp
-│   │       ├── 2026-09-19-Highland-Jazz-Blues/
-│   │       │   ├── 2026-09-19-Highland-Jazz-Blues-Buddy-Flett.webp
-│   │       │   ├── 2026-09-19-Highland-Jazz-Blues-Dumpstaphunk-Deeper.webp
-│   │       │   ├── 2026-09-19-Highland-Jazz-Blues-Dumpstaphunk-Do-You.webp
-│   │       │   ├── 2026-09-19-Highland-Jazz-Blues-Dumpstaphunk-Justice.webp
-│   │       │   └── 2026-09-19-Highland-Jazz-Blues-Dumpstaphunk.webp
-│   │       ├── 2026-09-21-bonnie-clyde-ambush-museum/
-│   │       │   └── 2026-09-21-bonnie-clyde-ambush-header.webp
-│   │       ├── 2026-09-25-chickofish/
-│   │       │   └── 2026-09-25-fish-plate.webp
-│   │       ├── 2026-10-01-monumental-memories/
-│   │       │   ├── 2026-10-01-crazy-horse-memories.webp
-│   │       │   ├── 2026-10-01-crazy-horse-model.webp
-│   │       │   ├── 2026-10-01-monumental-memories-header.webp
-│   │       │   └── 2026-10-01-speaker-whitney-rencountre-II.webp
-│   │       ├── 2026-10-02-crazy-horse-memorial/
-│   │       │   ├── 2026-10-02-crazy-horse-korczak-ziolkowski-rests.webp
-│   │       │   ├── 2026-10-02-crazy-horse-memorial-death-song-ernest-berke.webp
-│   │       │   ├── 2026-10-02-crazy-horse-memorial-entrance.webp
-│   │       │   ├── 2026-10-02-crazy-horse-memorial-face.webp
-│   │       │   └── 2026-10-02-crazy-horse-memorial-header.webp
-│   │       ├── 2026-10-02-mount-rushmore-up-close/
-│   │       │   ├── 2026-10-02-mount-rushmore-entrance.webp
-│   │       │   ├── 2026-10-02-mount-rushmore-flags.webp
-│   │       │   ├── 2026-10-02-mount-rushmore-gutzon-borglum.webp
-│   │       │   ├── 2026-10-02-mount-rushmore-profile.webp
-│   │       │   └── 2026-10-02-mount-rushmore-up-close-header.webp
-│   │       ├── 2026-10-04-meekers/
-│   │       │   └── 2026-10-04-southwest-benedict.webp
-│   │       ├── 2026-10-06-hot-springs-sd/
-│   │       │   ├── 2026-10-06-coffee-spot-header.webp
-│   │       │   ├── 2026-10-06-coffee-spot-nature-sounds.mp4
-│   │       │   └── 2026-10-06-coffee-spot.webp
-│   │       ├── 2026-10-07-st-aloysius/
-│   │       │   └── 2026-10-07-st-aloysius.webp
-│   │       └── 2026-10-15-red-river-revel/
-│   │           ├── red-river-revel-bte1.webp
-│   │           ├── red-river-revel-bte2.webp
-│   │           ├── red-river-revel-ccbo.webp
-│   │           ├── red-river-revel-header.webp
-│   │           ├── red-river-revel-jw1.webp
-│   │           ├── red-river-revel-jw2.webp
-│   │           └── red-river-revel-vendors.webp
+│   │   └── icon-x.svg
 │   └── favicon.ico
-├── scripts/
-│   ├── reorganize-r2-media.ts
-│   ├── verify-image-urls.ts
-│   └── verify-r2-media.ts
 ├── src/
-│   ├── assets/
-│   │   ├── astro.svg
-│   │   └── background.svg
 │   ├── components/
+│   │   ├── Footer.astro
 │   │   ├── Header.astro
-│   │   ├── SEO.astro
-│   │   └── Welcome.astro
+│   │   └── SEO.astro
 │   ├── content/
 │   │   ├── posts/
 │   │   │   ├── 2026-02-04-cilantro-lime-chicken.md
@@ -285,17 +113,29 @@ darlalovly/
 │   │       ├── salted-caramel-walnut-pull-apart-bread-recipe.md
 │   │       └── zucchini-bread-recipe.md
 │   ├── layouts/
-│   │   ├── BaseLayout.astro
-│   │   ├── FieldNoteLayout.astro
-│   │   └── Layout.astro
+│   │   ├── AdminLayout.astro
+│   │   └── BaseLayout.astro
 │   ├── pages/
+│   │   ├── admin/
+│   │   │   ├── api/
+│   │   │   │   ├── save.ts
+│   │   │   │   └── upload.ts
+│   │   │   ├── edit/
+│   │   │   │   └── [slug].astro
+│   │   │   ├── recipes/
+│   │   │   │   └── new.astro
+│   │   │   ├── gallery.astro
+│   │   │   ├── index.astro
+│   │   │   └── new.astro
 │   │   ├── posts/
-│   │   │   └── [slug].astro
+│   │   │   ├── [slug].astro
+│   │   │   └── index.astro
 │   │   ├── recipes/
 │   │   │   ├── [slug].astro
 │   │   │   └── index.astro
 │   │   └── index.astro
 │   ├── styles/
+│   │   ├── admin.css
 │   │   └── global.css
 │   ├── content.config.ts
 │   └── middleware.ts
@@ -307,5 +147,4 @@ darlalovly/
 ├── package-lock.json
 ├── package.json
 ├── README.md
-├── tsconfig.json
-└── watermark.mjs
+└── tsconfig.json

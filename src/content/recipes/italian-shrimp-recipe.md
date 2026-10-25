@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/italian-shrimp-recipe.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,9 +13,9 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-italian-shrimp-hero.webp"
+thumbnailKey: "images/recipes/2026-03-23-italian-shrimp-recipe/recipe-italian-shrimp-hero.webp"
 gallery: 
-  - "recipe-italian-shrimp-002.webp"
+  - "images/recipes/2026-03-23-italian-shrimp-recipe/recipe-italian-shrimp-002.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -68,22 +70,22 @@ seoFocusKeyword: "Italian Shrimp"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">A Home Cook's Secret: Quick, Delicious, &amp; Impressive ❤️</h2>
+## A Home Cook's Secret: Quick, Delicious, & Impressive ❤️
 
-<p>It is genuinely difficult to get good photos of this dish, mostly because it gets devoured so quickly! The recent pictures featured here—which I finally managed to snap after making this for dinner a few weeks ago—actually use some Chilean shrimp I found on a massive sale. While I typically prefer wild-caught Gulf shrimp for this bake, I’ve made it with all kinds of varieties over the years. It’s a remarkably resilient and forgiving dish. The key is simply using large shrimp and ensuring they aren't overcooked.</p>
+It is genuinely difficult to get good photos of this dish, mostly because it gets devoured so quickly! The recent pictures featured here—which I finally managed to snap after making this for dinner a few weeks ago—actually use some Chilean shrimp I found on a massive sale. While I typically prefer wild-caught Gulf shrimp for this bake, I’ve made it with all kinds of varieties over the years. It’s a remarkably resilient and forgiving dish. The key is simply using large shrimp and ensuring they aren't overcooked.
 
-<p>I recently wrote about <a href="/when-recipes-disappear"><strong>When Recipes Disappear</strong></a>—that unsettling feeling when a digital link you’ve relied on for years suddenly vanishes. This Italian Shrimp recipe is the perfect example of a dish that earned its place in my physical recipe keeper because I was terrified of losing it.</p>
+I recently wrote about [**When Recipes Disappear**](/when-recipes-disappear)—that unsettling feeling when a digital link you’ve relied on for years suddenly vanishes. This Italian Shrimp recipe is the perfect example of a dish that earned its place in my physical recipe keeper because I was terrified of losing it.
 
-<p>Years ago, I stumbled upon a version of this—maybe on Allrecipes or Recipezaar—and I've made it so many times since that I don't even think of it as a "recipe" anymore. My kids, who could rival professional food critics as toddlers, absolutely adored this dish. By 2016, they were already replicating it for their own friends at dinner parties!</p>
+Years ago, I stumbled upon a version of this—maybe on Allrecipes or Recipezaar—and I've made it so many times since that I don't even think of it as a "recipe" anymore. My kids, who could rival professional food critics as toddlers, absolutely adored this dish. By 2016, they were already replicating it for their own friends at dinner parties!
 
-<p>I remember posting the original recipe to Facebook back then just so they’d have a digital copy to share. I guess I’ve been trying to protect our family favorites from getting lost in the shuffle of broken links for a long time now.</p>
+I remember posting the original recipe to Facebook back then just so they’d have a digital copy to share. I guess I’ve been trying to protect our family favorites from getting lost in the shuffle of broken links for a long time now.
 
-<div class="vintage-graphic-container" style="margin: 40px 0; text-align: center; border: 1px solid var(--dash); padding: 20px; border-radius: var(--radius); background: #fcfcfc;">
-  <p class="col-meta" style="margin-bottom: 15px;">[ FROM THE ARCHIVE: 2016 FACEBOOK POST ]</p>
-  <img src="https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/recipe-italian-shrimp-001.webp" alt="Original 2016 Italian Shrimp Recipe Graphic" style="max-width: 100%; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
-  <p style="font-size: 0.85rem; font-style: italic; margin-top: 10px; opacity: 0.7;">The original graphic I made to share this recipe for the first time.</p>
+<div class="vintage-graphic-container my-10 text-center border border-neutral-800 p-6 rounded-xl bg-neutral-900/60">
+  <p class="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-4">[ FROM THE ARCHIVE: 2016 FACEBOOK POST ]</p>
+  <img src="https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/images/recipes/2026-03-23-italian-shrimp-recipe/recipe-italian-shrimp-001.webp" alt="Original 2016 Italian Shrimp Recipe Graphic" class="max-w-full rounded-md shadow-lg mx-auto block" />
+  <p class="text-xs text-neutral-400 italic mt-3">The original graphic I made to share this recipe for the first time.</p>
 </div>
 
-<p>The real beauty of this dish isn't just in the flavor—it's in the sheer lack of friction. If you can toss a few things in a pan and turn on an oven, you’ve already mastered it. It’s my absolute favorite AirBnB vacation meal for a reason; you only need to grab a handful of items at the local grocery store to put together a supper that feels like a high-end seafood boil without the massive cleanup.</p>
+The real beauty of this dish isn't just in the flavor—it's in the sheer lack of friction. If you can toss a few things in a pan and turn on an oven, you’ve already mastered it. It’s my absolute favorite AirBnB vacation meal for a reason; you only need to grab a handful of items at the local grocery store to put together a supper that feels like a high-end seafood boil without the massive cleanup.
 
-<p>It's fast, it's foolproof, and in all the years I've been making it, I've never met anyone who didn't love it. Whether you're short on time or just need to impress a crowd without breaking a sweat, it just works every single time.</p>
+It's fast, it's foolproof, and in all the years I've been making it, I've never met anyone who didn't love it. Whether you're short on time or just need to impress a crowd without breaking a sweat, it just works every single time.

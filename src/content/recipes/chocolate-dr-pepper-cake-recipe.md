@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/chocolate-dr-pepper-cake-recipe.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,11 +13,11 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-chocolate-cordial-dr-pepper-cake-hero.webp"
+thumbnailKey: "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-hero.webp"
 gallery: 
-  - "recipe-chocolate-cordial-dr-pepper-cake-001.webp"
-  - "recipe-chocolate-cordial-dr-pepper-cake-002.webp"
-  - "recipe-chocolate-cordial-dr-pepper-cake-003.webp"
+  - "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-001.webp"
+  - "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-002.webp"
+  - "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-003.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -80,14 +82,14 @@ seoFocusKeyword: "Dr. Pepper Cake"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">A Mystery Solved with a Splash of Soda ❤️</h2>
+## A Mystery Solved with a Splash of Soda ❤️
 
-<p>The other day, I stumbled across a post on social media about a "Dr. Pepper King Cake." I went down a bit of a rabbit hole trying to find a trace of an actual King Cake made with soda, but while that specific mystery remained unsolved, it led me to a couple of other recipes that I eventually fused into this 3-layer masterpiece.</p>
+The other day, I stumbled across a post on social media about a "Dr. Pepper King Cake." I went down a bit of a rabbit hole trying to find a trace of an actual King Cake made with soda, but while that specific mystery remained unsolved, it led me to a couple of other recipes that I eventually fused into this 3-layer masterpiece.
 
-<p>I was ecstatic at how easy this was to pull off. By splitting the batter between three round 8-inch pans and baking them for just 20 minutes, I achieved a texture that is absolutely fantastic—moist, dark, and rich, without needing a single egg or a drop of oil. It felt like a magic trick.</p>
+I was ecstatic at how easy this was to pull off. By splitting the batter between three round 8-inch pans and baking them for just 20 minutes, I achieved a texture that is absolutely fantastic—moist, dark, and rich, without needing a single egg or a drop of oil. It felt like a magic trick.
 
-<h2 class="wp-block-heading">The Frosting Fiasco (and the Fix) 🥄</h2>
+## The Frosting Fiasco (and the Fix) 🥄
 
-<p>Of course, no baking experiment is without its hurdles. I started by following a frosting recipe written specifically to provide that iconic Dr. Pepper taste. The original instructions suggested the soda would cook down into a thick syrup after about 5 to 7 minutes. After boiling mine for 30 minutes, it was still a very thin liquid—finally reduced to somewhere between 2/3 and 3/4 cup.</p>
+Of course, no baking experiment is without its hurdles. I started by following a frosting recipe written specifically to provide that iconic Dr. Pepper taste. The original instructions suggested the soda would cook down into a thick syrup after about 5 to 7 minutes. After boiling mine for 30 minutes, it was still a very thin liquid—finally reduced to somewhere between 2/3 and 3/4 cup.
 
-<p>Lo and behold if I didn’t end up with that Dr. Pepper reduction splashed all over my kitchen the second I turned on the mixer! After shutting everything down and cleaning up the mess, I realized the butter needed a "buffer." By adding a small amount of powdered sugar to the butter *before* drizzling in the liquid, I created an emulsion that actually held together. My stabilized method below is the only way to go unless you’re looking for an excuse to deep-clean your countertops.</p>
+Lo and behold if I didn’t end up with that Dr. Pepper reduction splashed all over my kitchen the second I turned on the mixer! After shutting everything down and cleaning up the mess, I realized the butter needed a "buffer." By adding a small amount of powdered sugar to the butter *before* drizzling in the liquid, I created an emulsion that actually held together. My stabilized method below is the only way to go unless you’re looking for an excuse to deep-clean your countertops.

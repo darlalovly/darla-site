@@ -1,4 +1,5 @@
 // File: src/content.config.ts
+
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
@@ -11,6 +12,23 @@ const resilientDate = z
     const d = new Date(val);
     return isNaN(d.getTime()) ? new Date() : d;
   });
+
+const locationPinSchema = z.object({
+  name: z.string(),
+  address: z.string().optional(),
+  url: z.string().optional(),
+});
+
+const galleryItemSchema = z.union([
+  z.string(),
+  z.object({
+    src: z.string().optional(),
+    key: z.string().optional(),
+    alt: z.string().optional(),
+    caption: z.string().optional(),
+    date: z.union([z.date(), z.string(), z.number()]).optional(),
+  }),
+]);
 
 const posts = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/posts' }),
@@ -32,9 +50,11 @@ const posts = defineCollection({
     tags: z.array(z.string()).optional().default([]),
     sotd: z.string().optional(),
     location: z.string().optional(),
+    locations: z.array(locationPinSchema).optional(),
     chapter: z.string().optional(),
     thumbnailKey: z.string().optional(),
     image: z.string().optional(),
+    gallery: z.array(galleryItemSchema).optional(),
     orientation: z.enum(['landscape', 'portrait', 'square']).optional(),
     heroOrientation: z.enum(['landscape', 'portrait', 'square']).optional().default('landscape'),
     excerpt: z.string().optional(),
@@ -54,7 +74,8 @@ const recipes = defineCollection({
     orientation: z.enum(['landscape', 'portrait', 'square']).optional(),
     heroOrientation: z.enum(['landscape', 'portrait', 'square']).optional().default('landscape'),
     thumbnailKey: z.string().optional(),
-    gallery: z.array(z.string()).optional(),
+    image: z.string().optional(),
+    gallery: z.array(galleryItemSchema).optional(),
     prepTime: z.string().optional(),
     cookTime: z.string().optional(),
     servings: z.union([z.number(), z.string()]).optional(),

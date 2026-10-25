@@ -1,0 +1,401 @@
+---
+// File: src/layouts/AdminLayout.astro
+
+interface Props {
+  title?: string;
+}
+
+const { title = "Dashboard ‹ darlalovly Studio" } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const isActive = (path: string) => {
+  if (path === '/admin' && (currentPath === '/admin' || currentPath === '/admin/')) return true;
+  if (path !== '/admin' && currentPath.startsWith(path)) return true;
+  return false;
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/webp" href="https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/darlalovly-logo.webp" />
+  </head>
+  <body>
+    <!-- Top Admin Bar -->
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <a href="/admin" class="topbar-brand">
+          <span class="brand-avatar">D</span>
+          <span class="brand-name">darlalovly studio</span>
+        </a>
+        <a href="/" target="_blank" rel="noopener noreferrer" class="topbar-site-link">View Site ↗</a>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-user">Signed in as <strong>Darla</strong></span>
+      </div>
+    </header>
+
+    <!-- Admin Body Container -->
+    <div class="admin-layout-container">
+      <!-- Left Column Menu -->
+      <aside class="admin-sidebar" aria-label="Main Studio Navigation">
+        <nav class="sidebar-menu">
+          
+          <div class="menu-section">
+            <a href="/admin" class={`menu-item ${isActive('/admin') && currentPath !== '/admin/new' && currentPath !== '/admin/recipes/new' ? 'is-active' : ''}`}>
+              <span class="menu-icon">✦</span>
+              <span class="menu-label">Dashboard</span>
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <div class="menu-heading">Entries</div>
+            <a href="/admin" class={`submenu-item ${isActive('/admin') && currentPath !== '/admin/new' && currentPath !== '/admin/recipes/new' ? 'is-active' : ''}`}>
+              All Entries
+            </a>
+            <a href="/admin/new" class={`submenu-item ${isActive('/admin/new') ? 'is-active' : ''}`}>
+              Add New Post
+            </a>
+            <a href="/admin/recipes/new" class={`submenu-item ${isActive('/admin/recipes/new') ? 'is-active' : ''}`}>
+              Add New Recipe
+            </a>
+          </div>
+
+          <div class="menu-section">
+            <div class="menu-heading">Media</div>
+            <a href="/admin/gallery" class={`submenu-item ${isActive('/admin/gallery') ? 'is-active' : ''}`}>
+              Library
+            </a>
+          </div>
+
+          <div class="menu-section menu-section-bottom">
+            <a href="/" target="_blank" rel="noopener noreferrer" class="menu-item site-external-link">
+              <span class="menu-icon">↗</span>
+              <span class="menu-label">View Live Garden</span>
+            </a>
+          </div>
+
+        </nav>
+      </aside>
+
+      <!-- Main Admin Content Area -->
+      <main class="admin-main-content">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #f4f4f5 !important;
+    color: #111111 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
+    min-height: 100vh;
+  }
+
+  /* Top Bar */
+  .admin-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 38px;
+    background: #000000;
+    color: #a1a1aa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 9999;
+    font-size: 13px;
+    border-bottom: 1px solid #27272a;
+  }
+
+  .topbar-left,
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .topbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .topbar-brand:hover {
+    color: #e4e4e7;
+  }
+
+  .brand-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #27272a;
+    border: 1px solid #52525b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-family: ui-monospace, monospace;
+    font-weight: bold;
+    color: #ffffff;
+  }
+
+  .topbar-site-link {
+    color: #a1a1aa;
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 120ms ease;
+  }
+
+  .topbar-site-link:hover {
+    color: #ffffff;
+  }
+
+  .topbar-user {
+    font-size: 12px;
+    color: #a1a1aa;
+  }
+
+  .topbar-user strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  /* Container & Left Sidebar */
+  .admin-layout-container {
+    display: flex;
+    padding-top: 38px;
+    min-height: 100vh;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 38px;
+    left: 0;
+    bottom: 0;
+    width: 175px;
+    background: #09090b;
+    border-right: 1px solid #27272a;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow-y: auto;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    gap: 12px;
+  }
+
+  .menu-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .menu-heading {
+    padding: 6px 16px 4px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #71717a;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    color: #a1a1aa;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 120ms ease, color 120ms ease;
+  }
+
+  .menu-item:hover {
+    background: #18181b;
+    color: #ffffff;
+  }
+
+  .menu-item.is-active {
+    background: #ffffff;
+    color: #000000;
+    font-weight: 700;
+  }
+
+  .menu-icon {
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .submenu-item {
+    display: block;
+    padding: 6px 16px 6px 28px;
+    color: #a1a1aa;
+    text-decoration: none;
+    font-size: 12px;
+    transition: background 120ms ease, color 120ms ease;
+  }
+
+  .submenu-item:hover {
+    background: #18181b;
+    color: #ffffff;
+  }
+
+  .submenu-item.is-active {
+    background: #ffffff;
+    color: #000000;
+    font-weight: 700;
+  }
+
+  .menu-section-bottom {
+    margin-top: 20px;
+    border-top: 1px solid #27272a;
+    padding-top: 10px;
+  }
+
+  .site-external-link {
+    color: #71717a;
+    font-size: 12px;
+  }
+
+  .site-external-link:hover {
+    color: #ffffff;
+  }
+
+  /* Main Content Canvas */
+  .admin-main-content {
+    margin-left: 175px;
+    flex: 1;
+    width: calc(100% - 175px);
+    min-height: calc(100vh - 38px);
+    background-color: #f4f4f5;
+  }
+
+  /* Universal Monochrome Element Overrides */
+  .btn-primary {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid #000000 !important;
+  }
+
+  .btn-primary:hover {
+    background: #27272a !important;
+    border-color: #27272a !important;
+    color: #ffffff !important;
+  }
+
+  .btn-secondary {
+    background: #ffffff !important;
+    border: 1px solid #d4d4d8 !important;
+    color: #18181b !important;
+  }
+
+  .btn-secondary:hover {
+    background: #f4f4f5 !important;
+    border-color: #000000 !important;
+    color: #000000 !important;
+  }
+
+  .entry-title-text,
+  .action-link,
+  .view-link,
+  .link-btn,
+  .tab-btn {
+    color: #000000 !important;
+  }
+
+  .entry-title-text:hover,
+  .action-link:hover,
+  .view-link:hover,
+  .link-btn:hover {
+    text-decoration: underline !important;
+    color: #52525b !important;
+  }
+
+  .input-title:focus,
+  .input-slug:focus,
+  .input-textarea:focus,
+  .input-control:focus,
+  .input-select:focus {
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 1px #000000 !important;
+    outline: 2px solid transparent !important;
+  }
+
+  .status-published {
+    background: #f4f4f5 !important;
+    color: #09090b !important;
+    border: 1px solid #d4d4d8 !important;
+  }
+
+  .status-draft {
+    background: #ffffff !important;
+    color: #71717a !important;
+    border: 1px dashed #a1a1aa !important;
+  }
+
+  @media (max-width: 782px) {
+    .admin-sidebar {
+      position: static;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .admin-layout-container {
+      flex-direction: column;
+    }
+
+    .admin-main-content {
+      margin-left: 0;
+      width: 100%;
+    }
+
+    .sidebar-menu {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 6px 8px;
+    }
+
+    .menu-section {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .menu-heading {
+      display: none;
+    }
+
+    .submenu-item {
+      padding: 6px 10px;
+    }
+  }
+</style>

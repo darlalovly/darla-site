@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/blueberry-croissant-bread-pudding-with-amaretto-cream-sauce.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,11 +13,11 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-blueberry-croissant-bread-pudding-hero.webp"
+thumbnailKey: "images/recipes/2025-05-24-blueberry-croissant-bread-pudding-recipe/recipe-blueberry-croissant-bread-pudding-hero.webp"
 gallery: 
-  - "recipe-blueberry-croissant-bread-pudding-001.webp"
-  - "recipe-blueberry-croissant-bread-pudding-002.webp"
-  - "recipe-blueberry-croissant-bread-pudding-003.webp"
+  - "images/recipes/2025-05-24-blueberry-croissant-bread-pudding-recipe/recipe-blueberry-croissant-bread-pudding-001.webp"
+  - "images/recipes/2025-05-24-blueberry-croissant-bread-pudding-recipe/recipe-blueberry-croissant-bread-pudding-002.webp"
+  - "images/recipes/2025-05-24-blueberry-croissant-bread-pudding-recipe/recipe-blueberry-croissant-bread-pudding-003.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -81,16 +83,16 @@ seoFocusKeyword: "croissant bread pudding"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">Brunch, Reimagined ❤️</h2>
+## Brunch, Reimagined ❤️
 
-<p>This recipe is part brunch, part dessert, and all comfort. I don’t always remember exact measurements, but this recipe lives somewhere between indulgence and instinct. It’s a little larger than the average bread pudding—I use a full dozen buttery bakery croissants and I never skimp on the blueberries. A whole pint, always fresh.</p>
+This recipe is part brunch, part dessert, and all comfort. I don’t always remember exact measurements, but this recipe lives somewhere between indulgence and instinct. It’s a little larger than the average bread pudding—I use a full dozen buttery bakery croissants and I never skimp on the blueberries. A whole pint, always fresh.
 
-<p>You can serve this warm out of the oven, but it’s the amaretto cream sauce that really brings it home. That’s Disaronno in the background—and yes, it absolutely goes in the sauce.</p>
+You can serve this warm out of the oven, but it’s the amaretto cream sauce that really brings it home. That’s Disaronno in the background—and yes, it absolutely goes in the sauce.
 
-<h2 class="wp-block-heading">From Simple Stale Bread to Buttery Bliss ✨</h2>
+## From Simple Stale Bread to Buttery Bliss ✨
 
-<p>I love bread pudding, but growing up, my mother always just made it with plain old leftover stale white bread. While I do still enjoy that classic version, there is something about using croissants that elevates this dish to a level that's more than just "special."</p>
+I love bread pudding, but growing up, my mother always just made it with plain old leftover stale white bread. While I do still enjoy that classic version, there is something about using croissants that elevates this dish to a level that's more than just "special."
 
-<p>The laminated layers of a croissant create these incredible pockets that catch the custard and the blueberry juice. They stay buttery and flaky in a way that regular bread just can't mimic. Plus, it’s an incredibly budget-friendly luxury; I can usually find croissants on sale in the day-old bakery selections. I love to finish it off with a handful of sliced almonds for a bit of crunch—it turns a simple breakfast into something truly memorable.</p>
+The laminated layers of a croissant create these incredible pockets that catch the custard and the blueberry juice. They stay buttery and flaky in a way that regular bread just can't mimic. Plus, it’s an incredibly budget-friendly luxury; I can usually find croissants on sale in the day-old bakery selections. I love to finish it off with a handful of sliced almonds for a bit of crunch—it turns a simple breakfast into something truly memorable.
 
-<p>Whether you’re planning a special holiday breakfast or just need something warm and sweet to end a long day, this one's worth making a mess for.</p>
+Whether you’re planning a special holiday breakfast or just need something warm and sweet to end a long day, this one's worth making a mess for.

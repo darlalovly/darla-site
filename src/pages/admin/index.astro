@@ -1,0 +1,499 @@
+---
+// File: src/pages/admin/index.astro
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import '../../styles/admin.css';
+import { getCollection } from 'astro:content';
+
+export const prerender = false;
+
+let rawPosts: any[] = [];
+try {
+  rawPosts = await getCollection('posts');
+} catch {
+  rawPosts = [];
+}
+
+let rawRecipes: any[] = [];
+try {
+  rawRecipes = await getCollection('recipes');
+} catch {
+  rawRecipes = [];
+}
+
+const parseDate = (val: any): Date => {
+  if (!val) return new Date(0);
+  const d = val instanceof Date ? val : new Date(val);
+  return isNaN(d.getTime()) ? new Date(0) : d;
+};
+
+const formatDate = (dateVal: any): string => {
+  const d = parseDate(dateVal);
+  if (d.getTime() === 0) return '—';
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).toUpperCase();
+};
+
+const allEntries = [
+  ...rawPosts.map((post) => {
+    const slug = post.id.replace(/\.(md|mdx)$/, '');
+    const isDraft = Boolean(post.data.isDraft || post.data.draft);
+    return {
+      id: post.id,
+      slug,
+      title: post.data.title || slug,
+      category: post.data.category || 'Post',
+      location: post.data.location || '—',
+      date: parseDate(post.data.date || post.data.pubDate),
+      formattedDate: formatDate(post.data.date || post.data.pubDate),
+      isDraft,
+      type: 'POST',
+      viewHref: `/posts/${slug}`,
+      editHref: `/admin/edit/${slug}?type=post`,
+    };
+  }),
+  ...rawRecipes.map((recipe) => {
+    const slug = recipe.id.replace(/\.(md|mdx)$/, '');
+    const isDraft = Boolean(recipe.data.isDraft || recipe.data.draft);
+    return {
+      id: recipe.id,
+      slug,
+      title: recipe.data.recipeName || recipe.data.title || slug,
+      category: 'Recipe',
+      location: '—',
+      date: parseDate(recipe.data.date),
+      formattedDate: formatDate(recipe.data.date),
+      isDraft,
+      type: 'RECIPE',
+      viewHref: `/recipes/${slug}`,
+      editHref: `/admin/edit/${slug}?type=recipe`,
+    };
+  }),
+].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+
+const totalCount = allEntries.length;
+const postsCount = allEntries.filter((e) => e.type === 'POST').length;
+const recipesCount = allEntries.filter((e) => e.type === 'RECIPE').length;
+const publishedCount = allEntries.filter((e) => !e.isDraft).length;
+const draftsCount = allEntries.filter((e) => e.isDraft).length;
+---
+
+<AdminLayout title="Content Directory ‹ darlalovly Studio">
+  <div class="studio-wrapper">
+    
+    <div class="studio-header-bar">
+      <div class="header-left">
+        <h1 class="studio-page-title">Content Directory</h1>
+      </div>
+      <div class="header-right">
+        <a href="/admin/new" class="btn btn-secondary btn-sm">+ Add Post</a>
+        <a href="/admin/recipes/new" class="btn btn-secondary btn-sm">+ Add Recipe</a>
+        <a href="/admin/gallery" class="btn btn-secondary btn-sm">Media Library</a>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-num">{totalCount}</span>
+        <span class="stat-label">Total Entries</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{postsCount}</span>
+        <span class="stat-label">Posts</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{recipesCount}</span>
+        <span class="stat-label">Recipes</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{draftsCount}</span>
+        <span class="stat-label">Drafts</span>
+      </div>
+    </div>
+
+    <!-- Filter Navigation Tabs -->
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <button type="button" class="tab-btn is-active" data-filter-type="all" data-filter-status="all">All ({totalCount})</button>
+        <span class="tab-divider">|</span>
+        <button type="button" class="tab-btn" data-filter-type="POST" data-filter-status="all">Posts ({postsCount})</button>
+        <span class="tab-divider">|</span>
+        <button type="button" class="tab-btn" data-filter-type="RECIPE" data-filter-status="all">Recipes ({recipesCount})</button>
+        <span class="tab-divider">|</span>
+        <button type="button" class="tab-btn" data-filter-type="all" data-filter-status="published">Published ({publishedCount})</button>
+        <span class="tab-divider">|</span>
+        <button type="button" class="tab-btn" data-filter-type="all" data-filter-status="draft">Drafts ({draftsCount})</button>
+      </div>
+    </div>
+
+    <!-- Content Table -->
+    <div class="studio-card table-card">
+      <table class="entries-table">
+        <thead>
+          <tr>
+            <th class="col-title">Title</th>
+            <th class="col-type">Type</th>
+            <th class="col-category">Category</th>
+            <th class="col-location">Location</th>
+            <th class="col-date">Date</th>
+            <th class="col-status">Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {allEntries.map((entry) => (
+            <tr
+              class="entry-row"
+              data-type={entry.type}
+              data-status={entry.isDraft ? "draft" : "published"}
+            >
+              <td class="col-title">
+                <div class="row-title-wrap">
+                  <a href={entry.editHref} class="entry-title-text font-medium">
+                    {entry.title}
+                  </a>
+                  <span class="entry-slug-text font-mono">
+                    {entry.type === 'POST' ? `/posts/${entry.slug}` : `/recipes/${entry.slug}`}
+                  </span>
+                </div>
+              </td>
+              <td class="col-type">
+                <span class="type-badge font-mono">
+                  {entry.type}
+                </span>
+              </td>
+              <td class="col-category">
+                <span class="category-pill font-mono">{entry.category}</span>
+              </td>
+              <td class="col-location">
+                <span class="location-text">{entry.location}</span>
+              </td>
+              <td class="col-date font-mono">
+                {entry.formattedDate}
+              </td>
+              <td class="col-status">
+                <span class={`status-badge font-mono ${entry.isDraft ? 'status-draft' : 'status-published'}`}>
+                  {entry.isDraft ? 'Draft' : 'Published'}
+                </span>
+              </td>
+              <td class="col-actions">
+                <div class="action-links">
+                  <a href={entry.editHref} class="action-link">Edit</a>
+                  <span class="action-divider">|</span>
+                  <a href={entry.viewHref} target="_blank" rel="noopener noreferrer" class="action-link">View ↗</a>
+                </div>
+              </td>
+            </tr>
+          ))}
+          {allEntries.length === 0 && (
+            <tr>
+              <td colspan="7" class="empty-cell font-mono">
+                No entries cataloged
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</AdminLayout>
+
+<script>
+  function setupDashboardFilters() {
+    const tabButtons = document.querySelectorAll<HTMLButtonElement>('.tab-btn');
+    const tableRows = document.querySelectorAll<HTMLTableRowElement>('.entry-row');
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach((b) => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+
+        const filterType = btn.getAttribute('data-filter-type') || 'all';
+        const filterStatus = btn.getAttribute('data-filter-status') || 'all';
+
+        tableRows.forEach((row) => {
+          const rowType = row.getAttribute('data-type');
+          const rowStatus = row.getAttribute('data-status');
+
+          const matchType = filterType === 'all' || filterType === rowType;
+          const matchStatus = filterStatus === 'all' || filterStatus === rowStatus;
+
+          if (matchType && matchStatus) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupDashboardFilters);
+  if (document.readyState !== 'loading') setupDashboardFilters();
+  else document.addEventListener('DOMContentLoaded', setupDashboardFilters);
+</script>
+
+<style is:global>
+  .studio-wrapper {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 20px 64px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .studio-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .studio-page-title {
+    font-size: clamp(1.4rem, 2.5vw, 1.75rem);
+    font-weight: 400;
+    margin: 0;
+    color: var(--title);
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  }
+
+  .stat-num {
+    font-family: var(--font-title);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--title);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .filter-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 0;
+    transition: color 120ms ease;
+  }
+
+  .tab-btn:hover {
+    color: var(--title);
+  }
+
+  .tab-btn.is-active {
+    font-weight: 700;
+    color: var(--title);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .tab-divider {
+    color: var(--border);
+    font-size: 11px;
+    user-select: none;
+  }
+
+  .table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    overflow-x: auto;
+  }
+
+  .entries-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+  }
+
+  .entries-table th {
+    background: #fafafa;
+    color: var(--title);
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .entries-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .entries-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .entries-table tr:hover td {
+    background: #fafafa;
+  }
+
+  .row-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .entry-title-text {
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--title);
+    text-decoration: none;
+  }
+
+  .entry-title-text:hover {
+    text-decoration: underline;
+  }
+
+  .entry-slug-text {
+    font-size: 11px;
+    color: var(--text-2);
+  }
+
+  .type-badge {
+    display: inline-block;
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    font-size: 10px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text);
+    border-radius: 2px;
+    background: #fafafa;
+  }
+
+  .category-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 10px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+
+  .location-text {
+    color: var(--text-2);
+    font-size: 12px;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .status-published {
+    background: #edf8ee;
+    color: #1e7025;
+    border: 1px solid #b8e2bb;
+  }
+
+  .status-draft {
+    background: #ffffff;
+    color: var(--text-2);
+    border: 1px dashed var(--border);
+  }
+
+  .action-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .action-link {
+    font-family: var(--font-title);
+    color: var(--title);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+  }
+
+  .action-link:hover {
+    text-decoration: underline;
+  }
+
+  .action-divider {
+    color: var(--border);
+    font-size: 11px;
+    user-select: none;
+  }
+
+  .empty-cell {
+    text-align: center;
+    padding: 40px 16px;
+    font-size: 12px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+</style>

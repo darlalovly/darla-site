@@ -1,0 +1,898 @@
+---
+// File: src/pages/admin/edit/[slug].astro
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getCollection } from 'astro:content';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const typeParam = Astro.url.searchParams.get('type') || 'post';
+
+let targetEntry: any = null;
+let entryType: 'POST' | 'RECIPE' = 'POST';
+
+if (typeParam === 'recipe') {
+  const recipes = await getCollection('recipes');
+  targetEntry = recipes.find((r) => r.id.replace(/\.(md|mdx)$/, '') === slug);
+  if (targetEntry) entryType = 'RECIPE';
+}
+
+if (!targetEntry) {
+  const posts = await getCollection('posts');
+  targetEntry = posts.find((p) => p.id.replace(/\.(md|mdx)$/, '') === slug);
+  if (targetEntry) entryType = 'POST';
+}
+
+if (!targetEntry) {
+  const recipes = await getCollection('recipes');
+  targetEntry = recipes.find((r) => r.id.replace(/\.(md|mdx)$/, '') === slug);
+  if (targetEntry) entryType = 'RECIPE';
+}
+
+if (!targetEntry) {
+  return Astro.redirect('/admin');
+}
+
+const data = targetEntry.data || {};
+const title = data.title || data.recipeName || '';
+const description = data.description || data.excerpt || data.recipeExcerpt || '';
+const dateIso = data.date ? new Date(data.date).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16);
+const category = (data.category || (entryType === 'RECIPE' ? 'recipes' : 'sights')).toLowerCase();
+const location = data.location || '';
+const isDraft = Boolean(data.isDraft || data.draft);
+const heroImage = data.image || data.thumbnailKey || '';
+const moodString = Array.isArray(data.mood) ? data.mood.join(', ') : (data.mood || '');
+const tagsString = Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || '');
+
+const locationsList = Array.isArray(data.locations) ? data.locations : [];
+const galleryList = Array.isArray(data.gallery)
+  ? data.gallery.map((g: any) => (typeof g === 'string' ? { src: g, alt: '' } : { src: g.src || g.key || '', alt: g.alt || '' }))
+  : [];
+
+const rawBody = targetEntry.body || '';
+
+const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
+const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
+
+const allPosts = await getCollection('posts');
+const extractedImages: { url: string; key: string; sourcePost: string }[] = [];
+
+allPosts.forEach((post) => {
+  const heroKey = post.data.thumbnailKey || post.data.image;
+  if (heroKey) {
+    const fullUrl = heroKey.startsWith('http') ? heroKey : `${cleanBase}${heroKey.replace(/^\/+/, '')}`;
+    extractedImages.push({
+      url: fullUrl,
+      key: heroKey,
+      sourcePost: post.data.title || post.id,
+    });
+  }
+  if (Array.isArray(post.data.gallery)) {
+    post.data.gallery.forEach((item: any) => {
+      const itemKey = typeof item === 'string' ? item : (item.src || item.key);
+      if (itemKey) {
+        const fullUrl = itemKey.startsWith('http') ? itemKey : `${cleanBase}${itemKey.replace(/^\/+/, '')}`;
+        extractedImages.push({
+          url: fullUrl,
+          key: itemKey,
+          sourcePost: post.data.title || post.id,
+        });
+      }
+    });
+  }
+});
+
+const mediaAssets = Array.from(new Map(extractedImages.map((img) => [img.key, img])).values());
+const categories = ['sights', 'food', 'events', 'musings', 'recipes'];
+---
+
+<AdminLayout title={`Edit ${title} ‹ darlalovly Studio`}>
+  <div class="studio-wrapper">
+    
+    <div class="studio-header-bar">
+      <div class="header-left">
+        <h1 class="studio-page-title">Edit {entryType === 'RECIPE' ? 'Recipe' : 'Entry'}</h1>
+        <a href="/admin" class="btn btn-secondary btn-sm">‹ All Entries</a>
+      </div>
+      <div class="studio-top-actions">
+        <button id="top-publish-btn" type="button" class="btn btn-primary">
+          Update File
+        </button>
+      </div>
+    </div>
+
+    <div id="save-banner" class="save-feedback-banner" style="display: none;"></div>
+
+    <form id="post-editor-form" class="studio-grid" onsubmit="return false;">
+      
+      <!-- LEFT COLUMN -->
+      <div class="studio-main-col">
+        
+        <div class="studio-card title-card">
+          <input
+            id="post-title"
+            type="text"
+            required
+            placeholder="Add title"
+            value={title}
+            class="input-title"
+          />
+          <div class="permalink-bar">
+            <span class="permalink-label">Permalink:</span>
+            <span class="permalink-host">https://darlalovly.com/{entryType === 'RECIPE' ? 'recipes' : 'posts'}/</span>
+            <input
+              id="post-slug"
+              type="text"
+              required
+              value={slug}
+              class="input-slug font-mono"
+            />
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Narrative Content (Markdown)</span>
+            <span class="card-subtitle">Rendered cleanly inside article canvas</span>
+          </div>
+          <div class="card-body">
+            <textarea
+              id="post-content"
+              rows="16"
+              placeholder="Write narrative Markdown..."
+              class="input-textarea font-sans"
+            >{rawBody}</textarea>
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Locations & Map Pins</span>
+            <button id="add-pin-btn" type="button" class="btn btn-secondary btn-sm">
+              + Add Location Pin
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="pins-container" class="repeater-list">
+              <p id="no-pins-notice" class="empty-notice" style={locationsList.length > 0 ? "display: none;" : ""}>
+                No locations added yet. Click "+ Add Location Pin" to attach Google Maps pins.
+              </p>
+              {locationsList.map((loc: any) => (
+                <div class="repeater-row pin-row">
+                  <input type="text" placeholder="Place Name" value={loc.name || ''} class="pin-name input-control" />
+                  <input type="text" placeholder="Address" value={loc.address || ''} class="pin-addr input-control" />
+                  <div class="row-flex">
+                    <input type="text" placeholder="Maps Link (URL)" value={loc.url || ''} class="pin-url input-control font-mono" />
+                    <button type="button" class="del-row-btn" title="Remove">✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Photo Archive Gallery</span>
+            <div class="btn-group">
+              <button id="add-gallery-modal-btn" type="button" class="btn btn-secondary btn-sm">
+                + Select from Media Library
+              </button>
+              <button id="add-gallery-btn" type="button" class="btn btn-secondary btn-sm">
+                + Add Empty Row
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="gallery-container" class="repeater-list">
+              <p id="no-gallery-notice" class="empty-notice" style={galleryList.length > 0 ? "display: none;" : ""}>
+                No gallery photos added yet. These will render at the bottom of the entry in an uncropped archive grid.
+              </p>
+              {galleryList.map((item: any) => (
+                <div class="repeater-row gallery-row">
+                  <div class="row-flex">
+                    <input type="text" placeholder="R2 Image Path" value={item.src || ''} class="gal-key input-control font-mono" />
+                    <button type="button" class="btn btn-secondary btn-sm row-browse-btn">Pick</button>
+                  </div>
+                  <div class="row-flex">
+                    <input type="text" placeholder="Caption / Alt Text" value={item.alt || ''} class="gal-alt input-control" />
+                    <button type="button" class="del-row-btn" title="Remove">✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Generated Markdown Output</span>
+            <div class="btn-group">
+              <button id="copy-markdown-btn" type="button" class="btn btn-secondary btn-sm">
+                Copy Markdown
+              </button>
+              <button id="download-btn" type="button" class="btn btn-secondary btn-sm">
+                Download .md
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <pre id="output-preview" class="code-preview font-mono"></pre>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="studio-side-col">
+        
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Publish</span>
+          </div>
+          <div class="card-body side-fields">
+            <div class="form-row-inline">
+              <span class="field-label">Status:</span>
+              <select id="post-status" class="input-select">
+                <option value="false" selected={!isDraft}>Published</option>
+                <option value="true" selected={isDraft}>Draft</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="post-date" class="field-label">Date & Time:</label>
+              <input
+                id="post-date"
+                type="datetime-local"
+                value={dateIso}
+                class="input-control font-mono"
+              />
+            </div>
+
+            <div class="form-row">
+              <label for="post-general-location" class="field-label">City / State Tag:</label>
+              <input
+                id="post-general-location"
+                type="text"
+                placeholder="e.g. Philadelphia, Pennsylvania"
+                value={location}
+                class="input-control"
+              />
+            </div>
+          </div>
+          <div class="card-footer">
+            <button id="generate-markdown-btn" type="button" class="link-btn">
+              Update Preview
+            </button>
+            <button id="side-publish-btn" type="button" class="btn btn-primary">
+              Update File
+            </button>
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Categories</span>
+          </div>
+          <div class="card-body">
+            <div class="category-list">
+              {categories.map((cat) => (
+                <label class="category-item">
+                  <input
+                    type="radio"
+                    name="post-category"
+                    value={cat}
+                    checked={category === cat}
+                  />
+                  <span class="category-name">{cat}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Featured Image</span>
+            <button id="browse-hero-modal-btn" type="button" class="btn btn-secondary btn-sm">
+              Choose from Library
+            </button>
+          </div>
+          <div class="card-body side-fields">
+            <input
+              id="post-hero"
+              type="text"
+              placeholder="/images/posts/.../header.webp"
+              value={heroImage}
+              class="input-control font-mono"
+            />
+            <div id="hero-preview-box" class="hero-preview-box">
+              {heroImage ? (
+                <img src={heroImage.startsWith('http') ? heroImage : `${cleanBase}${heroImage.replace(/^\/+/, '')}`} alt="Hero preview" class="preview-img" />
+              ) : (
+                <span>No image selected</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Mood & Tags</span>
+          </div>
+          <div class="card-body side-fields">
+            <div class="form-row">
+              <label for="post-mood" class="field-label">Mood (comma-separated):</label>
+              <input
+                id="post-mood"
+                type="text"
+                value={moodString}
+                placeholder="observant, excited"
+                class="input-control"
+              />
+            </div>
+            <div class="form-row">
+              <label for="post-tags" class="field-label">Tags (comma-separated):</label>
+              <input
+                id="post-tags"
+                type="text"
+                value={tagsString}
+                placeholder="architecture, sights"
+                class="input-control"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">Excerpt / Meta Description</span>
+          </div>
+          <div class="card-body">
+            <textarea
+              id="post-desc"
+              rows="3"
+              placeholder="Short summary for social previews..."
+              class="input-control"
+            >{description}</textarea>
+          </div>
+        </div>
+
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Image Selector Modal -->
+  <div id="media-modal-backdrop" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog studio-card">
+      <div class="card-header">
+        <span class="card-title" id="modal-title">Select Media from Library</span>
+        <button id="close-modal-btn" type="button" class="modal-close-btn" aria-label="Close Modal">✕</button>
+      </div>
+      <div class="modal-search-bar">
+        <input
+          id="modal-search-input"
+          type="text"
+          placeholder="Filter library by filename or entry..."
+          class="input-control"
+        />
+      </div>
+      <div class="modal-body">
+        <div id="modal-grid" class="modal-media-grid">
+          {mediaAssets.map((asset) => (
+            <button
+              type="button"
+              class="modal-asset-item"
+              data-key={asset.key}
+              data-search={`${asset.key} ${asset.sourcePost}`.toLowerCase()}
+            >
+              <div class="modal-thumb-wrap">
+                <img src={asset.url} alt={asset.key} loading="lazy" class="modal-thumb-img" />
+              </div>
+              <span class="modal-asset-key font-mono" title={asset.key}>{asset.key}</span>
+            </button>
+          ))}
+          {mediaAssets.length === 0 && (
+            <p class="empty-notice p-4 text-center">No media indexed in posts yet.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  function setupEditor() {
+    const titleInput = document.getElementById('post-title') as HTMLInputElement | null;
+    const slugInput = document.getElementById('post-slug') as HTMLInputElement | null;
+    const dateInput = document.getElementById('post-date') as HTMLInputElement | null;
+    const statusSelect = document.getElementById('post-status') as HTMLSelectElement | null;
+    const generalLocationInput = document.getElementById('post-general-location') as HTMLInputElement | null;
+    const heroInput = document.getElementById('post-hero') as HTMLInputElement | null;
+    const heroPreviewBox = document.getElementById('hero-preview-box');
+    const moodInput = document.getElementById('post-mood') as HTMLInputElement | null;
+    const tagsInput = document.getElementById('post-tags') as HTMLInputElement | null;
+    const descInput = document.getElementById('post-desc') as HTMLInputElement | null;
+    const contentInput = document.getElementById('post-content') as HTMLTextAreaElement | null;
+
+    const pinsContainer = document.getElementById('pins-container');
+    const galleryContainer = document.getElementById('gallery-container');
+    const addPinBtn = document.getElementById('add-pin-btn');
+    const addGalleryBtn = document.getElementById('add-gallery-btn');
+    const addGalleryModalBtn = document.getElementById('add-gallery-modal-btn');
+    const browseHeroModalBtn = document.getElementById('browse-hero-modal-btn');
+    const noPinsNotice = document.getElementById('no-pins-notice');
+    const noGalleryNotice = document.getElementById('no-gallery-notice');
+
+    const generateBtn = document.getElementById('generate-markdown-btn');
+    const topPublishBtn = document.getElementById('top-publish-btn') as HTMLButtonElement | null;
+    const sidePublishBtn = document.getElementById('side-publish-btn') as HTMLButtonElement | null;
+    const copyBtn = document.getElementById('copy-markdown-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const outputPreview = document.getElementById('output-preview');
+    const saveBanner = document.getElementById('save-banner');
+
+    const modalBackdrop = document.getElementById('media-modal-backdrop');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const modalSearchInput = document.getElementById('modal-search-input') as HTMLInputElement | null;
+    const modalAssetItems = document.querySelectorAll<HTMLButtonElement>('.modal-asset-item');
+    const modalTitle = document.getElementById('modal-title');
+
+    let currentTargetMode: 'hero' | 'gallery-new' | { type: 'gallery-row'; input: HTMLInputElement } = 'hero';
+
+    const updateHeroPreview = () => {
+      if (!heroInput || !heroPreviewBox) return;
+      const val = heroInput.value.trim();
+      if (val) {
+        heroPreviewBox.innerHTML = `<img src="${val}" alt="Hero preview" class="preview-img" onerror="this.parentElement.innerHTML='<span class=\\'err-msg\\'>Failed to load image</span>'" />`;
+      } else {
+        heroPreviewBox.innerHTML = '<span>No image selected</span>';
+      }
+    };
+
+    if (heroInput) {
+      heroInput.addEventListener('input', updateHeroPreview);
+    }
+
+    const bindRowActions = () => {
+      document.querySelectorAll<HTMLButtonElement>('.del-row-btn').forEach((btn) => {
+        btn.onclick = () => {
+          const row = btn.closest('.repeater-row');
+          if (row) {
+            row.remove();
+            if (pinsContainer && pinsContainer.querySelectorAll('.repeater-row').length === 0 && noPinsNotice) {
+              noPinsNotice.style.display = 'block';
+            }
+            if (galleryContainer && galleryContainer.querySelectorAll('.repeater-row').length === 0 && noGalleryNotice) {
+              noGalleryNotice.style.display = 'block';
+            }
+          }
+        };
+      });
+
+      document.querySelectorAll<HTMLButtonElement>('.row-browse-btn').forEach((btn) => {
+        btn.onclick = () => {
+          const row = btn.closest('.repeater-row');
+          const input = row?.querySelector('.gal-key') as HTMLInputElement | null;
+          if (input) {
+            openModal({ type: 'gallery-row', input });
+          }
+        };
+      });
+    };
+    bindRowActions();
+
+    const appendPinRow = (name = '', address = '', url = '') => {
+      if (!pinsContainer) return;
+      if (noPinsNotice) noPinsNotice.style.display = 'none';
+
+      const row = document.createElement('div');
+      row.className = 'repeater-row pin-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Place Name" value="${name}" class="pin-name input-control" />
+        <input type="text" placeholder="Address" value="${address}" class="pin-addr input-control" />
+        <div class="row-flex">
+          <input type="text" placeholder="Maps Link (URL)" value="${url}" class="pin-url input-control font-mono" />
+          <button type="button" class="del-row-btn" title="Remove">✕</button>
+        </div>
+      `;
+      pinsContainer.appendChild(row);
+      bindRowActions();
+    };
+
+    const appendGalleryRow = (key = '', caption = '') => {
+      if (!galleryContainer) return;
+      if (noGalleryNotice) noGalleryNotice.style.display = 'none';
+
+      const row = document.createElement('div');
+      row.className = 'repeater-row gallery-row';
+      row.innerHTML = `
+        <div class="row-flex">
+          <input type="text" placeholder="R2 Image Path" value="${key}" class="gal-key input-control font-mono" />
+          <button type="button" class="btn btn-secondary btn-sm row-browse-btn">Pick</button>
+        </div>
+        <div class="row-flex">
+          <input type="text" placeholder="Caption / Alt Text" value="${caption}" class="gal-alt input-control" />
+          <button type="button" class="del-row-btn" title="Remove">✕</button>
+        </div>
+      `;
+      galleryContainer.appendChild(row);
+      bindRowActions();
+    };
+
+    function openModal(mode: 'hero' | 'gallery-new' | { type: 'gallery-row'; input: HTMLInputElement }) {
+      currentTargetMode = mode;
+      if (modalTitle) {
+        modalTitle.textContent = mode === 'hero' ? 'Select Featured Image' : 'Select Gallery Image';
+      }
+      if (modalSearchInput) {
+        modalSearchInput.value = '';
+        modalAssetItems.forEach((btn) => ((btn as HTMLElement).style.display = ''));
+      }
+      if (modalBackdrop) {
+        modalBackdrop.style.display = 'flex';
+      }
+    }
+
+    function closeModal() {
+      if (modalBackdrop) modalBackdrop.style.display = 'none';
+    }
+
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) closeModal();
+      });
+    }
+
+    if (browseHeroModalBtn) {
+      browseHeroModalBtn.addEventListener('click', () => openModal('hero'));
+    }
+
+    if (addGalleryModalBtn) {
+      addGalleryModalBtn.addEventListener('click', () => openModal('gallery-new'));
+    }
+
+    if (modalSearchInput) {
+      modalSearchInput.addEventListener('input', () => {
+        const query = modalSearchInput.value.toLowerCase().trim();
+        modalAssetItems.forEach((btn) => {
+          const searchData = btn.getAttribute('data-search') || '';
+          if (!query || searchData.includes(query)) {
+            (btn as HTMLElement).style.display = '';
+          } else {
+            (btn as HTMLElement).style.display = 'none';
+          }
+        });
+      });
+    }
+
+    modalAssetItems.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-key') || '';
+        if (currentTargetMode === 'hero') {
+          if (heroInput) {
+            heroInput.value = key;
+            updateHeroPreview();
+          }
+        } else if (currentTargetMode === 'gallery-new') {
+          appendGalleryRow(key, '');
+        } else if (typeof currentTargetMode === 'object' && currentTargetMode.type === 'gallery-row') {
+          currentTargetMode.input.value = key;
+        }
+        closeModal();
+      });
+    });
+
+    if (addPinBtn) addPinBtn.onclick = () => appendPinRow();
+    if (addGalleryBtn) addGalleryBtn.onclick = () => appendGalleryRow();
+
+    const buildMarkdownString = () => {
+      const title = titleInput?.value.trim() || 'Untitled Entry';
+      const desc = descInput?.value.trim() || '';
+      const date = dateInput?.value ? new Date(dateInput.value).toISOString() : new Date().toISOString();
+      
+      const categoryRadio = document.querySelector('input[name="post-category"]:checked') as HTMLInputElement | null;
+      const category = categoryRadio?.value || 'sights';
+
+      const location = generalLocationInput?.value.trim() || '';
+      const hero = heroInput?.value.trim() || '';
+      const isDraft = statusSelect?.value === 'true';
+
+      const moodList = (moodInput?.value || '')
+        .split(',')
+        .map((m) => m.trim())
+        .filter(Boolean);
+
+      const tagsList = (tagsInput?.value || '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const pins: { name: string; address: string; url: string }[] = [];
+      pinsContainer?.querySelectorAll('.repeater-row').forEach((row) => {
+        const name = (row.querySelector('.pin-name') as HTMLInputElement)?.value.trim();
+        const address = (row.querySelector('.pin-addr') as HTMLInputElement)?.value.trim();
+        const url = (row.querySelector('.pin-url') as HTMLInputElement)?.value.trim();
+        if (name || address) pins.push({ name, address, url });
+      });
+
+      const gallery: { src: string; alt: string }[] = [];
+      galleryContainer?.querySelectorAll('.repeater-row').forEach((row) => {
+        const src = (row.querySelector('.gal-key') as HTMLInputElement)?.value.trim();
+        const alt = (row.querySelector('.gal-alt') as HTMLInputElement)?.value.trim();
+        if (src) gallery.push({ src, alt });
+      });
+
+      const frontmatter: string[] = [
+        '---',
+        `title: "${title.replace(/"/g, '\\"')}"`,
+        `description: "${desc.replace(/"/g, '\\"')}"`,
+        `date: "${date}"`,
+        `category: "${category}"`,
+      ];
+
+      if (location) frontmatter.push(`location: "${location.replace(/"/g, '\\"')}"`);
+      if (hero) frontmatter.push(`image: "${hero}"`);
+      if (moodList.length > 0) frontmatter.push(`mood: [${moodList.map((m) => `"${m}"`).join(', ')}]`);
+      if (tagsList.length > 0) frontmatter.push(`tags: [${tagsList.map((t) => `"${t}"`).join(', ')}]`);
+      frontmatter.push(`isDraft: ${isDraft}`);
+
+      if (pins.length > 0) {
+        frontmatter.push('locations:');
+        pins.forEach((pin) => {
+          frontmatter.push(`  - name: "${pin.name.replace(/"/g, '\\"')}"`);
+          if (pin.address) frontmatter.push(`    address: "${pin.address.replace(/"/g, '\\"')}"`);
+          if (pin.url) frontmatter.push(`    url: "${pin.url.replace(/"/g, '\\"')}"`);
+        });
+      }
+
+      if (gallery.length > 0) {
+        frontmatter.push('gallery:');
+        gallery.forEach((item) => {
+          frontmatter.push(`  - src: "${item.src}"`);
+          if (item.alt) frontmatter.push(`    alt: "${item.alt.replace(/"/g, '\\"')}"`);
+        });
+      }
+
+      frontmatter.push('---');
+
+      const narrative = contentInput?.value.trim() || '';
+      return `${frontmatter.join('\n')}\n\n${narrative}\n`;
+    };
+
+    const updatePreview = () => {
+      if (outputPreview) {
+        outputPreview.textContent = buildMarkdownString();
+      }
+    };
+
+    if (generateBtn) generateBtn.onclick = updatePreview;
+
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        const md = buildMarkdownString();
+        await navigator.clipboard.writeText(md);
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+      };
+    }
+
+    if (downloadBtn) {
+      downloadBtn.onclick = () => {
+        const md = buildMarkdownString();
+        const filename = `${slugInput?.value.trim() || 'entry'}.md`;
+        const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    async function handleUpdate() {
+      const slug = slugInput?.value.trim();
+      if (!slug) {
+        alert('Please specify a valid slug before updating.');
+        return;
+      }
+
+      const content = buildMarkdownString();
+      const categoryRadio = document.querySelector('input[name="post-category"]:checked') as HTMLInputElement | null;
+      const collection = categoryRadio?.value === 'recipes' ? 'recipes' : 'posts';
+
+      const buttons = [topPublishBtn, sidePublishBtn].filter(Boolean) as HTMLButtonElement[];
+      buttons.forEach((btn) => {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+      });
+
+      if (saveBanner) {
+        saveBanner.style.display = 'none';
+        saveBanner.className = 'save-feedback-banner';
+      }
+
+      try {
+        const res = await fetch('/admin/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ collection, slug, content }),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.error || 'Failed to update entry');
+        }
+
+        if (saveBanner) {
+          saveBanner.textContent = `Successfully updated ${slug}.md (${result.mode})`;
+          saveBanner.classList.add('banner-success');
+          saveBanner.style.display = 'block';
+        }
+
+        buttons.forEach((btn) => {
+          btn.disabled = false;
+          btn.textContent = 'Updated!';
+        });
+
+        setTimeout(() => {
+          buttons.forEach((btn) => {
+            btn.textContent = 'Update File';
+          });
+        }, 2200);
+      } catch (err: any) {
+        if (saveBanner) {
+          saveBanner.textContent = `Update Error: ${err.message}`;
+          saveBanner.classList.add('banner-error');
+          saveBanner.style.display = 'block';
+        }
+        buttons.forEach((btn) => {
+          btn.disabled = false;
+          btn.textContent = 'Update File';
+        });
+      }
+    }
+
+    if (topPublishBtn) topPublishBtn.addEventListener('click', handleUpdate);
+    if (sidePublishBtn) sidePublishBtn.addEventListener('click', handleUpdate);
+
+    updatePreview();
+  }
+
+  document.addEventListener('astro:page-load', setupEditor);
+  if (document.readyState !== 'loading') setupEditor();
+  else document.addEventListener('DOMContentLoaded', setupEditor);
+</script>
+
+<style is:global>
+  .save-feedback-banner {
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .banner-success {
+    background: #edf8ee;
+    color: #1e7025;
+    border: 1px solid #b8e2bb;
+  }
+
+  .banner-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-dialog {
+    width: 100%;
+    max-width: 840px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+  }
+
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .modal-close-btn:hover {
+    color: #000000;
+  }
+
+  .modal-search-bar {
+    padding: 12px 14px;
+    background: #fafafa;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+  }
+
+  .modal-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+
+  .modal-asset-item {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+    transition: border-color 120ms ease, transform 120ms ease;
+  }
+
+  .modal-asset-item:hover {
+    border-color: #000000;
+    transform: translateY(-1px);
+  }
+
+  .modal-thumb-wrap {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #f4f4f5;
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .modal-asset-key {
+    font-size: 10px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

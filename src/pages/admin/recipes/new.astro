@@ -1,0 +1,695 @@
+---
+// File: src/pages/admin/recipes/new.astro
+
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import '../../../styles/admin.css';
+import { getCollection } from 'astro:content';
+
+interface MediaAsset {
+  key: string;
+  url: string;
+}
+
+let existingRecipes: any[] = [];
+try {
+  existingRecipes = await getCollection('recipes');
+} catch {
+  existingRecipes = [];
+}
+
+const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
+const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
+
+const collectedImages: MediaAsset[] = [];
+for (const r of existingRecipes) {
+  if (r.data?.thumbnailKey) {
+    const key = r.data.thumbnailKey.replace(/^\/+/, '');
+    collectedImages.push({ key, url: key.startsWith('http') ? key : `${cleanBase}${key}` });
+  }
+  if (Array.isArray(r.data?.gallery)) {
+    for (const g of r.data.gallery) {
+      const k = typeof g === 'string' ? g : (g?.src || g?.key || '');
+      if (k) {
+        const cleanK = k.replace(/^\/+/, '');
+        collectedImages.push({ key: cleanK, url: cleanK.startsWith('http') ? cleanK : `${cleanBase}${cleanK}` });
+      }
+    }
+  }
+}
+
+const mediaAssets: MediaAsset[] = Array.from(new Map(collectedImages.map((img) => [img.key, img])).values());
+const currentDateStr = new Date().toISOString().slice(0, 16);
+---
+
+<AdminLayout title="Add New Recipe ‹ darlalovly Studio">
+  <div class="studio-wrapper">
+    
+    <!-- Studio Header Bar matching Screenshot 15 -->
+    <header class="studio-header-bar">
+      <div class="header-left">
+        <h1 class="studio-page-title">ADD NEW RECIPE</h1>
+        <a href="/admin" class="btn btn-secondary btn-sm" style="margin-left: 12px;">&larr; ALL ENTRIES</a>
+      </div>
+      <div class="header-right btn-group">
+        <button type="button" id="btn-copy-md" class="btn btn-secondary btn-sm">COPY MD</button>
+        <button type="button" id="btn-download-md" class="btn btn-secondary btn-sm">DOWNLOAD .MD</button>
+        <button type="submit" form="recipe-form" id="btn-submit" class="btn btn-primary btn-sm">PUBLISH</button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="status-banner" style="display: none;"></div>
+
+    <form id="recipe-form" class="studio-grid">
+      
+      <!-- Left Main Content Column -->
+      <main class="studio-main-col">
+        
+        <!-- Recipe Title & Permalink Card (Exact Sniffcult Post Style) -->
+        <div class="studio-card title-card">
+          <input
+            type="text"
+            id="title"
+            name="title"
+            required
+            placeholder="ADD TITLE"
+            class="input-title"
+          />
+
+          <div class="permalink-bar">
+            <span class="permalink-label">PERMALINK: https://darlalovly.com/recipes/</span>
+            <input
+              type="text"
+              id="slug"
+              name="slug"
+              required
+              placeholder="entry-slug"
+              class="input-slug font-mono"
+            />
+          </div>
+        </div>
+
+        <!-- Recipe Details Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">RECIPE DETAILS</span>
+            <span class="card-subtitle">DISPLAY TITLE & EXCERPT</span>
+          </div>
+          <div class="card-body side-fields">
+            <div class="form-row">
+              <label for="recipeName" class="field-label">RECIPE DISPLAY NAME</label>
+              <input
+                type="text"
+                id="recipeName"
+                name="recipeName"
+                placeholder="e.g. Southern Buttermilk Biscuits"
+                class="input-control"
+              />
+            </div>
+
+            <div class="form-row">
+              <label for="recipeExcerpt" class="field-label">RECIPE EXCERPT / DECK</label>
+              <textarea
+                id="recipeExcerpt"
+                name="recipeExcerpt"
+                rows="3"
+                placeholder="Warm, buttery bites coated in cinnamon-sugar..."
+                class="input-textarea"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Structured Ingredients & Instructions Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">RECIPE CARD CONTENT</span>
+            <span class="card-subtitle">INGREDIENTS & INSTRUCTIONS</span>
+          </div>
+          
+          <div class="card-body side-fields">
+            <div class="form-row">
+              <label for="recipeIngredients" class="field-label">INGREDIENTS (ONE PER LINE; USE **HEADER:** FOR GROUPS)</label>
+              <textarea
+                id="recipeIngredients"
+                name="recipeIngredients"
+                rows="8"
+                placeholder="**The Dough Base:**&#10;2 cups all-purpose flour&#10;1 tbsp baking powder&#10;&#10;**The Sauce:**&#10;1 cup heavy cream"
+                class="input-textarea font-mono"
+              ></textarea>
+            </div>
+
+            <div class="form-row">
+              <label for="recipeInstructions" class="field-label">INSTRUCTIONS (ONE PER LINE; USE **STEP TITLE:** TO BOLD)</label>
+              <textarea
+                id="recipeInstructions"
+                name="recipeInstructions"
+                rows="8"
+                placeholder="**Preheat & Prep:** Preheat oven to 450°F and grease baking sheet.&#10;**Cut Butter:** Cut cold butter into flour until pea-sized crumbs form.&#10;**Bake:** Bake for 12–15 minutes until golden brown."
+                class="input-textarea font-mono"
+              ></textarea>
+            </div>
+
+            <div class="form-row">
+              <label for="recipeNotes" class="field-label">KITCHEN NOTES & ADAPTATIONS</label>
+              <textarea
+                id="recipeNotes"
+                name="recipeNotes"
+                rows="4"
+                placeholder="**The Temperature Secret:**&#10;Keep your butter ice-cold for the flakiest layers."
+                class="input-textarea font-mono"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Narrative Markdown Story Body Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">ENTRY NARRATIVE (MARKDOWN)</span>
+            <span class="card-subtitle">RENDERED CLEANLY IN ARTICLE CANVAS</span>
+          </div>
+          <div class="card-body">
+            <textarea
+              id="markdownBody"
+              name="markdownBody"
+              rows="16"
+              placeholder="Write your story here using standard Markdown..."
+              class="input-textarea font-mono"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Photo Gallery Archive Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">PHOTO GALLERY ARCHIVE</span>
+            <button type="button" id="btn-add-gallery-item" class="btn btn-secondary btn-sm">+ ADD PHOTO</button>
+          </div>
+          <div class="card-body side-fields">
+            <p class="empty-notice">Filenames resolve automatically to your recipe subfolder in R2.</p>
+            <div id="gallery-container" class="repeater-list"></div>
+          </div>
+        </div>
+
+        <!-- SEO Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">SEARCH ENGINE OPTIMIZATION (SEO)</span>
+          </div>
+          <div class="card-body side-fields">
+            <div class="form-row">
+              <label for="seoTitle" class="field-label">SEO TITLE</label>
+              <input type="text" id="seoTitle" name="seoTitle" placeholder="Custom meta title" class="input-control" />
+            </div>
+            <div class="form-row">
+              <label for="seoDescription" class="field-label">SEO META DESCRIPTION</label>
+              <textarea id="seoDescription" name="seoDescription" rows="2" placeholder="Custom meta description" class="input-textarea"></textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-row">
+                <label for="seoFocusKeyword" class="field-label">FOCUS KEYWORD</label>
+                <input type="text" id="seoFocusKeyword" name="seoFocusKeyword" placeholder="e.g. buttermilk biscuits" class="input-control" />
+              </div>
+              <div class="form-row" style="justify-content: flex-end; padding-bottom: 6px;">
+                <label class="category-item" style="font-size: 11px;">
+                  <input type="checkbox" id="seoNoIndex" name="seoNoIndex" value="true" />
+                  <span>EXCLUDE FROM SEARCH ENGINES (NOINDEX)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Right Sidebar Controls -->
+      <aside class="studio-side-col">
+        
+        <!-- Publish Card (Exact Sniffcult Publish Widget Style) -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">PUBLISH</span>
+          </div>
+          <div class="card-body side-fields">
+            <div class="form-row">
+              <label class="field-label">STATUS:</label>
+              <select id="isDraftSelect" class="input-select" style="width: 100%;">
+                <option value="false" selected>PUBLISHED</option>
+                <option value="true">DRAFT</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="date" class="field-label">DATE & TIME:</label>
+              <input type="datetime-local" id="date" name="date" value={currentDateStr} class="input-control font-mono text-xs" />
+            </div>
+          </div>
+          <div class="card-footer">
+            <button type="button" id="btn-copy-md-side" class="link-btn">COPY MD</button>
+            <button type="submit" form="recipe-form" class="btn btn-primary btn-sm">PUBLISH</button>
+          </div>
+        </div>
+
+        <!-- Featured Hero Image Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">FEATURED IMAGE</span>
+            <button type="button" id="btn-open-media-modal" class="btn btn-secondary btn-sm" style="font-size: 10px; padding: 2px 8px;">CHOOSE FROM LIBRARY</button>
+          </div>
+          <div class="card-body side-fields">
+            <div class="form-row">
+              <label for="thumbnailKey" class="field-label">IMAGE KEY / FILENAME</label>
+              <input
+                type="text"
+                id="thumbnailKey"
+                name="thumbnailKey"
+                placeholder="recipe-hero.webp"
+                class="input-control font-mono text-xs"
+              />
+            </div>
+
+            <div class="form-row">
+              <label for="heroOrientation" class="field-label">ORIENTATION</label>
+              <select id="heroOrientation" name="heroOrientation" class="input-select" style="width: 100%;">
+                <option value="landscape" selected>LANDSCAPE (16:9)</option>
+                <option value="portrait">PORTRAIT</option>
+                <option value="square">SQUARE</option>
+              </select>
+            </div>
+
+            <div id="hero-preview-box" class="hero-preview-box mt-2">
+              <span>NO IMAGE SELECTED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timing & Parameters Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">TIMING & PARAMETERS</span>
+          </div>
+          <div class="card-body side-fields">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-row">
+                <label for="prepTime" class="field-label">PREP TIME</label>
+                <input type="text" id="prepTime" name="prepTime" placeholder="e.g. 20 min" class="input-control" />
+              </div>
+              <div class="form-row">
+                <label for="cookTime" class="field-label">COOK TIME</label>
+                <input type="text" id="cookTime" name="cookTime" placeholder="e.g. 45 min" class="input-control" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label for="servings" class="field-label">SERVINGS</label>
+              <input type="text" id="servings" name="servings" placeholder="e.g. 8" class="input-control" />
+            </div>
+
+            <div class="form-row">
+              <label for="spices" class="field-label">SPICES</label>
+              <input type="text" id="spices" name="spices" placeholder="e.g. cinnamon, cardamom" class="input-control" />
+            </div>
+
+            <div class="form-row">
+              <label for="tags" class="field-label">TAGS (COMMA SEPARATED)</label>
+              <input type="text" id="tags" name="tags" placeholder="bread, dessert, holiday" class="input-control" />
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </form>
+
+    <!-- Media Library Modal -->
+    <div id="media-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 class="card-title">SELECT R2 MEDIA ASSET</h3>
+          <button type="button" id="btn-close-modal" class="del-row-btn" style="font-size: 20px;">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="media-grid">
+            {mediaAssets.map((asset: MediaAsset) => (
+              <button
+                type="button"
+                class="media-choice-btn"
+                data-key={asset.key}
+                data-url={asset.url}
+              >
+                <img src={asset.url} alt={asset.key} loading="lazy" class="modal-thumb-img" />
+                <span class="media-key" style="font-size: 9px;">{asset.key.split('/').pop()}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</AdminLayout>
+
+<script is:inline define:vars={{ cleanBase }}>
+  let activeImageTarget = 'hero';
+
+  const titleInput = document.getElementById('title');
+  const slugInput = document.getElementById('slug');
+  const dateInput = document.getElementById('date');
+  const thumbInput = document.getElementById('thumbnailKey');
+  const heroPreview = document.getElementById('hero-preview-box');
+  const galleryContainer = document.getElementById('gallery-container');
+  const addGalleryBtn = document.getElementById('btn-add-gallery-item');
+  const statusBanner = document.getElementById('status-banner');
+
+  titleInput.addEventListener('input', () => {
+    if (!slugInput.dataset.manual) {
+      const raw = titleInput.value.toLowerCase().trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      const datePart = (dateInput.value || '').split('T')[0] || '';
+      slugInput.value = datePart ? `${datePart}-${raw}` : raw;
+    }
+  });
+
+  slugInput.addEventListener('input', () => {
+    slugInput.dataset.manual = 'true';
+  });
+
+  function updateHeroPreview() {
+    const val = thumbInput.value.trim();
+    if (!val) {
+      heroPreview.innerHTML = '<span>NO IMAGE SELECTED</span>';
+      return;
+    }
+    const fullUrl = val.startsWith('http')
+      ? val
+      : (val.startsWith('images/') ? `${cleanBase}${val}` : `${cleanBase}images/recipes/${slugInput.value || 'temp'}/${val}`);
+    heroPreview.innerHTML = `<img src="${fullUrl}" alt="Hero preview" class="preview-img" onerror="this.parentElement.innerHTML='<span>IMAGE NOT FOUND</span>'" />`;
+  }
+
+  thumbInput.addEventListener('input', updateHeroPreview);
+  slugInput.addEventListener('input', updateHeroPreview);
+
+  let galleryCounter = 0;
+  function addGalleryRow(initial = {}) {
+    galleryCounter++;
+    const rowId = `gallery-row-${galleryCounter}`;
+    const row = document.createElement('div');
+    row.className = 'recipe-gallery-row';
+    row.id = rowId;
+
+    row.innerHTML = `
+      <div class="form-row">
+        <label class="field-label" style="font-size: 10px;">IMAGE KEY / FILENAME</label>
+        <input type="text" class="input-control font-mono text-xs g-key" value="${initial.key || initial.src || ''}" placeholder="recipe-001.webp" />
+      </div>
+      <div class="form-row">
+        <label class="field-label" style="font-size: 10px;">DATE TAKEN</label>
+        <input type="date" class="input-control font-mono text-xs g-date" value="${initial.date || ''}" />
+      </div>
+      <div class="form-row">
+        <label class="field-label" style="font-size: 10px;">CAPTION / NOTE</label>
+        <input type="text" class="input-control text-xs g-caption" value="${initial.caption || ''}" placeholder="Crust baked golden brown" />
+      </div>
+      <div class="gallery-del-wrap">
+        <button type="button" class="del-row-btn btn-remove-g" title="Remove">&times;</button>
+      </div>
+    `;
+
+    row.querySelector('.btn-remove-g').onclick = () => row.remove();
+    galleryContainer.appendChild(row);
+  }
+
+  addGalleryBtn.onclick = () => addGalleryRow();
+
+  const modal = document.getElementById('media-modal');
+  const openModalBtn = document.getElementById('btn-open-media-modal');
+  const closeModalBtn = document.getElementById('btn-close-modal');
+
+  openModalBtn.onclick = () => {
+    activeImageTarget = 'hero';
+    modal.style.display = 'flex';
+  };
+
+  closeModalBtn.onclick = () => {
+    modal.style.display = 'none';
+  };
+
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+  };
+
+  document.querySelectorAll('.media-choice-btn').forEach((btn) => {
+    btn.onclick = () => {
+      const key = btn.dataset.key;
+      if (activeImageTarget === 'hero') {
+        thumbInput.value = key;
+        updateHeroPreview();
+      }
+      modal.style.display = 'none';
+    };
+  });
+
+  function buildRecipePayload() {
+    const title = titleInput.value.trim();
+    const recipeName = document.getElementById('recipeName').value.trim();
+    const slug = slugInput.value.trim() || 'untitled-recipe';
+    const dateVal = dateInput.value ? new Date(dateInput.value).toISOString() : new Date().toISOString();
+    const isDraft = document.getElementById('isDraftSelect').value === 'true';
+    const heroOrientation = document.getElementById('heroOrientation').value;
+    const thumbnailKey = thumbInput.value.trim();
+    const prepTime = document.getElementById('prepTime').value.trim();
+    const cookTime = document.getElementById('cookTime').value.trim();
+    const servings = document.getElementById('servings').value.trim();
+    const spices = document.getElementById('spices').value.trim();
+    const tags = document.getElementById('tags').value.split(',').map((t) => t.trim()).filter(Boolean);
+    const recipeExcerpt = document.getElementById('recipeExcerpt').value.trim();
+    const recipeIngredients = document.getElementById('recipeIngredients').value.trim();
+    const recipeInstructions = document.getElementById('recipeInstructions').value.trim();
+    const recipeNotes = document.getElementById('recipeNotes').value.trim();
+    const markdownBody = document.getElementById('markdownBody').value.trim();
+    const seoTitle = document.getElementById('seoTitle').value.trim();
+    const seoDescription = document.getElementById('seoDescription').value.trim();
+    const seoFocusKeyword = document.getElementById('seoFocusKeyword').value.trim();
+    const seoNoIndex = document.getElementById('seoNoIndex').checked;
+
+    const gallery = [];
+    document.querySelectorAll('#gallery-container .recipe-gallery-row').forEach((row) => {
+      const key = row.querySelector('.g-key').value.trim();
+      const date = row.querySelector('.g-date').value.trim();
+      const caption = row.querySelector('.g-caption').value.trim();
+      if (key) {
+        if (date || caption) {
+          gallery.push({ key, ...(date ? { date } : {}), ...(caption ? { caption } : {}) });
+        } else {
+          gallery.push(key);
+        }
+      }
+    });
+
+    const frontmatter = [
+      '---',
+      `title: ${JSON.stringify(title)}`,
+      ...(recipeName ? [`recipeName: ${JSON.stringify(recipeName)}`] : []),
+      `date: ${JSON.stringify(dateVal)}`,
+      `isDraft: ${isDraft}`,
+      `heroOrientation: ${JSON.stringify(heroOrientation)}`,
+      ...(thumbnailKey ? [`thumbnailKey: ${JSON.stringify(thumbnailKey)}`] : []),
+      'gallery:',
+      ...gallery.map((g) => typeof g === 'string' ? `  - ${JSON.stringify(g)}` : `  - key: ${JSON.stringify(g.key)}\n    ${g.date ? `date: ${JSON.stringify(g.date)}\n    ` : ''}${g.caption ? `caption: ${JSON.stringify(g.caption)}` : ''}`),
+      ...(prepTime ? [`prepTime: ${JSON.stringify(prepTime)}`] : []),
+      ...(cookTime ? [`cookTime: ${JSON.stringify(cookTime)}`] : []),
+      ...(servings ? [`servings: ${JSON.stringify(servings)}`] : []),
+      ...(spices ? [`spices: ${JSON.stringify(spices)}`] : []),
+      ...(tags.length ? [`tags: ${JSON.stringify(tags)}`] : []),
+      ...(recipeExcerpt ? [`recipeExcerpt: |\n  ${recipeExcerpt.replace(/\n/g, '\n  ')}`] : []),
+      ...(recipeIngredients ? [`recipeIngredients: |\n  ${recipeIngredients.replace(/\n/g, '\n  ')}`] : []),
+      ...(recipeInstructions ? [`recipeInstructions: |\n  ${recipeInstructions.replace(/\n/g, '\n  ')}`] : []),
+      ...(recipeNotes ? [`recipeNotes: |\n  ${recipeNotes.replace(/\n/g, '\n  ')}`] : []),
+      ...(seoTitle ? [`seoTitle: ${JSON.stringify(seoTitle)}`] : []),
+      ...(seoDescription ? [`seoDescription: ${JSON.stringify(seoDescription)}`] : []),
+      ...(seoFocusKeyword ? [`seoFocusKeyword: ${JSON.stringify(seoFocusKeyword)}`] : []),
+      ...(seoNoIndex ? [`seoNoIndex: true`] : []),
+      '---',
+      '',
+      markdownBody,
+    ].join('\n');
+
+    return { slug, frontmatter, data: { title, recipeName, date: dateVal, isDraft, thumbnailKey, gallery }, content: markdownBody };
+  }
+
+  document.getElementById('btn-download-md').onclick = () => {
+    const payload = buildRecipePayload();
+    const blob = new Blob([payload.frontmatter], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${payload.slug}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyMdAction = async () => {
+    const payload = buildRecipePayload();
+    await navigator.clipboard.writeText(payload.frontmatter);
+    showStatus('Markdown copied to clipboard! Ready to paste into src/content/recipes/', 'success');
+  };
+
+  document.getElementById('btn-copy-md').onclick = copyMdAction;
+  document.getElementById('btn-copy-md-side').onclick = copyMdAction;
+
+  document.getElementById('recipe-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'SAVING...';
+
+    const payload = buildRecipePayload();
+
+    try {
+      const res = await fetch('/admin/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          collection: 'recipes',
+          slug: payload.slug,
+          data: payload.data,
+          content: payload.content,
+          raw: payload.frontmatter,
+        }),
+      });
+
+      if (res.ok) {
+        showStatus(`Recipe saved successfully as ${payload.slug}.md!`, 'success');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showStatus(err.message || 'Saved locally; download .md file to sync with git repository.', 'info');
+      }
+    } catch {
+      showStatus('API endpoint unreachable; using direct .md download fallback.', 'info');
+      document.getElementById('btn-download-md').click();
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'PUBLISH';
+    }
+  };
+
+  function showStatus(msg, type) {
+    statusBanner.textContent = msg;
+    statusBanner.className = `status-banner status-${type}`;
+    statusBanner.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+<style is:global>
+  /* Local Overrides for Multi-field Recipe Elements */
+  .recipe-gallery-row {
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1.5fr auto;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  @media (max-width: 768px) {
+    .recipe-gallery-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .gallery-del-wrap {
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 4px;
+  }
+
+  .status-banner {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+  }
+
+  .status-success {
+    background: #f4f4f5;
+    color: #000000;
+    border: 1px solid var(--border);
+  }
+
+  .status-info {
+    background: #ffffff;
+    color: var(--text-2);
+    border: var(--dash);
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-box {
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 800px;
+    max-height: 85vh;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+  }
+
+  .modal-body {
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .media-choice-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    text-align: center;
+    transition: border-color 120ms ease;
+  }
+
+  .media-choice-btn:hover {
+    border-color: #000000;
+  }
+
+  .modal-thumb-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+</style>

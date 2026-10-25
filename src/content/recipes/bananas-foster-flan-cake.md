@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/bananas-foster-flan-cake.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,10 +13,10 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-bananas-foster-flan-cake-hero.webp"
+thumbnailKey: "images/recipes/2025-07-17-bananas-foster-flan-cake-recipe/recipe-bananas-foster-flan-cake-hero.webp"
 gallery: 
-  - "recipe-bananas-foster-flan-cake-001.webp"
-  - "recipe-bananas-foster-flan-cake-002.webp"
+  - "images/recipes/2025-07-17-bananas-foster-flan-cake-recipe/recipe-bananas-foster-flan-cake-001.webp"
+  - "images/recipes/2025-07-17-bananas-foster-flan-cake-recipe/recipe-bananas-foster-flan-cake-002.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -96,14 +98,14 @@ seoFocusKeyword: "Bananas Foster Flan Cake"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">A Dessert Miracle in the Making ❤️</h2>
+## A Dessert Miracle in the Making ❤️
 
-<p>Get ready to witness a dessert miracle! Today, we're jumping into a recipe that's part magic, part indulgence, and entirely unforgettable: a <strong>Banana Cake with Flan</strong> that flips in the oven to create a stunning banana-infused delight, all crowned with a sizzling, classic <strong>Bananas Foster</strong> topping.</p>
+Get ready to witness a dessert miracle! Today, we're jumping into a recipe that's part magic, part indulgence, and entirely unforgettable: a **Banana Cake with Flan** that flips in the oven to create a stunning banana-infused delight, all crowned with a sizzling, classic **Bananas Foster** topping.
 
-<p>This recipe was born from a fun challenge to see how many of my favorite sun-drenched flavors I could weave into one dessert. My inspiration pulled from two distinct culinary worlds: the decadent magic of the legendary <strong><a href="https://www.brennansneworleans.com/recipes/bananas-foster/">Bananas Foster from Brennan's in New Orleans</a></strong>, and the captivating structure of a classic <strong>Flan Imposible</strong>. I found great technique inspiration from <strong><a href="https://pinaenlacocina.com/chocoflanthe-not-so-impossible-cake/">¡Pina en la Cocina!</a></strong>.</p>
+This recipe was born from a fun challenge to see how many of my favorite sun-drenched flavors I could weave into one dessert. My inspiration pulled from two distinct culinary worlds: the decadent magic of the legendary **[Bananas Foster from Brennan's in New Orleans](https://www.brennansneworleans.com/recipes/bananas-foster/)**, and the captivating structure of a classic **Flan Imposible**. I found great technique inspiration from **[¡Pina en la Cocina!](https://pinaenlacocina.com/chocoflanthe-not-so-impossible-cake/)**.
 
-<h2 class="wp-block-heading">The Wow Factor: Why You'll Love This Cake ????</h2>
+## The Wow Factor: Why You'll Love This Cake ✨
 
-<p>There is something undeniably theatrical about this dessert. From the moment you invert the pan to reveal the perfectly set caramel and flan layers, to the final sizzle of the flambéed topping, it’s a showstopper. But beyond the presentation, it’s the <strong>Flavor Symphony</strong> that keeps people coming back. You get the deep notes from aged rum, the warmth of fresh cardamom and nutmeg, and the tropical brightness of ripe bananas in every single bite.</p>
+There is something undeniably theatrical about this dessert. From the moment you invert the pan to reveal the perfectly set caramel and flan layers, to the final sizzle of the flambéed topping, it’s a showstopper. But beyond the presentation, it’s the **Flavor Symphony** that keeps people coming back. You get the deep notes from aged rum, the warmth of fresh cardamom and nutmeg, and the tropical brightness of ripe bananas in every single bite.
 
-<p>The best part? It’s incredibly <strong>Make-Ahead Friendly</strong>. Because the cake and flan <em>must</em> chill to set correctly, you can handle the heavy lifting the night before. When it's time for dessert, you're just a quick stovetop flambé away from the big reveal.</p>
+The best part? It’s incredibly **Make-Ahead Friendly**. Because the cake and flan *must* chill to set correctly, you can handle the heavy lifting the night before. When it's time for dessert, you're just a quick stovetop flambé away from the big reveal.

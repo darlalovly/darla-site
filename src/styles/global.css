@@ -1,3 +1,5 @@
+/* File: src/styles/global.css */
+
 @import "tailwindcss";
 
 /* ==========================================================
@@ -88,7 +90,21 @@ p { margin-bottom: 1.5rem; }
   border-radius: 4px;
 }
 
-/* Base Top Navigation */
+/* Header, Navigation & Logo Restraints */
+header img,
+nav img,
+.col-topnav-brand img,
+.site-logo,
+#mobile-menu img,
+[data-mobile-menu] img {
+  height: 40px !important;
+  max-height: 40px !important;
+  width: auto !important;
+  max-width: 40px !important;
+  object-fit: contain !important;
+  display: inline-block !important;
+}
+
 .col-topnav {
   position: fixed;
   top: 0;
@@ -102,12 +118,6 @@ p { margin-bottom: 1.5rem; }
   justify-content: space-between;
   align-items: center;
   z-index: 1000;
-}
-
-.col-topnav-brand img {
-  height: 40px;
-  width: auto;
-  display: block;
 }
 
 .col-nav-list {
@@ -130,6 +140,12 @@ p { margin-bottom: 1.5rem; }
 
 .col-nav-list a:hover {
   color: var(--title);
+}
+
+#mobile-menu:not(.is-open):not(.open),
+[data-mobile-menu]:not(.is-open):not(.open),
+.mobile-nav-drawer:not(.is-open):not(.open) {
+  display: none !important;
 }
 
 main {
@@ -157,7 +173,6 @@ main {
   --tw-prose-links: #ffffff;
 }
 
-/* Eliminate all background fills, borders, and shadows from wrapping containers */
 .prose div,
 .prose figure,
 .prose picture,
@@ -170,7 +185,6 @@ main {
   box-shadow: none !important;
 }
 
-/* Borderless, seamless image and video styling */
 .prose img,
 .prose video {
   display: block;
@@ -184,7 +198,6 @@ main {
   box-shadow: none !important;
 }
 
-/* Standalone Centered Media Blocks */
 .prose p > img:not([src*="icon"]),
 .prose p > video,
 .prose figure > img,
@@ -195,7 +208,6 @@ main {
   object-fit: contain;
 }
 
-/* Small UI Icons Inside Markdown Links / Text */
 .prose a img,
 .prose img[src*="icon"] {
   display: inline-block !important;
@@ -217,7 +229,6 @@ main {
   text-underline-offset: 4px;
 }
 
-/* Seamless Float Text Wrapping Utilities */
 .media-wrap-left {
   float: left;
   margin: 0.35rem 1.75rem 1.25rem 0;
@@ -243,7 +254,6 @@ main {
   }
 }
 
-/* Clearfix Utility */
 .clear-media {
   clear: both;
 }

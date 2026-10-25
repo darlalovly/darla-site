@@ -4,6 +4,7 @@
 export const prerender = true;
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
 import { getCollection, getEntry, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 
@@ -47,13 +48,71 @@ const nextRecipe = publishedRecipes[currentIndex - 1];
 
 const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
 
-const resolveImageUrl = (imgKey?: string): string | undefined => {
+type ImageInput =
+  | string
+  | {
+      src?: string;
+      key?: string;
+      alt?: string;
+      caption?: string;
+      date?: string | number | Date;
+    }
+  | undefined
+  | null;
+
+const resolveImageUrl = (img?: ImageInput, targetSlug = currentId): string | undefined => {
+  if (!img) return undefined;
+  const imgKey = typeof img === 'string' ? img : (img.src || img.key);
   if (!imgKey) return undefined;
-  if (imgKey.startsWith('http://') || imgKey.startsWith('https://') || imgKey.startsWith('/')) {
-    return imgKey;
-  }
+  if (imgKey.startsWith('http://') || imgKey.startsWith('https://')) return imgKey;
   const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
-  return `${cleanBase}${imgKey.replace(/^\/+/, '')}`;
+  const cleanKey = imgKey.replace(/^\/+/, '');
+  if (cleanKey.startsWith('images/')) {
+    return `${cleanBase}${cleanKey}`;
+  }
+  return `${cleanBase}images/recipes/${targetSlug}/${cleanKey}`;
+};
+
+const extractImageDate = (img: ImageInput, fallbackDate?: string | number | Date): string | undefined => {
+  if (typeof img === 'object' && img?.date) {
+    try {
+      return new Date(img.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {}
+  }
+  const str = typeof img === 'string' ? img : (img?.src || img?.key || '');
+  const dateMatch = str.match(/(?:^|\/)(\d{4})[-_.](\d{2})[-_.](\d{2})/);
+  if (dateMatch) {
+    const [, y, m, d] = dateMatch;
+    const parsed = new Date(`${y}-${m}-${d}T12:00:00`);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+  }
+  if (fallbackDate) {
+    try {
+      return new Date(fallbackDate).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {}
+  }
+  return undefined;
+};
+
+const getImageCaption = (img: ImageInput): string | undefined => {
+  if (typeof img === 'object' && img?.caption) {
+    return img.caption;
+  }
+  return undefined;
 };
 
 const featureImageKey = entry.data.thumbnailKey || (entry.data.gallery && entry.data.gallery[0]);
@@ -78,8 +137,10 @@ const displayDate = entry.data.date
     })
   : "";
 
-const prevThumb = prevRecipe ? resolveImageUrl(prevRecipe.data.thumbnailKey || (prevRecipe.data.gallery && prevRecipe.data.gallery[0])) : undefined;
-const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (nextRecipe.data.gallery && nextRecipe.data.gallery[0])) : undefined;
+const prevSlug = prevRecipe ? prevRecipe.id.replace(/\.(md|mdx)$/, '') : undefined;
+const nextSlug = nextRecipe ? nextRecipe.id.replace(/\.(md|mdx)$/, '') : undefined;
+const prevThumb = prevRecipe ? resolveImageUrl(prevRecipe.data.thumbnailKey || (prevRecipe.data.gallery && prevRecipe.data.gallery[0]), prevSlug) : undefined;
+const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (nextRecipe.data.gallery && nextRecipe.data.gallery[0]), nextSlug) : undefined;
 ---
 
 <BaseLayout 
@@ -89,10 +150,12 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
   type="article"
   publishedTime={entry.data.date}
 >
-  <article class="w-full max-w-4xl mx-auto flex flex-col gap-12 pb-16">
+  <Header />
+
+  <article class="w-full max-w-4xl mx-auto flex flex-col gap-12 pt-24 sm:pt-28 pb-16 px-4 sm:px-6">
     
-    <!-- Recipe Header -->
-    <header class="flex flex-col gap-6 border-b border-neutral-800 pb-10">
+    <!-- Recipe Intro Section -->
+    <section class="recipe-intro flex flex-col gap-6 border-b border-neutral-800 pb-10">
       <nav class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400 flex items-center gap-2">
         <a href="/" class="hover:text-white transition-colors">Home</a>
         <span>/</span>
@@ -118,11 +181,11 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
       )}
 
       {resolvedFeatureImage && (
-        <div class="w-full overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800/80 mt-2">
+        <div class="recipe-featured-frame w-full aspect-video overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800/80 mt-2">
           <img
             src={resolvedFeatureImage}
             alt={entry.data.title}
-            class="w-full h-auto max-h-[540px] object-cover rounded-xl block"
+            class="recipe-featured-img w-full h-full object-cover rounded-xl block"
           />
         </div>
       )}
@@ -135,7 +198,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
           Jump to Recipe &darr;
         </a>
       </div>
-    </header>
+    </section>
 
     <!-- Main Prose Body Content -->
     <div class="prose prose-invert max-w-none text-neutral-200 font-sans leading-relaxed">
@@ -145,15 +208,15 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
     <!-- Structured Recipe Card -->
     <section id="recipe-card" class="border border-neutral-800 rounded-xl bg-neutral-900/50 p-6 sm:p-10 flex flex-col gap-8">
       <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-800 pb-6">
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1 min-w-0 flex-1">
           <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ RECIPE CARD ]</div>
-          <h2 class="text-2xl sm:text-3xl font-mono uppercase tracking-wide text-white m-0">
+          <h2 class="text-2xl sm:text-3xl font-mono uppercase tracking-wide text-white m-0 break-words">
             {entry.data.recipeName || entry.data.title}
           </h2>
         </div>
         <button
           onclick="window.print()"
-          class="cursor-pointer border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white hover:border-white transition-colors rounded-sm"
+          class="cursor-pointer shrink-0 whitespace-nowrap border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white hover:border-white transition-colors rounded-sm"
         >
           Print
         </button>
@@ -203,21 +266,41 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
       )}
     </section>
 
-    <!-- Mosaic Gallery Section -->
+    <!-- Mosaic Gallery Section with Chronological Dates & Captions -->
     {entry.data.gallery && entry.data.gallery.length > 0 && (
       <section class="flex flex-col gap-6 border-t border-neutral-800 pt-10">
-        <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ GALLERY ]</div>
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ GALLERY / CHRONOLOGY ]</div>
+          <span class="text-[11px] font-mono text-neutral-500 uppercase tracking-wider">{entry.data.gallery.length} Photos</span>
+        </div>
         <div class="columns-1 sm:columns-2 md:columns-3 gap-5 [column-fill:_balance]">
           {entry.data.gallery.map((img) => {
             const galleryUrl = resolveImageUrl(img);
+            const altText = typeof img === 'object' && img?.alt ? img.alt : `${entry.data.title} photograph`;
+            const photoDate = extractImageDate(img, entry.data.date);
+            const captionText = getImageCaption(img);
             return (
               <figure class="mb-5 break-inside-avoid overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800/80 group">
                 <img
                   src={galleryUrl}
-                  alt={`${entry.data.title} photograph`}
+                  alt={altText}
                   loading="lazy"
-                  class="w-full h-auto object-contain rounded-xl block transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                  class="w-full h-auto object-contain rounded-t-xl block transition-transform duration-500 ease-out group-hover:scale-[1.02]"
                 />
+                {(photoDate || captionText) && (
+                  <figcaption class="p-3 bg-neutral-950/80 border-t border-neutral-800/80 flex flex-col gap-1">
+                    {photoDate && (
+                      <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+                        {photoDate}
+                      </span>
+                    )}
+                    {captionText && (
+                      <span class="text-xs font-sans text-neutral-300 leading-snug">
+                        {captionText}
+                      </span>
+                    )}
+                  </figcaption>
+                )}
               </figure>
             );
           })}
@@ -231,10 +314,14 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
         <div class="relative group flex items-center w-full sm:w-1/2">
           {prevThumb && (
             <div class="absolute bottom-full mb-4 left-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-              <div class="relative overflow-hidden rounded-xl crt-tv-frame w-48 h-32 bg-neutral-900 border border-neutral-700/60 shadow-2xl">
+              <div class="crt-tv-frame rounded-xl bg-neutral-900 border border-neutral-700/60 shadow-2xl">
                 <div class="absolute inset-0 pointer-events-none z-20 crt-screen-vignette"></div>
                 <div class="absolute inset-0 pointer-events-none z-10 crt-scanlines"></div>
-                <img src={prevThumb} alt={prevRecipe.data.title} class="w-full h-full object-cover rounded-xl" />
+                <img
+                  src={prevThumb}
+                  alt={prevRecipe.data.title}
+                  class="crt-thumb-img rounded-xl"
+                />
               </div>
             </div>
           )}
@@ -256,10 +343,14 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
         <div class="relative group flex items-center justify-end w-full sm:w-1/2 ml-auto">
           {nextThumb && (
             <div class="absolute bottom-full mb-4 right-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-              <div class="relative overflow-hidden rounded-xl crt-tv-frame w-48 h-32 bg-neutral-900 border border-neutral-700/60 shadow-2xl">
+              <div class="crt-tv-frame rounded-xl bg-neutral-900 border border-neutral-700/60 shadow-2xl">
                 <div class="absolute inset-0 pointer-events-none z-20 crt-screen-vignette"></div>
                 <div class="absolute inset-0 pointer-events-none z-10 crt-scanlines"></div>
-                <img src={nextThumb} alt={nextRecipe.data.title} class="w-full h-full object-cover rounded-xl" />
+                <img
+                  src={nextThumb}
+                  alt={nextRecipe.data.title}
+                  class="crt-thumb-img rounded-xl"
+                />
               </div>
             </div>
           )}
@@ -282,6 +373,37 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
 </BaseLayout>
 
 <style>
+  .recipe-featured-frame {
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .recipe-featured-img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
+  .crt-tv-frame {
+    width: 192px !important;
+    height: 128px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    display: block !important;
+  }
+
+  .crt-thumb-img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
   .crt-screen-vignette {
     box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.85), inset 0 0 6px rgba(0, 0, 0, 0.95);
   }

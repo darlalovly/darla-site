@@ -12,6 +12,10 @@ interface NavSection {
   children?: SubItem[];
 }
 
+const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
+const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
+const r2LogoUrl = `${cleanBase}branding/darlalovly-logo.webp`;
+
 const navSections: NavSection[] = [
   {
     label: 'Travel & Sights',
@@ -57,7 +61,7 @@ const navSections: NavSection[] = [
   <div class="max-w-6xl mx-auto px-4 sm:px-6 h-20 sm:h-24 flex items-center justify-between">
     <a href="/" class="site-logo-link flex items-center select-none" aria-label="darlalovly home">
       <img
-        src="/images/logo.png"
+        src={r2LogoUrl}
         alt="darlalovly fleur-de-lis logo"
         class="site-logo h-12 sm:h-14 w-auto object-contain transition-opacity duration-300 hover:opacity-80"
       />
@@ -85,7 +89,7 @@ const navSections: NavSection[] = [
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-20 sm:h-24 flex items-center justify-between">
       <a href="/" class="site-logo-link flex items-center select-none" aria-label="darlalovly home">
         <img
-          src="/images/logo.png"
+          src={r2LogoUrl}
           alt="darlalovly fleur-de-lis logo"
           class="site-logo h-12 sm:h-14 w-auto object-contain transition-opacity duration-300 hover:opacity-80"
         />
@@ -152,7 +156,7 @@ const navSections: NavSection[] = [
 
     document.querySelectorAll<HTMLImageElement>('img.site-logo').forEach((img) => {
       img.onerror = () => {
-        const fallbacks = ['/images/logo.svg', '/images/logo.webp', '/logo.png', '/favicon.svg'];
+        const fallbacks = ['/images/logo.png', '/images/logo.webp', '/favicon.svg'];
         const currentStep = parseInt(img.dataset.step || '0', 10);
         if (currentStep < fallbacks.length) {
           img.dataset.step = String(currentStep + 1);

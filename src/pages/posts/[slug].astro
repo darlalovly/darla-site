@@ -73,6 +73,9 @@ const nextSlug = nextPost ? getSlug(nextPost) : null;
 const nextTitle = nextPost ? nextPost.data.title : null;
 const nextImage = nextPost ? resolveImageUrl(nextPost.data.thumbnailKey || nextPost.data.image) : null;
 
+const locations = post.data.locations || [];
+const galleryItems = post.data.gallery || [];
+
 const { Content } = await render(post);
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url);
 
@@ -104,7 +107,7 @@ const schemaGraph: any = {
         "name": "darlalovly",
         "logo": {
           "@type": "ImageObject",
-          "url": new URL("/images/logo.png", canonicalURL).href
+          "url": new URL("/icons/darlalovly-logo.svg", canonicalURL).href
         }
       },
       ...(heroImage ? { "image": [new URL(heroImage, canonicalURL).href] } : {}),
@@ -209,11 +212,81 @@ const schemaGraph: any = {
         </div>
       )}
 
-      <div class="prose prose-invert prose-neutral max-w-none font-sans text-neutral-200 leading-relaxed pt-2 break-words post-flow-content">
+      <!-- Clean Narrative Text -->
+      <div class="prose prose-invert prose-neutral max-w-none font-sans text-neutral-200 leading-relaxed pt-2 break-words">
         <Content />
       </div>
 
-      <nav class="mt-16 sm:mt-24 pt-8 sm:pt-12 border-t border-neutral-800 flex flex-row items-center justify-between gap-4 w-full select-none" aria-label="Post pagination">
+      <!-- Structured Location Pins & Links Component -->
+      {locations.length > 0 && (
+        <section class="mt-12 pt-8 border-t border-neutral-800/80 flex flex-col gap-4 font-mono w-full clear-both" aria-label="Locations">
+          <div class="flex items-center justify-between text-xs text-neutral-400 uppercase tracking-[0.2em]">
+            <span>[ Location Pins & Links ]</span>
+            <span>{locations.length} {locations.length === 1 ? 'Pin' : 'Pins'}</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {locations.map((loc: any) => {
+              const mapsUrl = loc.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.name} ${loc.address || ''}`)}`;
+              return (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-start gap-3 p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800 hover:border-neutral-600 transition-colors group select-none text-left"
+                >
+                  <span class="text-base select-none">📍</span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-white group-hover:underline font-sans text-sm font-medium truncate">
+                      {loc.name}
+                    </span>
+                    {loc.address && (
+                      <span class="text-neutral-400 font-mono text-[11px] mt-0.5 break-words">
+                        {loc.address}
+                      </span>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <!-- Structured Photo Archive Gallery Component -->
+      {galleryItems.length > 0 && (
+        <section class="my-12 pt-8 border-t border-neutral-800/80 clear-both w-full select-none" aria-label="Photo Archive">
+          <div class="mb-6 flex items-center justify-between font-mono text-xs text-neutral-400 uppercase tracking-[0.2em]">
+            <span>[ Photo Archive ]</span>
+            <span>{galleryItems.length} {galleryItems.length === 1 ? 'Image' : 'Images'}</span>
+          </div>
+          <div class="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
+            {galleryItems.map((item: any) => {
+              const itemKey = typeof item === 'string' ? item : (item.src || item.key);
+              const itemSrc = resolveImageUrl(itemKey);
+              const altText = typeof item === 'object' ? (item.alt || item.caption || '') : '';
+
+              return (
+                <figure class="break-inside-avoid relative overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800 mb-4">
+                  <img
+                    src={itemSrc}
+                    alt={altText || post.data.title}
+                    loading="lazy"
+                    decoding="async"
+                    class="block w-full h-auto object-contain rounded-xl"
+                  />
+                  {altText && (
+                    <figcaption class="p-3 text-[11px] font-mono text-neutral-400 bg-neutral-950/90 border-t border-neutral-800/80 text-center leading-snug">
+                      {altText}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <nav class="mt-16 sm:mt-24 pt-8 sm:pt-12 border-t border-neutral-800 flex flex-row items-center justify-between gap-4 w-full select-none clear-both" aria-label="Post pagination">
         <div class="flex-1 flex justify-start min-w-0">
           {nextSlug && (
             <a
@@ -302,36 +375,7 @@ const schemaGraph: any = {
     }
   }
 
-  function setupAlternatingPostMedia() {
-    const prose = document.querySelector('.post-flow-content');
-    if (!prose) return;
-
-    const images = Array.from(prose.querySelectorAll('img'));
-    let alternateIndex = 0;
-
-    images.forEach((img, idx) => {
-      const parentP = img.closest('p');
-      const targetElement = (parentP && parentP.children.length === 1 && parentP.textContent?.trim() === '')
-        ? parentP
-        : img;
-
-      if (idx === 0) {
-        targetElement.classList.add('post-hero-img');
-        return;
-      }
-
-      if (alternateIndex % 2 === 0) {
-        targetElement.classList.add('post-img-right');
-      } else {
-        targetElement.classList.add('post-img-left');
-      }
-      alternateIndex++;
-    });
-  }
-
-  document.addEventListener('astro:page-load', () => {
-    setupAlternatingPostMedia();
-
+  function initPostEngine() {
     const staticOverlay = document.getElementById('crt-static-overlay');
     if (staticOverlay) {
       staticOverlay.className = 'fixed inset-0 pointer-events-none z-[100] opacity-0 bg-neutral-950 flex items-center justify-center overflow-hidden';
@@ -355,7 +399,9 @@ const schemaGraph: any = {
         }, selectedEffect.delay);
       });
     });
-  });
+  }
+
+  document.addEventListener('astro:page-load', initPostEngine);
 </script>
 
 <style is:global>
@@ -382,74 +428,12 @@ const schemaGraph: any = {
     100% { opacity: 1; filter: brightness(1); transform: none; }
   }
 
-  .prose img,
-  .post-flow-content img {
+  .prose img {
     border-radius: 0.75rem !important;
     border: none !important;
     max-width: 100% !important;
     height: auto !important;
-  }
-
-  .post-flow-content::after {
-    content: "";
-    display: table;
-    clear: both;
-  }
-
-  .post-hero-img {
-    display: block;
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: 85vh;
-    object-fit: contain;
-    margin: 0 auto 2rem auto !important;
-    border-radius: 0.75rem !important;
-    clear: both;
-  }
-
-  .post-hero-img img {
-    border-radius: 0.75rem !important;
-  }
-
-  @media (min-width: 640px) {
-    .post-img-right {
-      float: right;
-      clear: right;
-      max-width: 46% !important;
-      margin: 0.25rem 0 1.25rem 1.75rem !important;
-      border-radius: 0.75rem !important;
-    }
-
-    .post-img-left {
-      float: left;
-      clear: left;
-      max-width: 46% !important;
-      margin: 0.25rem 1.75rem 1.25rem 0 !important;
-      border-radius: 0.75rem !important;
-    }
-
-    .post-img-right img,
-    .post-img-left img {
-      border-radius: 0.75rem !important;
-    }
-  }
-
-  @media (max-width: 639px) {
-    .post-img-right,
-    .post-img-left {
-      float: none;
-      width: 100% !important;
-      max-width: 100% !important;
-      margin: 1.5rem 0 !important;
-      border-radius: 0.75rem !important;
-      clear: both;
-    }
-
-    .post-img-right img,
-    .post-img-left img {
-      border-radius: 0.75rem !important;
-    }
+    object-fit: contain !important;
   }
 </style>
 

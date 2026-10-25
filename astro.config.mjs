@@ -1,16 +1,25 @@
-import { defineConfig } from "astro/config";
-import cloudflare from "@astrojs/cloudflare";
-import tailwindcss from "@tailwindcss/vite";
+// File: astro.config.mjs
+
+import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
+import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
-  output: "server",
+  output: 'server',
   adapter: cloudflare({
+    imageService: 'passthrough',
     platformProxy: {
       enabled: true,
     },
-    imageService: "cloudflare",
   }),
   vite: {
     plugins: [tailwindcss()],
+    ssr: {
+      target: 'webworker',
+      noExternal: true,
+    },
+    optimizeDeps: {
+      exclude: ['@astrojs/cloudflare'],
+    },
   },
 });

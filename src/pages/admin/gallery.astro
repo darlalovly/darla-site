@@ -1,0 +1,663 @@
+---
+// File: src/pages/admin/gallery.astro
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import '../../styles/admin.css';
+import { getCollection } from 'astro:content';
+
+export const prerender = false;
+
+const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
+const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
+
+interface MediaItem {
+  url: string;
+  key: string;
+  source: string;
+  type: 'post' | 'recipe' | 'unassigned';
+  folder: string;
+}
+
+const keyToSourceMap = new Map<string, { source: string; type: 'post' | 'recipe' }>();
+
+let allPosts: any[] = [];
+try { allPosts = await getCollection('posts'); } catch {}
+
+let allRecipes: any[] = [];
+try { allRecipes = await getCollection('recipes'); } catch {}
+
+allPosts.forEach((post) => {
+  const heroKey = post.data.thumbnailKey || post.data.image;
+  if (heroKey) keyToSourceMap.set(heroKey.replace(/^\/+/, ''), { source: post.data.title || post.id, type: 'post' });
+  if (Array.isArray(post.data.gallery)) {
+    post.data.gallery.forEach((item: any) => {
+      const itemKey = typeof item === 'string' ? item : (item.src || item.key);
+      if (itemKey) keyToSourceMap.set(itemKey.replace(/^\/+/, ''), { source: post.data.title || post.id, type: 'post' });
+    });
+  }
+  if (post.body) {
+    const inlineMatches = post.body.matchAll(/(?:\/)?(images\/posts\/[^\s"')]+\.(?:webp|jpg|jpeg|png|gif|svg|avif))/gi);
+    for (const match of inlineMatches) {
+      const inlineKey = match[1].replace(/^\/+/, '');
+      if (!keyToSourceMap.has(inlineKey)) {
+        keyToSourceMap.set(inlineKey, { source: post.data.title || post.id, type: 'post' });
+      }
+    }
+  }
+});
+
+allRecipes.forEach((recipe) => {
+  const heroKey = recipe.data.thumbnailKey || recipe.data.image;
+  if (heroKey) keyToSourceMap.set(heroKey.replace(/^\/+/, ''), { source: recipe.data.recipeName || recipe.data.title || recipe.id, type: 'recipe' });
+  if (Array.isArray(recipe.data.gallery)) {
+    recipe.data.gallery.forEach((item: any) => {
+      const itemKey = typeof item === 'string' ? item : (item.src || item.key);
+      if (itemKey) keyToSourceMap.set(itemKey.replace(/^\/+/, ''), { source: recipe.data.recipeName || recipe.data.title || recipe.id, type: 'recipe' });
+    });
+  }
+  if (recipe.body) {
+    const inlineMatches = recipe.body.matchAll(/(?:\/)?(images\/recipes\/[^\s"')]+\.(?:webp|jpg|jpeg|png|gif|svg|avif))/gi);
+    for (const match of inlineMatches) {
+      const inlineKey = match[1].replace(/^\/+/, '');
+      if (!keyToSourceMap.has(inlineKey)) {
+        keyToSourceMap.set(inlineKey, { source: recipe.data.recipeName || recipe.data.title || recipe.id, type: 'recipe' });
+      }
+    }
+  }
+});
+
+let bucket: any = undefined;
+try {
+  // @ts-ignore
+  const cfWorkers = await import('cloudflare:workers');
+  const cfEnv = cfWorkers?.env || {};
+  bucket = cfEnv.MEDIA_BUCKET || cfEnv.R2 || cfEnv.darlalovly_media;
+} catch {}
+
+const rawKeys: string[] = [];
+
+if (bucket && typeof bucket.list === 'function') {
+  try {
+    let truncated = true;
+    let cursor: string | undefined = undefined;
+    while (truncated && rawKeys.length < 1000) {
+      const listing: any = await bucket.list({ prefix: 'images/', cursor, limit: 250 });
+      for (const obj of listing.objects) {
+        if (!obj.key.endsWith('/')) {
+          rawKeys.push(obj.key);
+        }
+      }
+      truncated = listing.truncated;
+      cursor = listing.cursor;
+    }
+  } catch {}
+}
+
+if (rawKeys.length === 0) {
+  keyToSourceMap.forEach((_, key) => rawKeys.push(key));
+}
+
+const mediaAssets: MediaItem[] = Array.from(new Set(rawKeys)).map((key) => {
+  const cleanKey = key.replace(/^\/+/, '');
+  const url = `${cleanBase}${cleanKey}`;
+  const mapped = keyToSourceMap.get(cleanKey);
+  const isRecipeKey = cleanKey.startsWith('images/recipes') || mapped?.type === 'recipe';
+  const isPostKey = cleanKey.startsWith('images/posts') || mapped?.type === 'post';
+  const type = isRecipeKey ? 'recipe' : isPostKey ? 'post' : 'unassigned';
+  const source = mapped?.source || (isRecipeKey ? 'Recipe Media' : isPostKey ? 'Post Media' : 'Unassigned Media');
+  const folder = cleanKey.split('/').slice(0, -1).join('/') || 'root';
+
+  return { url, key: cleanKey, source, type, folder };
+});
+
+const recipeAssets = mediaAssets.filter((a) => a.type === 'recipe');
+const postAssets = mediaAssets.filter((a) => a.type === 'post');
+---
+
+<AdminLayout title="Media Library ‹ darlalovly Studio">
+  <div class="studio-wrapper">
+    
+    <div class="studio-header-bar">
+      <div class="header-left">
+        <h1 class="studio-page-title">Media Library</h1>
+        <span class="bucket-badge font-mono">Bucket: darlalovly-media</span>
+      </div>
+    </div>
+
+    <!-- Upload Dropzone Card -->
+    <div class="studio-card upload-card">
+      <div class="upload-config-bar">
+        <div class="config-group">
+          <label for="target-folder-preset" class="field-label">Target Collection:</label>
+          <select id="target-folder-preset" class="input-select">
+            <option value="posts" selected>Posts</option>
+            <option value="recipes">Recipes</option>
+            <option value="custom">Custom Path</option>
+          </select>
+        </div>
+
+        <div class="config-group flex-1">
+          <label for="target-folder-path" class="field-label">R2 Destination Path:</label>
+          <input
+            type="text"
+            id="target-folder-path"
+            value="images/posts"
+            class="input-control font-mono"
+          />
+        </div>
+      </div>
+
+      <div id="dropzone" class="upload-dropzone">
+        <input type="file" id="media-file-input" accept="image/*" multiple class="file-input-hidden" />
+        <div class="dropzone-content">
+          <span class="upload-icon">↑</span>
+          <p class="upload-text">Upload photos to R2 Bucket</p>
+          <p class="upload-sub" id="dropzone-sub">Target folder: images/posts</p>
+          <button type="button" class="btn btn-primary btn-sm" id="browse-btn">
+            Select Files
+          </button>
+        </div>
+      </div>
+
+      <div id="upload-status-bar" class="upload-status-bar" style="display: none;">
+        <span id="upload-status-text" class="status-text font-mono">Idle</span>
+      </div>
+    </div>
+
+    <!-- Media Controls & Filter -->
+    <div class="media-controls-bar">
+      <div class="filter-tabs">
+        <button type="button" class="tab-btn is-active" data-type="all">All ({mediaAssets.length})</button>
+        <span class="tab-divider">|</span>
+        <button type="button" class="tab-btn" data-type="recipe">Recipes ({recipeAssets.length})</button>
+        <span class="tab-divider">|</span>
+        <button type="button" class="tab-btn" data-type="post">Posts ({postAssets.length})</button>
+      </div>
+
+      <div class="search-box">
+        <input type="text" id="media-search" placeholder="Filter by folder, key, or title..." class="input-control font-mono text-xs" />
+      </div>
+    </div>
+
+    <!-- Image Grid Card -->
+    <div class="studio-card gallery-grid-card">
+      <div class="media-grid" id="media-grid">
+        {mediaAssets.map((asset) => (
+          <div
+            class="media-item"
+            data-key={asset.key}
+            data-type={asset.type}
+            data-source={asset.source.toLowerCase()}
+            data-folder={asset.folder.toLowerCase()}
+          >
+            <div class="media-thumb-wrap">
+              <img src={asset.url} alt={asset.key} loading="lazy" class="media-thumb-img" />
+              <span class="media-type-badge font-mono">{asset.type}</span>
+            </div>
+            <div class="media-meta">
+              <span class="media-key font-mono" title={asset.key}>{asset.key}</span>
+              <span class="media-origin" title={asset.source}>From: {asset.source}</span>
+              <div class="media-actions">
+                <button type="button" class="copy-url-btn btn btn-secondary btn-sm" data-copy={asset.key}>
+                  Copy Path
+                </button>
+                <a href={asset.url} target="_blank" rel="noopener noreferrer" class="view-link">Open ↗</a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</AdminLayout>
+
+<script>
+  function setupMediaGallery() {
+    const searchInput = document.getElementById('media-search') as HTMLInputElement | null;
+    const mediaGrid = document.getElementById('media-grid') as HTMLElement | null;
+    const dropzone = document.getElementById('dropzone') as HTMLElement | null;
+    const fileInput = document.getElementById('media-file-input') as HTMLInputElement | null;
+    const browseBtn = document.getElementById('browse-btn') as HTMLButtonElement | null;
+    const statusBar = document.getElementById('upload-status-bar') as HTMLElement | null;
+    const statusText = document.getElementById('upload-status-text') as HTMLElement | null;
+    const dropzoneSub = document.getElementById('dropzone-sub');
+
+    const presetSelect = document.getElementById('target-folder-preset') as HTMLSelectElement | null;
+    const targetFolderInput = document.getElementById('target-folder-path') as HTMLInputElement | null;
+
+    const filterTabs = document.querySelectorAll<HTMLButtonElement>('.filter-tabs .tab-btn');
+
+    function updateDestinationPath() {
+      if (!presetSelect || !targetFolderInput) return;
+      const preset = presetSelect.value;
+
+      if (preset === 'recipes') {
+        targetFolderInput.value = 'images/recipes';
+      } else if (preset === 'posts') {
+        targetFolderInput.value = 'images/posts';
+      }
+
+      if (dropzoneSub) {
+        dropzoneSub.textContent = `Target folder: ${targetFolderInput.value}`;
+      }
+    }
+
+    if (presetSelect) presetSelect.addEventListener('change', updateDestinationPath);
+    if (targetFolderInput) {
+      targetFolderInput.addEventListener('input', () => {
+        if (dropzoneSub) dropzoneSub.textContent = `Target folder: ${targetFolderInput.value}`;
+      });
+    }
+
+    let activeType = 'all';
+
+    function applyFilters() {
+      const query = searchInput?.value.toLowerCase().trim() || '';
+      const items = document.querySelectorAll<HTMLElement>('.media-item');
+
+      items.forEach((item) => {
+        const itemType = item.getAttribute('data-type') || '';
+        const itemKey = (item.getAttribute('data-key') || '').toLowerCase();
+        const itemSource = (item.getAttribute('data-source') || '').toLowerCase();
+        const itemFolder = (item.getAttribute('data-folder') || '').toLowerCase();
+
+        const matchesType = activeType === 'all' || activeType === itemType;
+        const matchesQuery = !query || itemKey.includes(query) || itemSource.includes(query) || itemFolder.includes(query);
+
+        if (matchesType && matchesQuery) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    filterTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach((t) => t.classList.remove('is-active'));
+        tab.classList.add('is-active');
+        activeType = tab.getAttribute('data-type') || 'all';
+        applyFilters();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', applyFilters);
+    }
+
+    function bindCopyButtons() {
+      document.querySelectorAll<HTMLButtonElement>('.copy-url-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const path = btn.getAttribute('data-copy');
+          if (path) {
+            await navigator.clipboard.writeText(path);
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 1800);
+          }
+        });
+      });
+    }
+    bindCopyButtons();
+
+    if (browseBtn && fileInput) {
+      browseBtn.addEventListener('click', () => fileInput.click());
+    }
+
+    async function uploadFiles(files: FileList | File[]) {
+      if (!files || files.length === 0) return;
+
+      const folderPath = targetFolderInput?.value.trim().replace(/^\/+|\/+$/g, '') || 'images/posts';
+
+      if (statusBar && statusText) {
+        statusBar.style.display = 'block';
+        statusBar.classList.remove('status-error');
+        statusText.textContent = `Uploading ${files.length} file(s) to ${folderPath}...`;
+      }
+
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('file', file);
+      });
+      formData.append('folder', folderPath);
+
+      try {
+        const response = await fetch('/admin/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Upload failed');
+        }
+
+        if (statusText) {
+          statusText.textContent = `Uploaded ${result.count} file(s) directly to ${folderPath}`;
+        }
+
+        if (mediaGrid && Array.isArray(result.assets)) {
+          const isRecipe = folderPath.includes('recipes');
+          result.assets.forEach((asset: { key: string; url: string }) => {
+            const item = document.createElement('div');
+            item.className = 'media-item';
+            item.setAttribute('data-key', asset.key);
+            item.setAttribute('data-type', isRecipe ? 'recipe' : 'post');
+            item.setAttribute('data-source', 'recent upload');
+            item.setAttribute('data-folder', folderPath.toLowerCase());
+            item.innerHTML = `
+              <div class="media-thumb-wrap">
+                <img src="${asset.url}" alt="${asset.key}" loading="lazy" class="media-thumb-img" />
+                <span class="media-type-badge font-mono">${isRecipe ? 'recipe' : 'post'}</span>
+              </div>
+              <div class="media-meta">
+                <span class="media-key font-mono" title="${asset.key}">${asset.key}</span>
+                <span class="media-origin" title="Recent Upload">From: Recent Upload</span>
+                <div class="media-actions">
+                  <button type="button" class="copy-url-btn btn btn-secondary btn-sm" data-copy="${asset.key}">
+                    Copy Path
+                  </button>
+                  <a href="${asset.url}" target="_blank" rel="noopener noreferrer" class="view-link">Open ↗</a>
+                </div>
+              </div>
+            `;
+            mediaGrid.prepend(item);
+          });
+
+          bindCopyButtons();
+        }
+      } catch (err: any) {
+        if (statusBar && statusText) {
+          statusBar.classList.add('status-error');
+          statusText.textContent = `Upload error: ${err.message}`;
+        }
+      }
+    }
+
+    if (dropzone) {
+      ['dragenter', 'dragover'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('is-dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('is-dragover');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e: DragEvent) => {
+        if (e.dataTransfer?.files) {
+          uploadFiles(e.dataTransfer.files);
+        }
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files) {
+          uploadFiles(fileInput.files);
+          fileInput.value = '';
+        }
+      });
+    }
+
+    updateDestinationPath();
+  }
+
+  document.addEventListener('astro:page-load', setupMediaGallery);
+  if (document.readyState !== 'loading') setupMediaGallery();
+  else document.addEventListener('DOMContentLoaded', setupMediaGallery);
+</script>
+
+<style is:global>
+  .bucket-badge {
+    background: #fafafa;
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+
+  .upload-config-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 14px 16px;
+    background: #fafafa;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .config-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .upload-dropzone {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    margin: 16px;
+    padding: 36px 20px;
+    text-align: center;
+    background: #ffffff;
+    cursor: pointer;
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+
+  .upload-dropzone.is-dragover {
+    border-color: #000000;
+    background-color: #f4f4f5;
+  }
+
+  .file-input-hidden {
+    display: none;
+  }
+
+  .dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .upload-icon {
+    font-family: var(--font-title);
+    font-size: 24px;
+    color: var(--title);
+    line-height: 1;
+  }
+
+  .upload-text {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--title);
+  }
+
+  .upload-sub {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+
+  .upload-status-bar {
+    padding: 10px 16px;
+    background: #fafafa;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .upload-status-bar.status-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border-top-color: #fecaca;
+  }
+
+  .media-controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+  }
+
+  .filter-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--text-2);
+    padding: 4px 6px;
+    transition: color 120ms ease;
+  }
+
+  .tab-btn:hover {
+    color: var(--title);
+  }
+
+  .tab-btn.is-active {
+    color: var(--title);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .tab-divider {
+    color: var(--border);
+    font-size: 11px;
+    user-select: none;
+  }
+
+  .search-box {
+    max-width: 320px;
+    width: 100%;
+  }
+
+  .gallery-grid-card {
+    padding: 16px;
+  }
+
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 16px;
+  }
+
+  .media-item {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .media-thumb-wrap {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #f4f4f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .media-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .media-type-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #ffffff;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: var(--caps-track);
+    border-radius: 2px;
+  }
+
+  .media-meta {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-2);
+  }
+
+  .media-key {
+    font-weight: 600;
+    color: var(--title);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+
+  .media-origin {
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+
+  .media-actions {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .view-link {
+    font-family: var(--font-title);
+    color: var(--title);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: var(--caps-track);
+    text-transform: uppercase;
+  }
+
+  .view-link:hover {
+    text-decoration: underline;
+  }
+</style>

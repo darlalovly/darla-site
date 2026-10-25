@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/mango-mojito.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,10 +13,10 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-mango-mojito-hero.webp"
+thumbnailKey: "images/recipes/2025-05-24-mango-mojito-recipe/recipe-mango-mojito-hero.webp"
 gallery: 
-  - "recipe-mango-mojito-001.webp"
-  - "recipe-mango-mojito-002.webp"
+  - "images/recipes/2025-05-24-mango-mojito-recipe/recipe-mango-mojito-001.webp"
+  - "images/recipes/2025-05-24-mango-mojito-recipe/recipe-mango-mojito-002.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -67,14 +69,14 @@ seoFocusKeyword: "mango mojito"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">Scent & Soda: A Tropical Inspiration ❤️</h2>
+## Scent & Soda: A Tropical Inspiration ❤️
 
-<p>Sometimes a flavor is so powerful it transcends the kitchen. I actually posted this recipe specifically because of a perfume. Whenever I wear <strong><a href="/perfumes/hilde-soliani/mango-on-the-rocks">Hilde Soliani’s Mango on the Rocks</a></strong>, I am immediately struck by its vibrant, boozy realism. It is a fragrance that demands a companion, and for me, that companion is always a cold Mango Mojito.</p>
+Sometimes a flavor is so powerful it transcends the kitchen. I actually posted this recipe specifically because of a perfume. Whenever I wear **[Hilde Soliani’s Mango on the Rocks](/perfumes/hilde-soliani/mango-on-the-rocks)**, I am immediately struck by its vibrant, boozy realism. It is a fragrance that demands a companion, and for me, that companion is always a cold Mango Mojito.
 
-<p>The scent makes me crave the tropical sweetness of ripe mango and the clean, sharp slap of fresh mint. It's a sensory loop—one creates the mood, the other satisfies the taste. It’s one of those rare moments where what you’re wearing and what you’re drinking feel completely in sync.</p>
+The scent makes me crave the tropical sweetness of ripe mango and the clean, sharp slap of fresh mint. It's a sensory loop—one creates the mood, the other satisfies the taste. It’s one of those rare moments where what you’re wearing and what you’re drinking feel completely in sync.
 
-<h2 class="wp-block-heading">Tropical Balance in a Glass ✨</h2>
+## Tropical Balance in a Glass ✨
 
-<p>There is something about the way the heavy, creamy sweetness of a ripe mango plays against the sharp, clean snap of fresh mint. It’s a contrast that regular mojitos—which rely strictly on lime for their brightness—just can't quite achieve. The mango adds a luxurious weight to the drink, making it feel more substantial and indulgent, like a liquid vacation.</p>
+There is something about the way the heavy, creamy sweetness of a ripe mango plays against the sharp, clean snap of fresh mint. It’s a contrast that regular mojitos—which rely strictly on lime for their brightness—just can't quite achieve. The mango adds a luxurious weight to the drink, making it feel more substantial and indulgent, like a liquid vacation.
 
-<p>Because of that fruit density, it balances the initial boozy kick of the white rum with a tropical softness that lingers long after the first sip. It’s thick, refreshing, and incredibly easy to adapt; whether you're using a perfectly ripe mango from the market or a bit of nectar to bridge the gap, it hits that perfect summer note every single time.</p>
+Because of that fruit density, it balances the initial boozy kick of the white rum with a tropical softness that lingers long after the first sip. It’s thick, refreshing, and incredibly easy to adapt; whether you're using a perfectly ripe mango from the market or a bit of nectar to bridge the gap, it hits that perfect summer note every single time.

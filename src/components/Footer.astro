@@ -1,0 +1,16 @@
+---
+// File: src/components/Footer.astro
+
+interface Props {
+  siteName?: string;
+}
+
+const { siteName = "darlalovly" } = Astro.props;
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="border-t border-neutral-800 bg-neutral-950 py-10 px-6 flex flex-col items-center justify-center">
+  <div class="max-w-6xl mx-auto flex items-center justify-center text-xs text-neutral-500 font-mono text-center">
+    <span>© {currentYear} {siteName}</span>
+  </div>
+</footer>

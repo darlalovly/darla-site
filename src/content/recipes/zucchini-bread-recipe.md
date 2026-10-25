@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/zucchini-bread-recipe.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,13 +13,13 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-zuchinni-bread-gallery-5.webp"
+thumbnailKey: "images/recipes/2025-08-10-zucchini-bread-recipe/recipe-zuchinni-bread-gallery-5.webp"
 gallery: 
-  - "recipe-zuchinni-bread-gallery-1.webp"
-  - "recipe-zuchinni-bread-gallery-2.webp"
-  - "recipe-zuchinni-bread-gallery-3.webp"
-  - "recipe-zuchinni-bread-gallery-4.webp"
-  - "recipe-zuchinni-bread-gallery-5.webp"
+  - "images/recipes/2025-08-10-zucchini-bread-recipe/recipe-zuchinni-bread-gallery-1.webp"
+  - "images/recipes/2025-08-10-zucchini-bread-recipe/recipe-zuchinni-bread-gallery-2.webp"
+  - "images/recipes/2025-08-10-zucchini-bread-recipe/recipe-zuchinni-bread-gallery-3.webp"
+  - "images/recipes/2025-08-10-zucchini-bread-recipe/recipe-zuchinni-bread-gallery-4.webp"
+  - "images/recipes/2025-08-10-zucchini-bread-recipe/recipe-zuchinni-bread-gallery-5.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -76,16 +78,14 @@ seoFocusKeyword: "zucchini bread"
 seoNoIndex: false
 ---
 
-<p>There's a special kind of satisfaction that comes from turning a garden gift into something delicious. Today, I'm sharing my favorite, wonderfully moist, perfectly spiced <strong>Zucchini Bread</strong> that strikes the ideal balance of flavor without being too, too sweet.</p>
+There's a special kind of satisfaction that comes from turning a garden gift into something delicious. Today, I'm sharing my favorite, wonderfully moist, perfectly spiced **Zucchini Bread** that strikes the ideal balance of flavor without being too, too sweet.
 
-<p>This recipe is my personal adaptation of Paul Prudhomme's Carrot Muffins or Bread recipe found in his legendary <em>Louisiana Kitchen</em> cookbook. I've been making this recipe since the 90s with a few substitutions over the years. I've always preferred pecans to walnuts, and buttermilk is always my choice over whole milk.</p>
+This recipe is my personal adaptation of Paul Prudhomme's Carrot Muffins or Bread recipe found in his legendary *Louisiana Kitchen* cookbook. I've been making this recipe since the 90s with a few substitutions over the years. I've always preferred pecans to walnuts, and buttermilk is always my choice over whole milk.
 
-<p>The result is an incredibly tender quick bread. The batter is thick and rustic, promising a loaf that’s substantial yet light, with a beautiful crumb and a crackled, golden top. It’s the kind of recipe you’ll make again and again—it's always been a welcomed gift!</p>
+The result is an incredibly tender quick bread. The batter is thick and rustic, promising a loaf that’s substantial yet light, with a beautiful crumb and a crackled, golden top. It’s the kind of recipe you’ll make again and again—it's always been a welcomed gift!
 
-<h2 class="wp-block-heading">Why This Recipe Is a Must-Try</h2>
+## Why This Recipe Is a Must-Try
 
-<ul>
-  <li><strong>The Perfect Texture:</strong> Thanks to the zucchini and buttermilk, this bread is exceptionally moist and stays that way for days.</li>
-  <li><strong>Balanced Flavor:</strong> The brown sugar gives it a caramel-like sweetness that complements the cinnamon and nutty pecans.</li>
-  <li><strong>Garden Fresh:</strong> It's the most delicious way to use up that abundant zucchini from the garden. One medium zucchini is all you need for two loaves!</li>
-</ul>
+- **The Perfect Texture:** Thanks to the zucchini and buttermilk, this bread is exceptionally moist and stays that way for days.
+- **Balanced Flavor:** The brown sugar gives it a caramel-like sweetness that complements the cinnamon and nutty pecans.
+- **Garden Fresh:** It's the most delicious way to use up that abundant zucchini from the garden. One medium zucchini is all you need for two loaves!

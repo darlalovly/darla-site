@@ -1,1 +1,0 @@
-console.log('Build-time watermarking disabled; images are watermarked dynamically on client-side download.');

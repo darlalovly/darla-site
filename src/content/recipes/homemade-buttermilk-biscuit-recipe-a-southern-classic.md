@@ -1,4 +1,6 @@
 ---
+# File: src/content/recipes/2024-03-16-homemade-buttermilk-biscuit-recipe.md
+
 # ==========================================
 # CORE DETAILS
 # ==========================================
@@ -11,10 +13,10 @@ heroOrientation: "landscape"
 # ==========================================
 # MEDIA
 # ==========================================
-thumbnailKey: "recipe-southern-buttermilk-biscuit-01.webp"
+thumbnailKey: "images/recipes/2024-03-16-homemade-buttermilk-biscuit-recipe/recipe-southern-buttermilk-biscuit-01.webp"
 gallery:
-  - "recipe-southern-buttermilk-biscuit-02.webp"
-  - "recipe-southern-buttermilk-biscuit-03.webp"
+  - "images/recipes/2024-03-16-homemade-buttermilk-biscuit-recipe/recipe-southern-buttermilk-biscuit-02.webp"
+  - "images/recipes/2024-03-16-homemade-buttermilk-biscuit-recipe/recipe-southern-buttermilk-biscuit-03.webp"
 
 # ==========================================
 # RECIPE METADATA
@@ -70,25 +72,23 @@ seoFocusKeyword: "buttermilk biscuits"
 seoNoIndex: false
 ---
 
-<h2 class="wp-block-heading">A Pinch of Love ❤️</h2>
+## A Pinch of Love ❤️
 
-<p>As a little girl, I eagerly awaited the moment when Maw-Maw would leave a small piece of biscuit dough just for me. I’d carefully shape it into my own tiny “baby” biscuit, feeling like I was part of something special. During those precious moments, filled with love, laughter, and the scent of fresh dough, I truly began to understand the magic of baking. Over time, that simple joy turned into a deep passion—one that left an indelible mark on my heart.</p>
+As a little girl, I eagerly awaited the moment when Maw-Maw would leave a small piece of biscuit dough just for me. I’d carefully shape it into my own tiny “baby” biscuit, feeling like I was part of something special. During those precious moments, filled with love, laughter, and the scent of fresh dough, I truly began to understand the magic of baking. Over time, that simple joy turned into a deep passion—one that left an indelible mark on my heart.
 
-<p>Even now, every time I bake these homemade biscuits, I’m reminded of the power of food to bring people together and create lasting memories. It does more than nourish—it connects us, reviving old traditions and creating new ones.</p>
+Even now, every time I bake these homemade biscuits, I’m reminded of the power of food to bring people together and create lasting memories. It does more than nourish—it connects us, reviving old traditions and creating new ones.
 
-<h2 class="wp-block-heading">Why You’ll Love These Southern Biscuits ❤️</h2>
+## Why You’ll Love These Southern Biscuits ❤️
 
-<ul>
-  <li><strong>Light and flaky:</strong> Layers that rise to golden perfection.</li>
-  <li><strong>Rich and buttery:</strong> Melt-in-your-mouth flavor in every bite.</li>
-  <li><strong>Foolproof:</strong> Simple, step-by-step instructions.</li>
-  <li><strong>Versatile:</strong> Perfect for pairing with honey, jam, or sausage gravy.</li>
-</ul>
+- **Light and flaky:** Layers that rise to golden perfection.
+- **Rich and buttery:** Melt-in-your-mouth flavor in every bite.
+- **Foolproof:** Simple, step-by-step instructions.
+- **Versatile:** Perfect for pairing with honey, jam, or sausage gravy.
 
-<hr />
+---
 
-<h2 class="wp-block-heading">Biscuits, From My Heart to Yours</h2>
+## Biscuits, From My Heart to Yours
 
-<p>I hope this buttermilk biscuit recipe inspires you to create your own kitchen traditions. Share the joy of freshly baked biscuits with loved ones, and as their aroma fills your home, may it also fill your heart with nostalgia and the promise of new memories yet to be made.</p>
+I hope this buttermilk biscuit recipe inspires you to create your own kitchen traditions. Share the joy of freshly baked biscuits with loved ones, and as their aroma fills your home, may it also fill your heart with nostalgia and the promise of new memories yet to be made.
 
-<p>✨ <strong>Happy baking! May your kitchen always be a place of love and comfort.</strong> ✨
+✨ **Happy baking! May your kitchen always be a place of love and comfort.** ✨
