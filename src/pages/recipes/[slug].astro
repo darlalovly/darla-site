@@ -155,7 +155,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
   <article class="w-full max-w-4xl mx-auto flex flex-col gap-12 pt-24 sm:pt-28 pb-16 px-4 sm:px-6">
     
     <!-- Recipe Intro Section -->
-    <section class="recipe-intro flex flex-col gap-6 border-b border-neutral-800 pb-10">
+    <section class="recipe-intro no-print flex flex-col gap-6 border-b border-neutral-800 pb-10">
       <nav class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400 flex items-center gap-2">
         <a href="/" class="hover:text-white transition-colors">Home</a>
         <span>/</span>
@@ -201,7 +201,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
     </section>
 
     <!-- Main Prose Body Content -->
-    <div class="prose prose-invert max-w-none text-neutral-200 font-sans leading-relaxed">
+    <div class="recipe-prose prose prose-invert max-w-none text-neutral-200 font-sans leading-relaxed no-print">
       <Content />
     </div>
 
@@ -216,7 +216,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
         </div>
         <button
           onclick="window.print()"
-          class="cursor-pointer shrink-0 whitespace-nowrap border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white hover:border-white transition-colors rounded-sm"
+          class="no-print cursor-pointer shrink-0 whitespace-nowrap border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white hover:border-white transition-colors rounded-sm"
         >
           Print
         </button>
@@ -268,7 +268,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
 
     <!-- Mosaic Gallery Section with Chronological Dates & Captions -->
     {entry.data.gallery && entry.data.gallery.length > 0 && (
-      <section class="flex flex-col gap-6 border-t border-neutral-800 pt-10">
+      <section class="recipe-gallery no-print flex flex-col gap-6 border-t border-neutral-800 pt-10">
         <div class="flex items-center justify-between">
           <div class="text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ GALLERY / CHRONOLOGY ]</div>
           <span class="text-[11px] font-mono text-neutral-500 uppercase tracking-wider">{entry.data.gallery.length} Photos</span>
@@ -309,7 +309,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
     )}
 
     <!-- Previous / Next Minimal Arrow Navigation -->
-    <nav class="relative border-t border-b border-neutral-800/80 py-12 my-6 flex flex-col sm:flex-row items-center justify-between gap-8 select-none" aria-label="Recipe navigation">
+    <nav class="recipe-nav no-print relative border-t border-b border-neutral-800/80 py-12 my-6 flex flex-col sm:flex-row items-center justify-between gap-8 select-none" aria-label="Recipe navigation">
       {prevRecipe ? (
         <div class="relative group flex items-center w-full sm:w-1/2">
           {prevThumb && (
@@ -414,5 +414,64 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
       rgba(0, 0, 0, 0.45) 50%
     );
     background-size: 100% 4px;
+  }
+
+  /* Print Isolation: Renders only the Recipe Card */
+  @media print {
+    :global(header),
+    :global(footer),
+    :global(nav),
+    :global(.animated-noise-overlay),
+    :global(#crt-off-overlay),
+    .no-print,
+    .recipe-intro,
+    .recipe-prose,
+    .recipe-gallery,
+    .recipe-nav {
+      display: none !important;
+    }
+
+    :global(body),
+    :global(main) {
+      background: #ffffff !important;
+      color: #000000 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+    }
+
+    article {
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      gap: 0 !important;
+    }
+
+    #recipe-card {
+      border: 1px solid #000000 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      padding: 24px !important;
+      border-radius: 4px !important;
+      box-shadow: none !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      display: flex !important;
+    }
+
+    #recipe-card * {
+      color: #000000 !important;
+      border-color: #d4d4d8 !important;
+      background: transparent !important;
+      text-shadow: none !important;
+    }
+
+    #recipe-card header {
+      border-bottom: 2px solid #000000 !important;
+    }
+
+    #recipe-card header button {
+      display: none !important;
+    }
   }
 </style>

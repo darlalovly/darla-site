@@ -60,7 +60,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // 3. Allow static assets and direct media files through without authentication
+  // 3. Pass static assets and direct media files through without auth
   if (
     pathname.startsWith("/_astro/") ||
     pathname.startsWith("/_image") ||
@@ -81,23 +81,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
-  // 5. Gate all /admin routes (including /admin/api/*) behind Cloudflare Zero Trust
-  if (pathname.startsWith("/admin")) {
-    if (cfUserEmail) {
-      return next();
-    }
-    return new Response("Forbidden: Admin routes require Cloudflare Zero Trust authentication.", {
-      status: 403,
-      headers: { "Content-Type": "text/plain" },
-    });
-  }
-
-  // 6. Zero Trust sessions bypass public preview HTTP Basic Auth prompts
+  // 5. Zero Trust authenticated sessions bypass all preview checks
   if (cfUserEmail) {
     return next();
   }
 
-  // 7. Enforce HTTP Basic Auth across public pages using PREVIEW_USERS secret
+  // 6. Enforce HTTP Basic Auth fallback (protects preview & admin until Zero Trust edge rules apply)
   let cfEnv: any = {};
   try {
     // @ts-ignore
@@ -119,6 +108,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
+  // 7. Verify HTTP Basic Auth credentials
   const authHeader =
     context.request.headers.get("authorization") ||
     context.request.headers.get("Authorization");

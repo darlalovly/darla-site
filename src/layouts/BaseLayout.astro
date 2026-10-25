@@ -55,7 +55,7 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
   </head>
   <body 
     data-audio-transitions={enableAudioTransition ? "true" : "false"}
-    class="selection:bg-white selection:text-neutral-900 bg-neutral-950 text-neutral-100 min-h-screen flex flex-col justify-between"
+    class="public-site selection:bg-white selection:text-neutral-900 bg-neutral-950 text-neutral-100 min-h-screen flex flex-col justify-between"
   >
     <!-- Fixed Analog Static Layer -->
     <div class="fixed inset-0 pointer-events-none z-50 animated-noise-overlay" aria-hidden="true"></div>
@@ -287,6 +287,14 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
 </html>
 
 <style is:global>
+  /* Enforce black background on public layouts to prevent admin CSS bleed in production bundles */
+  html,
+  body.public-site {
+    background-color: #0a0a0a !important;
+    background: #0a0a0a !important;
+    color: #e5e5e5 !important;
+  }
+
   .animated-noise-overlay {
     background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 1px, transparent 1px), radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 1px, transparent 1px);
     background-size: 6px 6px, 8px 8px;
@@ -382,7 +390,7 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
     animation: flash-beam 0.4s ease-out forwards;
   }
 
-  /* 6 Silent transitions for subpages & posts */
+  /* Silent transitions for subpages & posts */
   .mode-scanline-sweep .tv-scanlines {
     animation: scanline-sweep 0.4s ease-out forwards;
   }
@@ -403,6 +411,24 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
   }
   .mode-analog-fade {
     animation: crt-fade-black 0.38s ease-in-out forwards;
+  }
+
+  /* Global Print Isolation */
+  @media print {
+    header,
+    footer,
+    nav,
+    .animated-noise-overlay,
+    #crt-off-overlay,
+    .no-print {
+      display: none !important;
+    }
+
+    body.public-site {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
   }
 
   @keyframes crt-beam-collapse {
