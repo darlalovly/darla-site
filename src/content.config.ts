@@ -74,6 +74,8 @@ const recipes = defineCollection({
     orientation: z.enum(['landscape', 'portrait', 'square']).optional(),
     heroOrientation: z.enum(['landscape', 'portrait', 'square']).optional().default('landscape'),
     thumbnailKey: z.string().optional(),
+    cardThumbnail: z.string().optional(),
+    recipeThumb: z.string().optional(),
     image: z.string().optional(),
     gallery: z.array(galleryItemSchema).optional(),
     prepTime: z.string().optional(),

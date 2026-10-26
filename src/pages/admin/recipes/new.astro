@@ -28,6 +28,10 @@ for (const r of existingRecipes) {
     const key = r.data.thumbnailKey.replace(/^\/+/, '');
     collectedImages.push({ key, url: key.startsWith('http') ? key : `${cleanBase}${key}` });
   }
+  if (r.data?.cardThumbnail) {
+    const key = r.data.cardThumbnail.replace(/^\/+/, '');
+    collectedImages.push({ key, url: key.startsWith('http') ? key : `${cleanBase}${key}` });
+  }
   if (Array.isArray(r.data?.gallery)) {
     for (const g of r.data.gallery) {
       const k = typeof g === 'string' ? g : (g?.src || g?.key || '');
@@ -66,7 +70,7 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
       <!-- Left Main Content Column -->
       <main class="studio-main-col">
         
-        <!-- Recipe Title & Permalink Card (Exact Sniffcult Post Style) -->
+        <!-- Recipe Title & Permalink Card -->
         <div class="studio-card title-card">
           <input
             type="text"
@@ -227,7 +231,7 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
       <!-- Right Sidebar Controls -->
       <aside class="studio-side-col">
         
-        <!-- Publish Card (Exact Sniffcult Publish Widget Style) -->
+        <!-- Publish Card -->
         <div class="studio-card">
           <div class="card-header">
             <span class="card-title">PUBLISH</span>
@@ -281,6 +285,32 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
 
             <div id="hero-preview-box" class="hero-preview-box mt-2">
               <span>NO IMAGE SELECTED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipe Card Circular Thumbnail (Optional Specific Image) -->
+        <div class="studio-card">
+          <div class="card-header">
+            <span class="card-title">CARD THUMBNAIL</span>
+            <button type="button" id="btn-open-card-thumb-modal" class="btn btn-secondary btn-sm" style="font-size: 10px; padding: 2px 8px;">CHOOSE FROM LIBRARY</button>
+          </div>
+          <div class="card-body side-fields">
+            <div class="form-row">
+              <label for="cardThumbnail" class="field-label">ROUND BADGE IMAGE (FALLS BACK TO FEATURED)</label>
+              <input
+                type="text"
+                id="cardThumbnail"
+                name="cardThumbnail"
+                placeholder="e.g. biscuits-round-dish.webp"
+                class="input-control font-mono text-xs"
+              />
+            </div>
+
+            <div class="card-thumb-preview-wrapper mt-2">
+              <div id="card-thumb-preview-box" class="card-thumb-preview-box">
+                <span>FALLBACK</span>
+              </div>
             </div>
           </div>
         </div>
@@ -357,7 +387,9 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
   const slugInput = document.getElementById('slug');
   const dateInput = document.getElementById('date');
   const thumbInput = document.getElementById('thumbnailKey');
+  const cardThumbInput = document.getElementById('cardThumbnail');
   const heroPreview = document.getElementById('hero-preview-box');
+  const cardThumbPreview = document.getElementById('card-thumb-preview-box');
   const galleryContainer = document.getElementById('gallery-container');
   const addGalleryBtn = document.getElementById('btn-add-gallery-item');
   const statusBanner = document.getElementById('status-banner');
@@ -377,20 +409,43 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
     slugInput.dataset.manual = 'true';
   });
 
+  function resolveFullUrl(val) {
+    if (!val) return '';
+    if (val.startsWith('http://') || val.startsWith('https://')) return val;
+    if (val.startsWith('images/')) return `${cleanBase}${val}`;
+    return `${cleanBase}images/recipes/${slugInput.value || 'temp'}/${val.replace(/^\/+/, '')}`;
+  }
+
   function updateHeroPreview() {
     const val = thumbInput.value.trim();
     if (!val) {
       heroPreview.innerHTML = '<span>NO IMAGE SELECTED</span>';
+    } else {
+      const fullUrl = resolveFullUrl(val);
+      heroPreview.innerHTML = `<img src="${fullUrl}" alt="Hero preview" class="preview-img" onerror="this.parentElement.innerHTML='<span>IMAGE NOT FOUND</span>'" />`;
+    }
+    updateCardThumbPreview();
+  }
+
+  function updateCardThumbPreview() {
+    const specificVal = cardThumbInput.value.trim();
+    const effectiveVal = specificVal || thumbInput.value.trim();
+
+    if (!effectiveVal) {
+      cardThumbPreview.innerHTML = '<span>NONE</span>';
       return;
     }
-    const fullUrl = val.startsWith('http')
-      ? val
-      : (val.startsWith('images/') ? `${cleanBase}${val}` : `${cleanBase}images/recipes/${slugInput.value || 'temp'}/${val}`);
-    heroPreview.innerHTML = `<img src="${fullUrl}" alt="Hero preview" class="preview-img" onerror="this.parentElement.innerHTML='<span>IMAGE NOT FOUND</span>'" />`;
+
+    const fullUrl = resolveFullUrl(effectiveVal);
+    cardThumbPreview.innerHTML = `<img src="${fullUrl}" alt="Card thumb preview" class="card-thumb-round-img" onerror="this.parentElement.innerHTML='<span>ERR</span>'" />`;
   }
 
   thumbInput.addEventListener('input', updateHeroPreview);
-  slugInput.addEventListener('input', updateHeroPreview);
+  cardThumbInput.addEventListener('input', updateCardThumbPreview);
+  slugInput.addEventListener('input', () => {
+    updateHeroPreview();
+    updateCardThumbPreview();
+  });
 
   let galleryCounter = 0;
   function addGalleryRow(initial = {}) {
@@ -426,10 +481,16 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
 
   const modal = document.getElementById('media-modal');
   const openModalBtn = document.getElementById('btn-open-media-modal');
+  const openCardThumbModalBtn = document.getElementById('btn-open-card-thumb-modal');
   const closeModalBtn = document.getElementById('btn-close-modal');
 
   openModalBtn.onclick = () => {
     activeImageTarget = 'hero';
+    modal.style.display = 'flex';
+  };
+
+  openCardThumbModalBtn.onclick = () => {
+    activeImageTarget = 'cardThumb';
     modal.style.display = 'flex';
   };
 
@@ -447,6 +508,9 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
       if (activeImageTarget === 'hero') {
         thumbInput.value = key;
         updateHeroPreview();
+      } else if (activeImageTarget === 'cardThumb') {
+        cardThumbInput.value = key;
+        updateCardThumbPreview();
       }
       modal.style.display = 'none';
     };
@@ -460,6 +524,7 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
     const isDraft = document.getElementById('isDraftSelect').value === 'true';
     const heroOrientation = document.getElementById('heroOrientation').value;
     const thumbnailKey = thumbInput.value.trim();
+    const cardThumbnail = cardThumbInput.value.trim();
     const prepTime = document.getElementById('prepTime').value.trim();
     const cookTime = document.getElementById('cookTime').value.trim();
     const servings = document.getElementById('servings').value.trim();
@@ -497,6 +562,7 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
       `isDraft: ${isDraft}`,
       `heroOrientation: ${JSON.stringify(heroOrientation)}`,
       ...(thumbnailKey ? [`thumbnailKey: ${JSON.stringify(thumbnailKey)}`] : []),
+      ...(cardThumbnail ? [`cardThumbnail: ${JSON.stringify(cardThumbnail)}`] : []),
       'gallery:',
       ...gallery.map((g) => typeof g === 'string' ? `  - ${JSON.stringify(g)}` : `  - key: ${JSON.stringify(g.key)}\n    ${g.date ? `date: ${JSON.stringify(g.date)}\n    ` : ''}${g.caption ? `caption: ${JSON.stringify(g.caption)}` : ''}`),
       ...(prepTime ? [`prepTime: ${JSON.stringify(prepTime)}`] : []),
@@ -517,7 +583,7 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
       markdownBody,
     ].join('\n');
 
-    return { slug, frontmatter, data: { title, recipeName, date: dateVal, isDraft, thumbnailKey, gallery }, content: markdownBody };
+    return { slug, frontmatter, data: { title, recipeName, date: dateVal, isDraft, thumbnailKey, cardThumbnail, gallery }, content: markdownBody };
   }
 
   document.getElementById('btn-download-md').onclick = () => {
@@ -607,6 +673,38 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
     display: flex;
     align-items: flex-end;
     padding-bottom: 4px;
+  }
+
+  .card-thumb-preview-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
+  }
+
+  .card-thumb-preview-box {
+    width: 76px;
+    height: 76px;
+    min-width: 76px;
+    min-height: 76px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-family: var(--font-title);
+    letter-spacing: var(--caps-track);
+    color: var(--text-2);
+  }
+
+  .card-thumb-round-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .status-banner {

@@ -1,46 +1,29 @@
 ---
-# File: src/content/recipes/chocolate-dr-pepper-cake-recipe.md
-
-# ==========================================
-# CORE DETAILS
-# ==========================================
 title: "The Chocolate Cordial Dr. Pepper Cake: A Viral Hack Perfected"
 recipeName: "Chocolate Cordial Dr. Pepper Cake"
-date: "2025-12-26T10:00:00"
+date: "2025-12-26T22:00:00.000Z"
 isDraft: false
 heroOrientation: "landscape"
-
-# ==========================================
-# MEDIA
-# ==========================================
 thumbnailKey: "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-hero.webp"
-gallery: 
+cardThumbnail: "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-001.webp"
+gallery:
   - "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-001.webp"
   - "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-002.webp"
   - "images/recipes/2025-12-26-dr-pepper-cake-recipe/recipe-chocolate-cordial-dr-pepper-cake-003.webp"
-
-# ==========================================
-# RECIPE METADATA
-# ==========================================
 prepTime: "45 min"
 cookTime: "50 min"
-servings: 8
-
-# ==========================================
-# INSTRUCTIONS & INGREDIENTS
-# ==========================================
+servings: "8"
 recipeExcerpt: |
   A rich three-layer chocolate masterpiece featuring a clever 2-ingredient cake base and a unique stability-first Dr. Pepper buttercream. No eggs or oil required—just the magic of carbonation and a splash-proof frosting technique.
-
 recipeIngredients: |
   **For the 2-Ingredient Cake Base:**
   1 box (15.25 oz) Duncan Hines Devil’s Food Cake Mix
   2 mini-cans (approx. 15-16 oz total) Dr. Pepper
   *Butter and flour for greasing pans*
-
+  
   **For the Dr. Pepper Reduction:**
   1 bottle (16.9 oz) Dr. Pepper (Pure cane sugar preferred)
-
+  
   **For the Stabilized Cherry-Almond Frosting:**
   1 cup (8 oz) unsalted butter, softened
   1 tbsp almond extract
@@ -48,12 +31,11 @@ recipeIngredients: |
   1 cup powdered sugar (The "Stabilizer")
   ⅔ cup cooled Dr. Pepper reduction
   3 ½ cups powdered sugar (Added gradually)
-
+  
   **For the Decoration:**
   8-12 chocolate-covered cherry cordials, halved
   8-12 maraschino cherries, stems removed
   Chocolate sprinkles
-
 recipeInstructions: |
   **Prep the Layers:** Preheat your oven to 350°F. Generously grease and flour three 8-inch round cake pans. Whisk together the cake mix and two mini-cans of Dr. Pepper until perfectly smooth.
   **Bake the Base:** Divide the batter evenly between the three prepared pans. Bake for 20 minutes, or until a toothpick comes out clean. Cool in pans for 10 minutes before inverting onto wire racks to cool completely.
@@ -63,7 +45,6 @@ recipeInstructions: |
   **Finish the Frosting:** Gradually add the remaining 3 ½ cups of powdered sugar until the frosting is thick, smooth, and spreadable.
   **Assembly:** Frost between the layers and then the top and sides of the cake.
   **Decorate:** Slice your cherry cordials in half. Nestle a maraschino cherry into the center of each half. Space these around the top edge and finish with a heavy dusting of chocolate sprinkles.
-
 recipeNotes: |
   **The "Splash-Proof" Secret:**
   Don't skip that first cup of powdered sugar before adding the liquid. It gives the butter fat something to "grab" onto, which is the only way to get a watery reduction to emulsify into a fluffy buttercream without making a mess of your kitchen.
@@ -71,15 +52,9 @@ recipeNotes: |
   For the most authentic taste, look for Dr. Pepper bottled in Frisco, Texas. They use pure cane sugar instead of corn syrup, which gives the reduction a cleaner, more intense sweetness.
   **Temperature Warning:**
   Never add the Dr. Pepper reduction to the butter while even slightly warm. It must be stone-cold to ensure your frosting stays stable and doesn't "break" or melt the butter.
-
-# ==========================================
-# SEO & TAXONOMIES
-# ==========================================
-spices: ""
 seoTitle: "Chocolate Cordial Dr. Pepper Cake Recipe | DarlaLovly"
 seoDescription: "A viral 3-layer chocolate cake hack with stabilized Dr. Pepper buttercream and chocolate cherry cordials."
 seoFocusKeyword: "Dr. Pepper Cake"
-seoNoIndex: false
 ---
 
 ## A Mystery Solved with a Splash of Soda ❤️

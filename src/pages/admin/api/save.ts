@@ -9,9 +9,12 @@ interface SavePayload {
   slug?: string;
   content?: string;
   raw?: string;
+  data?: Record<string, any>;
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
+  const { request } = context;
+
   try {
     let collection = 'posts';
     let slug = '';
@@ -61,6 +64,50 @@ export const POST: APIRoute = async ({ request }) => {
     const filename = `${safeSlug}.md`;
     const relativeFilePath = `src/content/${safeCollection}/${filename}`;
 
+    // 1. Local development fallback: direct disk write when running localhost server
+    if (import.meta.env.DEV) {
+      try {
+        const fsModule = 'node:' + 'fs/promises';
+        const pathModule = 'node:' + 'path';
+        // @ts-ignore
+        const fs: any = await import(/* @vite-ignore */ fsModule).catch(() => null);
+        // @ts-ignore
+        const path: any = await import(/* @vite-ignore */ pathModule).catch(() => null);
+        const root = (globalThis as any).process?.cwd ? (globalThis as any).process.cwd() : '';
+
+        if (fs && path && root) {
+          let targetRelative = relativeFilePath;
+          const mdxRelative = `src/content/${safeCollection}/${safeSlug}.mdx`;
+          try {
+            await fs.access(path.resolve(root, mdxRelative));
+            targetRelative = mdxRelative;
+          } catch {}
+
+          const targetFullPath = path.resolve(root, targetRelative);
+          await fs.mkdir(path.dirname(targetFullPath), { recursive: true });
+          await fs.writeFile(targetFullPath, fileContent, 'utf-8');
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              mode: 'local-fs',
+              message: `Saved ${filename} directly to disk at ${targetRelative}.`,
+              path: targetRelative,
+              slug: safeSlug,
+              collection: safeCollection,
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (fsErr: any) {
+        console.error('Local FS save error:', fsErr);
+      }
+    }
+
+    // 2. Production & Mobile publishing: commit to GitHub to trigger automated Cloudflare Pages builds
+    const locals = (context.locals as any) || {};
+    const runtimeEnv = locals?.runtime?.env || (context as any)?.env || {};
+
     let cfEnv: any = {};
     try {
       // @ts-ignore
@@ -70,16 +117,16 @@ export const POST: APIRoute = async ({ request }) => {
 
     const nodeEnv = (globalThis as any).process?.env || {};
     const viteEnv = (import.meta as any).env || {};
-    const env = { ...nodeEnv, ...viteEnv, ...cfEnv };
+    const env = { ...cfEnv, ...runtimeEnv, ...nodeEnv, ...viteEnv };
 
     const githubToken = env.GITHUB_TOKEN;
     const githubOwner = env.GITHUB_REPO_OWNER || 'darlalovly';
-    const githubRepo = env.GITHUB_REPO || env.GITHUB_REPO_NAME || 'darla-site';
+    const githubRepo = env.GITHUB_REPO_NAME || env.GITHUB_REPO || 'darla-site';
     const fullRepo =
       githubOwner && githubRepo && !githubRepo.includes('/')
         ? `${githubOwner}/${githubRepo}`
         : githubRepo;
-    const githubBranch = env.GITHUB_BRANCH || env.GITHUB_REPO_BRANCH || 'main';
+    const githubBranch = env.GITHUB_REPO_BRANCH || env.GITHUB_BRANCH || 'main';
 
     if (githubToken && fullRepo) {
       const apiUrl = `https://api.github.com/repos/${fullRepo}/contents/${relativeFilePath}`;
@@ -133,7 +180,7 @@ export const POST: APIRoute = async ({ request }) => {
         JSON.stringify({
           success: true,
           mode: 'github-api',
-          message: `Committed ${filename} to ${fullRepo}@${githubBranch}`,
+          message: `Committed ${filename} to ${fullRepo}@${githubBranch}. Cloudflare build triggered.`,
           path: relativeFilePath,
           slug: safeSlug,
           collection: safeCollection,
@@ -144,18 +191,14 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(
       JSON.stringify({
-        success: true,
-        mode: 'edge-ready',
-        message: `Entry ${filename} processed successfully for ${relativeFilePath}.`,
-        filename,
-        slug: safeSlug,
-        collection: safeCollection,
+        success: false,
+        error: 'Missing GITHUB_TOKEN environment variable in Cloudflare Pages runtime.',
       }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
     return new Response(
-      JSON.stringify({ error: error?.message || 'Failed to process markdown entry.' }),
+      JSON.stringify({ error: error?.message || 'Failed to process entry save.' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

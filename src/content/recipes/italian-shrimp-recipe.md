@@ -1,49 +1,32 @@
 ---
-# File: src/content/recipes/italian-shrimp-recipe.md
-
-# ==========================================
-# CORE DETAILS
-# ==========================================
 title: "The Easiest (and Most Delicious) Italian Shrimp Recipe You'll Ever Make"
 recipeName: "Italian Shrimp"
-date: "2026-03-23T08:45:00"
+date: "2026-03-23T18:45:00.000Z"
 isDraft: false
 heroOrientation: "landscape"
-
-# ==========================================
-# MEDIA
-# ==========================================
 thumbnailKey: "images/recipes/2026-03-23-italian-shrimp-recipe/recipe-italian-shrimp-hero.webp"
-gallery: 
+cardThumbnail: "images/recipes/2026-03-23-italian-shrimp-recipe/recipe-italian-shrimp-002.webp"
+gallery:
   - "images/recipes/2026-03-23-italian-shrimp-recipe/recipe-italian-shrimp-002.webp"
-
-# ==========================================
-# RECIPE METADATA
-# ==========================================
 prepTime: "10 min"
 cookTime: "25 min"
-servings: 8
-
-# ==========================================
-# INSTRUCTIONS & INGREDIENTS
-# ==========================================
+servings: "8"
+spices: "garlic, parsley"
 recipeExcerpt: |
   A no-fail winner that’s been a regular on the dinner table since my kids were small. Using just a few ingredients, this buttery, garlicky, lemon-infused shrimp is the perfect "impressive" meal for busy weeknights or a relaxed vacation night.
-
 recipeIngredients: |
   **The Seafood:**
   4 lbs large shrimp (headless, deveined, but shell-on and tail-on)
-
+  
   **The Sauce Base:**
   16–32 oz (1-2 bottles) Italian Dressing (Girard's preferred)
   1 cup (2 sticks) unsalted butter, sliced into pads
   3–4 large lemons, halved or quartered
   4 tbsp minced garlic (about one full head)
   2 bunches fresh Italian parsley, roughly chopped
-
+  
   **The Essential:**
   A few loaves of crusty French or sourdough bread (for dipping!)
-
 recipeInstructions: |
   **Preheat & Prep:** Preheat your oven to 350°F (175°C). Rinse your shrimp and pat them dry. 
   **Assemble:** Spread the shrimp in a large baking dish (or two, depending on size) in a relatively even layer. 
@@ -51,7 +34,6 @@ recipeInstructions: |
   **Add the Liquids:** Pour the Italian dressing over the top until the shrimp are well-coated. Arrange the butter pads evenly across the top.
   **Bake:** Place in the oven and bake for 20–30 minutes. You’re looking for the shrimp to turn a vibrant pink and become opaque, and for the butter and dressing to create a bubbling, golden sauce.
   **Serve:** Bring the whole dish to the table. This is a "get your fingers dirty" meal—peel, eat, and dip that bread into the liquid gold at the bottom of the pan.
-
 recipeNotes: |
   **Shrimp Varieties:**
   The recent photos feature some Chilean shrimp I found on sale, but my absolute preference is for wild-caught Gulf shrimp. That said, I've made this with all kinds of large shrimp over the years, and as long as they are fresh and not overcooked, it always comes out delicious.
@@ -59,15 +41,9 @@ recipeNotes: |
   Don't just use the juice! Dropping the squeezed lemon rinds into the dish while it bakes releases the essential oils from the zest, giving the sauce a much deeper citrus punch.
   **Baked Parsley:**
   I like to throw the parsley in before it hits the oven. It wilts into the sauce and absorbs all that garlicky butter flavor rather than just sitting on top as a garnish.
-
-# ==========================================
-# SEO & TAXONOMIES
-# ==========================================
-spices: "garlic, parsley"
 seoTitle: "The Easiest Italian Baked Shrimp Recipe | DarlaLovly"
 seoDescription: "A family-favorite baked Italian shrimp recipe using Italian dressing, butter, and lemon. Quick, easy, and perfect for crowds."
 seoFocusKeyword: "Italian Shrimp"
-seoNoIndex: false
 ---
 
 ## A Home Cook's Secret: Quick, Delicious, & Impressive ❤️
