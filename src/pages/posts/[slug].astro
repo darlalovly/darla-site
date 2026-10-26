@@ -16,7 +16,7 @@ export async function getStaticPaths() {
   return posts
     .filter((post) => !post.data.isDraft && !post.data.draft)
     .map((entry) => ({
-      params: { slug: entry.id.replace(/\.(md|mdx)$/, '') },
+      params: { slug: (entry as any).slug || entry.id.replace(/\.(md|mdx)$/, '') },
       props: { entry },
     }));
 }
@@ -46,7 +46,7 @@ const publishedPosts = allPosts
   .filter((p) => !p.data.isDraft && !p.data.draft)
   .sort((a, b) => new Date(a.data.date).valueOf() - new Date(b.data.date).valueOf());
 
-const getSlug = (p: CollectionEntry<'posts'>) => p.id.replace(/\.(md|mdx)$/, '');
+const getSlug = (p: CollectionEntry<'posts'>) => (p as any).slug || p.id.replace(/\.(md|mdx)$/, '');
 
 const post = propEntry ?? publishedPosts.find((p) => getSlug(p) === slug);
 
@@ -63,17 +63,17 @@ if (currentIndex === -1) {
 const prevPost = currentIndex > 0 ? publishedPosts[currentIndex - 1] : null;
 const nextPost = currentIndex < publishedPosts.length - 1 ? publishedPosts[currentIndex + 1] : null;
 
-const heroImage = resolveImageUrl(post.data.thumbnailKey || post.data.image);
+const heroImage = resolveImageUrl(post.data.thumbnailKey || (post.data as any).image || (post.data as any).heroImage);
 
 const prevSlug = prevPost ? getSlug(prevPost) : null;
 const prevTitle = prevPost ? prevPost.data.title : null;
-const prevImage = prevPost ? resolveImageUrl(prevPost.data.thumbnailKey || prevPost.data.image) : null;
+const prevImage = prevPost ? resolveImageUrl(prevPost.data.thumbnailKey || (prevPost.data as any).image) : null;
 
 const nextSlug = nextPost ? getSlug(nextPost) : null;
 const nextTitle = nextPost ? nextPost.data.title : null;
-const nextImage = nextPost ? resolveImageUrl(nextPost.data.thumbnailKey || nextPost.data.image) : null;
+const nextImage = nextPost ? resolveImageUrl(nextPost.data.thumbnailKey || (nextPost.data as any).image) : null;
 
-const locations = post.data.locations || [];
+const locations = (post.data as any).locations || (post.data as any).pins || [];
 const galleryItems = post.data.gallery || [];
 
 const { Content } = await render(post);
@@ -88,6 +88,31 @@ const formatDate = (dateVal: string | Date) => {
 
 const formattedDate = formatDate(post.data.date);
 
+const locationSchemas = locations.map((loc: any) => {
+  const lat = loc.lat ?? loc.latitude;
+  const lng = loc.lng ?? loc.longitude ?? loc.lon;
+  return {
+    "@type": "Place",
+    "name": loc.name || loc.title || loc.label || post.data.location || "Waypoint",
+    ...(loc.address ? {
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": loc.address
+      }
+    } : {}),
+    ...(lat && lng ? {
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": Number(lat),
+        "longitude": Number(lng)
+      }
+    } : {}),
+    ...(loc.url || (lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : undefined) ? {
+      "hasMap": loc.url || `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    } : {})
+  };
+});
+
 const schemaGraph: any = {
   "@context": "https://schema.org",
   "@graph": [
@@ -97,21 +122,24 @@ const schemaGraph: any = {
       "headline": post.data.title,
       "description": post.data.description ?? post.data.excerpt ?? "",
       "datePublished": new Date(post.data.date).toISOString(),
-      "dateModified": new Date(post.data.date).toISOString(),
+      "dateModified": (post.data as any).modifiedDate ? new Date((post.data as any).modifiedDate).toISOString() : new Date(post.data.date).toISOString(),
       "author": {
         "@type": "Person",
-        "name": "Darla"
+        "name": "Darla",
+        "url": "https://darlalovly.com/about"
       },
       "publisher": {
         "@type": "Organization",
         "name": "darlalovly",
         "logo": {
           "@type": "ImageObject",
-          "url": new URL("/icons/darlalovly-logo.svg", canonicalURL).href
+          "url": `${cloudflareBase.replace(/\/$/, '')}/branding/darlalovly-logo.webp`
         }
       },
       ...(heroImage ? { "image": [new URL(heroImage, canonicalURL).href] } : {}),
-      ...(post.data.location ? {
+      ...(locationSchemas.length > 0 ? {
+        "contentLocation": locationSchemas.length === 1 ? locationSchemas[0] : locationSchemas
+      } : (post.data.location ? {
         "contentLocation": {
           "@type": "Place",
           "name": post.data.location,
@@ -122,9 +150,9 @@ const schemaGraph: any = {
             "addressCountry": "US"
           }
         }
-      } : {})
+      } : {}))
     },
-    ...((post.data.category === 'Events' || post.data.categories?.includes('Events')) ? [
+    ...((post.data.category === 'Events' || (post.data as any).categories?.includes('Events')) ? [
       {
         "@type": "Event",
         "@id": `${canonicalURL}#event`,
@@ -132,7 +160,9 @@ const schemaGraph: any = {
         "startDate": new Date(post.data.date).toISOString(),
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "eventStatus": "https://schema.org/EventScheduled",
-        ...(post.data.location ? {
+        ...(locationSchemas.length > 0 ? {
+          "location": locationSchemas.length === 1 ? locationSchemas[0] : locationSchemas
+        } : (post.data.location ? {
           "location": {
             "@type": "Place",
             "name": post.data.location,
@@ -143,7 +173,7 @@ const schemaGraph: any = {
               "addressCountry": "US"
             }
           }
-        } : {})
+        } : {}))
       }
     ] : [])
   ]
@@ -226,7 +256,9 @@ const schemaGraph: any = {
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             {locations.map((loc: any) => {
-              const mapsUrl = loc.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.name} ${loc.address || ''}`)}`;
+              const lat = loc.lat ?? loc.latitude;
+              const lng = loc.lng ?? loc.longitude ?? loc.lon;
+              const mapsUrl = loc.url || loc.mapUrl || (lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.name || loc.title || ''} ${loc.address || ''}`)}`);
               return (
                 <a
                   href={mapsUrl}
@@ -237,7 +269,7 @@ const schemaGraph: any = {
                   <span class="text-base select-none">📍</span>
                   <div class="flex flex-col min-w-0">
                     <span class="text-white group-hover:underline font-sans text-sm font-medium truncate">
-                      {loc.name}
+                      {loc.name || loc.title || loc.label}
                     </span>
                     {loc.address && (
                       <span class="text-neutral-400 font-mono text-[11px] mt-0.5 break-words">

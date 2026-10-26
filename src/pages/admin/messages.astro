@@ -1,0 +1,243 @@
+---
+// File: src/pages/admin/messages.astro
+
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import '../../styles/admin.css';
+
+// @ts-ignore
+import { env } from 'cloudflare:workers';
+
+let db: any = null;
+try {
+  db = (env as any)?.DB;
+} catch {}
+if (!db) {
+  db = (globalThis as any).process?.env?.DB;
+}
+
+let dbError = '';
+
+if (db) {
+  try {
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        message TEXT NOT NULL,
+        is_read INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+  } catch (err: any) {
+    dbError = err?.message || 'Failed to initialize messages table.';
+  }
+}
+
+if (Astro.request.method === 'POST') {
+  try {
+    if (db) {
+      const formData = await Astro.request.formData();
+      const action = String(formData.get('action') || '');
+      const id = String(formData.get('id') || '');
+
+      if (action === 'delete' && id) {
+        await db.prepare('DELETE FROM messages WHERE id = ?').bind(id).run();
+      } else if (action === 'toggle-read' && id) {
+        await db.prepare('UPDATE messages SET is_read = CASE WHEN is_read = 1 THEN 0 ELSE 1 END WHERE id = ?').bind(id).run();
+      } else if (action === 'mark-all-read') {
+        await db.prepare('UPDATE messages SET is_read = 1 WHERE is_read = 0').run();
+      }
+    }
+  } catch (err: any) {
+    dbError = err?.message || 'Failed to execute database action.';
+  }
+  return Astro.redirect('/admin/messages');
+}
+
+interface MessageItem {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  is_read: number;
+  created_at: string;
+}
+
+let messages: MessageItem[] = [];
+
+if (db) {
+  try {
+    const result = await db
+      .prepare('SELECT id, name, email, message, is_read, created_at FROM messages ORDER BY created_at DESC')
+      .all();
+    messages = (result?.results as MessageItem[]) || [];
+  } catch (err: any) {
+    dbError = err?.message || 'Error fetching messages from database.';
+  }
+} else {
+  dbError = 'Database binding (DB) is unavailable in current runtime.';
+}
+
+const unreadCount = messages.filter((m) => !m.is_read).length;
+---
+
+<AdminLayout title="Inbox ‹ darlalovly Studio">
+  <div class="studio-wrapper">
+    
+    <header class="studio-header-bar">
+      <div class="header-left">
+        <h1 class="studio-page-title">STUDIO INBOX</h1>
+        <span class={`status-tag ${unreadCount > 0 ? 'status-unread' : 'status-read'}`}>
+          {unreadCount} UNREAD
+        </span>
+        <a href="/admin" class="btn btn-secondary btn-sm" style="margin-left: 12px;">&larr; ALL ENTRIES</a>
+      </div>
+
+      <div class="header-right btn-group">
+        {unreadCount > 0 && (
+          <form method="POST" style="margin: 0;">
+            <input type="hidden" name="action" value="mark-all-read" />
+            <button type="submit" class="btn btn-secondary btn-sm">MARK ALL READ</button>
+          </form>
+        )}
+      </div>
+    </header>
+
+    {dbError && (
+      <div class="status-banner status-info">
+        <span>{dbError}</span>
+      </div>
+    )}
+
+    <main class="studio-main-col w-full">
+      {messages.length === 0 ? (
+        <div class="studio-card">
+          <div class="card-body">
+            <p class="empty-notice">No messages found in database.</p>
+          </div>
+        </div>
+      ) : (
+        <div class="flex flex-col gap-4">
+          {messages.map((item) => (
+            <div class={`studio-card message-item-card ${item.is_read ? 'message-read' : 'message-unread'}`}>
+              <div class="card-header message-header">
+                <div class="flex flex-wrap items-center gap-3">
+                  <span class={`badge-status ${item.is_read ? 'badge-read' : 'badge-unread'}`}>
+                    {item.is_read ? 'READ' : 'NEW'}
+                  </span>
+                  <span class="card-title">{item.name}</span>
+                  <a href={`mailto:${item.email}`} class="font-mono text-xs text-neutral-500 hover:text-black">
+                    &lt;{item.email}&gt;
+                  </a>
+                </div>
+                <div class="font-mono text-xs text-neutral-400">
+                  {new Date(item.created_at).toLocaleString('en-US', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </div>
+              </div>
+
+              <div class="card-body">
+                <p class="message-content-text">{item.message}</p>
+              </div>
+
+              <div class="card-footer">
+                <form method="POST" style="margin: 0; display: inline;">
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="action" value="toggle-read" />
+                  <button type="submit" class="link-btn">
+                    {item.is_read ? 'MARK UNREAD' : 'MARK READ'}
+                  </button>
+                </form>
+
+                <form method="POST" onsubmit="return confirm('Delete this message permanently?');" style="margin: 0; display: inline;">
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="action" value="delete" />
+                  <button type="submit" class="link-btn text-rose-600 hover:text-rose-800">
+                    DELETE
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </main>
+
+  </div>
+</AdminLayout>
+
+<style is:global>
+  .status-tag {
+    font-family: var(--font-title);
+    font-size: 10px;
+    letter-spacing: var(--caps-track);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .status-unread {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  .status-read {
+    background: #e4e4e7;
+    color: #52525b;
+  }
+
+  .message-item-card {
+    transition: border-color 150ms ease;
+  }
+
+  .message-unread {
+    border-left: 3px solid #000000 !important;
+  }
+
+  .message-read {
+    opacity: 0.9;
+  }
+
+  .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .badge-status {
+    font-family: var(--font-title);
+    font-size: 9px;
+    letter-spacing: var(--caps-track);
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-weight: 600;
+  }
+
+  .badge-unread {
+    background: #18181b;
+    color: #ffffff;
+  }
+
+  .badge-read {
+    background: #f4f4f5;
+    color: #71717a;
+    border: 1px solid var(--border);
+  }
+
+  .message-content-text {
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    margin: 0;
+  }
+</style>

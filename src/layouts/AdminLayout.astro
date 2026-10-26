@@ -46,15 +46,19 @@ const isActive = (path: string) => {
         <nav class="sidebar-menu">
           
           <div class="menu-section">
-            <a href="/admin" class={`menu-item ${isActive('/admin') && currentPath !== '/admin/new' && currentPath !== '/admin/recipes/new' ? 'is-active' : ''}`}>
+            <a href="/admin" class={`menu-item ${isActive('/admin') && currentPath !== '/admin/new' && currentPath !== '/admin/recipes/new' && currentPath !== '/admin/messages' && currentPath !== '/admin/gallery' ? 'is-active' : ''}`}>
               <span class="menu-icon">✦</span>
               <span class="menu-label">Dashboard</span>
+            </a>
+            <a href="/admin/messages" class={`menu-item ${isActive('/admin/messages') ? 'is-active' : ''}`}>
+              <span class="menu-icon">✉</span>
+              <span class="menu-label">Inbox</span>
             </a>
           </div>
 
           <div class="menu-section">
             <div class="menu-heading">Entries</div>
-            <a href="/admin" class={`submenu-item ${isActive('/admin') && currentPath !== '/admin/new' && currentPath !== '/admin/recipes/new' ? 'is-active' : ''}`}>
+            <a href="/admin" class={`submenu-item ${isActive('/admin') && currentPath !== '/admin/new' && currentPath !== '/admin/recipes/new' && currentPath !== '/admin/messages' && currentPath !== '/admin/gallery' ? 'is-active' : ''}`}>
               All Entries
             </a>
             <a href="/admin/new" class={`submenu-item ${isActive('/admin/new') ? 'is-active' : ''}`}>

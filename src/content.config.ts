@@ -13,10 +13,29 @@ const resilientDate = z
     return isNaN(d.getTime()) ? new Date() : d;
   });
 
+const optionalResilientDate = z
+  .union([z.date(), z.string(), z.number()])
+  .optional()
+  .transform((val) => {
+    if (!val) return undefined;
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? undefined : d;
+  });
+
 const locationPinSchema = z.object({
-  name: z.string(),
+  name: z.string().optional(),
+  title: z.string().optional(),
+  label: z.string().optional(),
   address: z.string().optional(),
   url: z.string().optional(),
+  mapUrl: z.string().optional(),
+  lat: z.union([z.number(), z.string()]).optional(),
+  lng: z.union([z.number(), z.string()]).optional(),
+  latitude: z.union([z.number(), z.string()]).optional(),
+  longitude: z.union([z.number(), z.string()]).optional(),
+  lon: z.union([z.number(), z.string()]).optional(),
+  note: z.string().optional(),
+  description: z.string().optional(),
 });
 
 const galleryItemSchema = z.union([
@@ -36,6 +55,7 @@ const posts = defineCollection({
     title: z.string().optional(),
     description: z.string().optional(),
     date: resilientDate,
+    modifiedDate: optionalResilientDate,
     order: z.number().optional(),
     type: z.enum(['entry', 'quote', 'note']).default('entry'),
     author: z.string().optional(),
@@ -51,13 +71,16 @@ const posts = defineCollection({
     sotd: z.string().optional(),
     location: z.string().optional(),
     locations: z.array(locationPinSchema).optional(),
+    pins: z.array(locationPinSchema).optional(),
     chapter: z.string().optional(),
     thumbnailKey: z.string().optional(),
+    heroImage: z.string().optional(),
     image: z.string().optional(),
     gallery: z.array(galleryItemSchema).optional(),
     orientation: z.enum(['landscape', 'portrait', 'square']).optional(),
     heroOrientation: z.enum(['landscape', 'portrait', 'square']).optional().default('landscape'),
     excerpt: z.string().optional(),
+    seoDescription: z.string().optional(),
     isDraft: z.boolean().optional().default(false),
     draft: z.boolean().optional().default(false),
   }),
@@ -69,6 +92,7 @@ const recipes = defineCollection({
     title: z.string(),
     recipeName: z.string().optional(),
     date: resilientDate,
+    modifiedDate: optionalResilientDate,
     isDraft: z.boolean().optional().default(false),
     draft: z.boolean().optional().default(false),
     orientation: z.enum(['landscape', 'portrait', 'square']).optional(),

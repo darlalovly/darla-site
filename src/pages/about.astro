@@ -1,0 +1,127 @@
+---
+// File: src/pages/about.astro
+
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  mainEntity: {
+    '@type': 'Person',
+    '@id': 'https://darlalovly.com/about#author',
+    name: 'Darla',
+    alternateName: 'darlalovly',
+    url: 'https://darlalovly.com/about',
+    description: 'Independent writer, home cook, and traveler documenting regional Americana, tested recipes, and roadside history.',
+    knowsAbout: [
+      'Culinary Arts',
+      'Home Baking',
+      'Southern Recipes',
+      'Roadside Americana',
+      'Local History',
+      'Historic Preservation',
+      'Travel Writing'
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      url: 'https://darlalovly.com/contact',
+      contactType: 'Editorial Correspondence',
+    },
+  },
+};
+---
+
+<BaseLayout
+  title="About ‹ darlalovly"
+  description="Author profile, editorial standards, and colophon for darlalovly — documenting roadside history, home recipes, and independent travel."
+>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(personSchema)} />
+
+  <main class="w-full max-w-2xl mx-auto flex flex-col gap-12 pt-28 sm:pt-36 pb-20 px-4 sm:px-6 relative z-10">
+    
+    <header class="flex flex-col gap-3 border-b border-neutral-800 pb-8">
+      <div class="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500">[ DOSSIER / COLOPHON ]</div>
+      <h1 class="text-3xl sm:text-4xl font-mono uppercase tracking-wide text-white m-0">
+        ABOUT DARLALOVLY
+      </h1>
+      <p class="text-sm sm:text-base text-neutral-400 font-sans leading-relaxed m-0 italic">
+        A personal digital garden cataloging roadside detours, kitchen archives, and private reflections.
+      </p>
+    </header>
+
+    <!-- Author Identity & Background -->
+    <section class="flex flex-col gap-4 text-sm sm:text-base text-neutral-300 font-sans leading-relaxed">
+      <div class="border-l-2 border-neutral-700 pl-4 py-1 font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+        [ AUTHOR IDENTITY ]
+      </div>
+      <p>
+        I have written online under the moniker <strong>darlalovly</strong> for nearly two decades. Across shifting platforms, temporary accounts, and algorithmic cycles, I never took social media seriously as a permanent home. Rather than fitting my life into a single commercial niche, this site serves as an independent, self-contained record of the diverse hobbies, projects, and curiosities that occupy my time.
+      </p>
+      <p>
+        This space functions as a digital garden: an unhurried, evolving repository where reclaimed memories, road trip notes, and kitchen testing exist free from engagement metrics or algorithmic feed pressures.
+      </p>
+    </section>
+
+    <!-- Topical Authority & Coverage -->
+    <section class="flex flex-col gap-4 border-t border-neutral-800 pt-8">
+      <div class="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+        [ TOPICAL SCOPE ]
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="border border-neutral-800 rounded-sm p-5 bg-neutral-900/40 flex flex-col gap-2">
+          <span class="font-mono text-xs uppercase tracking-wider text-white">Roadside History & Travel</span>
+          <p class="text-xs text-neutral-400 font-sans leading-relaxed m-0">
+            Firsthand accounts of regional Americana, historic preservation, forgotten highways, small museums, and city walks across Louisiana, Colorado, South Dakota, and beyond.
+          </p>
+        </div>
+        <div class="border border-neutral-800 rounded-sm p-5 bg-neutral-900/40 flex flex-col gap-2">
+          <span class="font-mono text-xs uppercase tracking-wider text-white">Kitchen Archives & Recipes</span>
+          <p class="text-xs text-neutral-400 font-sans leading-relaxed m-0">
+            Practical home baking, classic southern comfort foods, tested dinner recipes, and pantry staples measured and recorded from personal cooking experience.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Editorial Integrity & Firsthand Testing (E-E-A-T) -->
+    <section class="flex flex-col gap-4 border-t border-neutral-800 pt-8">
+      <div class="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+        [ EDITORIAL STANDARDS ]
+      </div>
+      <p class="text-sm sm:text-base text-neutral-300 font-sans leading-relaxed m-0">
+        Every recipe published on this site is tested and prepared in a home kitchen. Measurements, bake times, and ingredient substitutions reflect real trials rather than aggregated content. Similarly, all travel entries, restaurant notes, and landmark photography are documented firsthand from real detours. This site does not accept sponsored placements, paid reviews, or automated syndicate content.
+      </p>
+    </section>
+
+    <!-- Prior Archives & Perfume Scope Notice -->
+    <section class="flex flex-col gap-4 border-t border-neutral-800 pt-8">
+      <div class="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+        [ NOTE ON PRIOR PLATFORMS ]
+      </div>
+      <p class="text-xs sm:text-sm text-neutral-400 font-sans leading-relaxed m-0">
+        If you found this domain through my past social media activity—particularly fragrance writing on Instagram—that chapter has largely concluded. While olfactory memories and sensory observations still inform how I view places and food, perfume is no longer the primary focus here. This site documents a much broader canvas of everyday life, travel, and cooking.
+      </p>
+    </section>
+
+    <!-- Contact & Direct Correspondence -->
+    <section class="flex flex-col gap-4 border-t border-neutral-800 pt-8">
+      <div class="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+        [ CORRESPONDENCE ]
+      </div>
+      <p class="text-xs sm:text-sm text-neutral-400 font-sans leading-relaxed m-0">
+        Questions regarding recipes, local history details, or corrections can be submitted privately to the studio inbox.
+      </p>
+      <div class="pt-2">
+        <a
+          href="/contact"
+          class="inline-block border border-neutral-700 bg-neutral-900 px-5 py-2.5 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:border-white hover:text-white transition-colors rounded-sm"
+        >
+          Send a Message &rarr;
+        </a>
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>

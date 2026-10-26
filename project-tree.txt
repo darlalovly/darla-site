@@ -11,6 +11,7 @@ darlalovly/
 │           │       └── metadata.sqlite-wal
 │           ├── d1/
 │           │   └── miniflare-D1DatabaseObject/
+│           │       ├── 914b1499d5c93dcc77d8508c0887547f6acfa43a60b7b5e72f370ccccd86e92a.sqlite
 │           │       ├── metadata.sqlite
 │           │       ├── metadata.sqlite-shm
 │           │       └── metadata.sqlite-wal
@@ -51,6 +52,8 @@ darlalovly/
 │                   ├── metadata.sqlite
 │                   ├── metadata.sqlite-shm
 │                   └── metadata.sqlite-wal
+├── migrations/
+│   └── 0001_create_messages.sql
 ├── public/
 │   ├── icons/
 │   │   ├── darlalovly-logo.svg
@@ -67,7 +70,10 @@ darlalovly/
 │   │   ├── icon-threads.svg
 │   │   ├── icon-tumblr.svg
 │   │   └── icon-x.svg
-│   └── favicon.ico
+│   ├── favicon.ico
+│   └── robots.txt
+├── scripts/
+│   └── clean-posts.ts
 ├── src/
 │   ├── components/
 │   │   ├── Footer.astro
@@ -118,6 +124,7 @@ darlalovly/
 │   ├── pages/
 │   │   ├── admin/
 │   │   │   ├── api/
+│   │   │   │   ├── contact.ts
 │   │   │   │   ├── save.ts
 │   │   │   │   └── upload.ts
 │   │   │   ├── edit/
@@ -126,14 +133,20 @@ darlalovly/
 │   │   │   │   └── new.astro
 │   │   │   ├── gallery.astro
 │   │   │   ├── index.astro
+│   │   │   ├── messages.astro
 │   │   │   └── new.astro
+│   │   ├── og/
+│   │   │   └── [...slug].png.ts
 │   │   ├── posts/
 │   │   │   ├── [slug].astro
 │   │   │   └── index.astro
 │   │   ├── recipes/
 │   │   │   ├── [slug].astro
 │   │   │   └── index.astro
-│   │   └── index.astro
+│   │   ├── about.astro
+│   │   ├── contact.astro
+│   │   ├── index.astro
+│   │   └── rss.xml.ts
 │   ├── styles/
 │   │   ├── admin.css
 │   │   └── global.css
@@ -147,4 +160,5 @@ darlalovly/
 ├── package-lock.json
 ├── package.json
 ├── README.md
-└── tsconfig.json
+├── tsconfig.json
+└── wrangler.toml

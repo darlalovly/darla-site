@@ -1,6 +1,8 @@
 ---
 // File: src/components/Header.astro
 
+import { getCollection } from 'astro:content';
+
 interface SubItem {
   label: string;
   href: string;
@@ -9,12 +11,23 @@ interface SubItem {
 interface NavSection {
   label: string;
   href?: string;
+  subheading?: string;
   children?: SubItem[];
 }
 
 const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
 const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
 const r2LogoUrl = `${cleanBase}branding/darlalovly-logo.webp`;
+
+const allRecipes = await getCollection('recipes').catch(() => []);
+const recentRecipes: SubItem[] = allRecipes
+  .filter((r) => !r.data.isDraft && !r.data.draft)
+  .sort((a, b) => new Date(b.data.date || 0).valueOf() - new Date(a.data.date || 0).valueOf())
+  .slice(0, 4)
+  .map((r) => ({
+    label: r.data.recipeName || r.data.title || r.id.replace(/\.(md|mdx)$/, ''),
+    href: `/recipes/${r.id.replace(/\.(md|mdx)$/, '')}`,
+  }));
 
 const navSections: NavSection[] = [
   {
@@ -35,6 +48,8 @@ const navSections: NavSection[] = [
   {
     label: 'Recipes',
     href: '/recipes',
+    subheading: 'Selected / Try These',
+    children: recentRecipes,
   },
   {
     label: 'Events',
@@ -43,6 +58,18 @@ const navSections: NavSection[] = [
   {
     label: 'Musings',
     href: '/category/musings',
+  },
+  {
+    label: 'About',
+    href: '/about',
+  },
+  {
+    label: 'Contact',
+    href: '/contact',
+  },
+  {
+    label: 'RSS Feed',
+    href: '/rss.xml',
   },
   {
     label: 'Destinations',
@@ -123,7 +150,13 @@ const navSections: NavSection[] = [
             </span>
           )}
 
-          {section.children && (
+          {section.subheading && (
+            <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 -mt-2">
+              [ {section.subheading} ]
+            </span>
+          )}
+
+          {section.children && section.children.length > 0 && (
             <ul class="flex flex-col gap-2.5">
               {section.children.map((child) => (
                 <li>

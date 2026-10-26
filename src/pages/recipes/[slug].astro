@@ -134,6 +134,68 @@ const cleanText = (str: string | undefined) => {
     .trim();
 };
 
+const toIsoDuration = (timeStr?: string): string | undefined => {
+  if (!timeStr) return undefined;
+  if (timeStr.startsWith('P')) return timeStr;
+  let hours = 0;
+  let minutes = 0;
+  const hMatch = timeStr.match(/(\d+)\s*(?:h|hr|hour|hours)/i);
+  const mMatch = timeStr.match(/(\d+)\s*(?:m|min|minute|minutes)/i);
+  if (hMatch) hours = parseInt(hMatch[1], 10);
+  if (mMatch) minutes = parseInt(mMatch[1], 10);
+  if (!hMatch && !mMatch) {
+    const justNum = parseInt(timeStr.replace(/\D/g, ''), 10);
+    if (!isNaN(justNum)) minutes = justNum;
+  }
+  if (hours === 0 && minutes === 0) return undefined;
+  let res = 'PT';
+  if (hours > 0) res += `${hours}H`;
+  if (minutes > 0) res += `${minutes}M`;
+  return res;
+};
+
+const ingredientsArray = entry.data.recipeIngredients
+  ? entry.data.recipeIngredients
+      .split('\n')
+      .map((item: string) => item.replace(/^\s*[-*]\s*/, '').replace(/\*\*(.*?)\*\*/g, '$1').trim())
+      .filter((item: string) => item.length > 0 && !item.startsWith('['))
+  : [];
+
+const instructionsArray = entry.data.recipeInstructions
+  ? entry.data.recipeInstructions
+      .split('\n')
+      .map((step: string) => step.replace(/^\s*\d+\.\s*/, '').replace(/\*\*(.*?)\*\*/g, '$1').trim())
+      .filter((step: string) => step.length > 0)
+      .map((step: string, index: number) => ({
+        '@type': 'HowToStep',
+        position: index + 1,
+        text: step,
+      }))
+  : [];
+
+const imagesList = Array.from(new Set([resolvedFeatureImage, resolvedCardThumbnail].filter(Boolean))) as string[];
+
+const recipeSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Recipe',
+  name: entry.data.recipeName || entry.data.title,
+  headline: entry.data.title,
+  image: imagesList.length > 0 ? imagesList : undefined,
+  description: entry.data.recipeExcerpt || entry.data.seoDescription || undefined,
+  datePublished: entry.data.date ? new Date(entry.data.date).toISOString() : undefined,
+  prepTime: toIsoDuration(entry.data.prepTime),
+  cookTime: toIsoDuration(entry.data.cookTime),
+  recipeYield: entry.data.servings ? `${entry.data.servings} Servings` : undefined,
+  recipeCategory: 'Recipe',
+  recipeIngredient: ingredientsArray.length > 0 ? ingredientsArray : undefined,
+  recipeInstructions: instructionsArray.length > 0 ? instructionsArray : undefined,
+  author: {
+    '@type': 'Person',
+    name: 'Darla',
+    url: 'https://darlalovly.com',
+  },
+};
+
 const displayDate = entry.data.date
   ? new Date(entry.data.date).toLocaleDateString('en-US', {
       month: 'long',
@@ -155,6 +217,8 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
   type="article"
   publishedTime={entry.data.date}
 >
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(recipeSchema)} />
+
   <article class="w-full max-w-4xl mx-auto flex flex-col gap-12 pt-24 sm:pt-28 pb-16 px-4 sm:px-6">
     
     <!-- Recipe Intro Section -->
@@ -250,7 +314,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
             Ingredients
           </h3>
           <ul class="flex flex-col gap-2.5 text-sm text-neutral-300 font-sans p-0 list-none">
-            {entry.data.recipeIngredients?.split('\n').filter((l) => l.trim()).map((item) => (
+            {entry.data.recipeIngredients?.split('\n').filter((l: string) => l.trim()).map((item: string) => (
               <li class={item.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(item)} />
             ))}
           </ul>
@@ -261,7 +325,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
             Instructions
           </h3>
           <ol class="flex flex-col gap-4 text-sm text-neutral-300 font-sans list-decimal list-inside p-0">
-            {entry.data.recipeInstructions?.split('\n').filter((l) => l.trim()).map((step) => (
+            {entry.data.recipeInstructions?.split('\n').filter((l: string) => l.trim()).map((step: string) => (
               <li class="leading-relaxed" set:html={cleanText(step)} />
             ))}
           </ol>
@@ -272,7 +336,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
         <div class="recipe-notes-wrap mt-4 border-t border-neutral-800 pt-6 flex flex-col gap-3">
           <div class="notes-badge text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ KITCHEN NOTES ]</div>
           <ul class="flex flex-col gap-2 text-sm text-neutral-300 font-sans p-0 list-none">
-            {entry.data.recipeNotes.split('\n').filter((l) => l.trim() !== '').map((note) => (
+            {entry.data.recipeNotes.split('\n').filter((l: string) => l.trim() !== '').map((note: string) => (
               <li class={note.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(note)} />
             ))}
           </ul>
@@ -401,7 +465,6 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
     display: block !important;
   }
 
-  /* Substantial circular badge sized to the recipe title */
   .recipe-thumb-circle {
     width: 76px !important;
     height: 76px !important;
@@ -477,7 +540,6 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
     background-size: 100% 4px;
   }
 
-  /* Full Print Isolation: Pure White Background, Circular Thumbnail & Title */
   @media print {
     :global(header.col-topnav),
     :global(footer),

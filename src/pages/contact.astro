@@ -1,0 +1,170 @@
+---
+// File: src/pages/contact.astro
+
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "";
+---
+
+<BaseLayout
+  title="Contact ‹ darlalovly"
+  description="Contact and communication page for darlalovly."
+>
+  <main class="w-full max-w-2xl mx-auto flex flex-col gap-10 pt-28 sm:pt-36 pb-20 px-4 sm:px-6">
+    
+    <header class="flex flex-col gap-3 border-b border-neutral-800 pb-8">
+      <div class="text-xs font-mono uppercase tracking-[0.25em] text-neutral-400">[ TRANSMISSION ]</div>
+      <h1 class="text-3xl sm:text-4xl font-mono uppercase tracking-wide text-white m-0">
+        GET IN TOUCH
+      </h1>
+      <p class="text-sm sm:text-base text-neutral-400 font-sans leading-relaxed m-0">
+        Leave a note below. Submissions are delivered directly to the studio inbox.
+      </p>
+    </header>
+
+    <div id="form-status" class="hidden rounded-sm border p-4 text-xs font-mono uppercase tracking-wider" role="alert"></div>
+
+    <form id="contact-form" class="flex flex-col gap-6">
+      
+      <!-- Anti-spam honeypot field -->
+      <div class="hidden" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="name" class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400">
+          NAME <span class="text-neutral-500">*</span>
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          placeholder="Name"
+          class="w-full rounded-sm border border-neutral-800 bg-neutral-900/60 px-4 py-3 text-sm font-sans text-neutral-200 placeholder-neutral-600 focus:border-neutral-400 focus:outline-none transition-colors"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="email" class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400">
+          EMAIL <span class="text-neutral-500">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          placeholder="your@email.com"
+          class="w-full rounded-sm border border-neutral-800 bg-neutral-900/60 px-4 py-3 text-sm font-sans text-neutral-200 placeholder-neutral-600 focus:border-neutral-400 focus:outline-none transition-colors"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="message" class="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400">
+          MESSAGE <span class="text-neutral-500">*</span>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          rows="6"
+          required
+          placeholder="Write your note..."
+          class="w-full rounded-sm border border-neutral-800 bg-neutral-900/60 px-4 py-3 text-sm font-sans text-neutral-200 placeholder-neutral-600 focus:border-neutral-400 focus:outline-none transition-colors resize-y"
+        ></textarea>
+      </div>
+
+      {turnstileSiteKey && (
+        <div class="pt-2">
+          <div
+            class="cf-turnstile"
+            data-sitekey={turnstileSiteKey}
+            data-theme="dark"
+          ></div>
+        </div>
+      )}
+
+      <div class="pt-2">
+        <button
+          type="submit"
+          id="submit-btn"
+          class="cursor-pointer border border-neutral-700 bg-neutral-900 px-6 py-3 text-xs font-mono uppercase tracking-widest text-neutral-300 hover:border-white hover:text-white transition-colors rounded-sm"
+        >
+          Send Message
+        </button>
+      </div>
+
+    </form>
+
+  </main>
+</BaseLayout>
+
+{turnstileSiteKey && (
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+)}
+
+<script>
+  function setupContactForm() {
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+    const statusBox = document.getElementById('form-status') as HTMLDivElement | null;
+
+    if (!form || !submitBtn || !statusBox) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      statusBox.className = 'hidden';
+      statusBox.textContent = '';
+
+      const formData = new FormData(form);
+      const payload = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        message: formData.get('message'),
+        website: formData.get('website'),
+        turnstileToken: formData.get('cf-turnstile-response') || '',
+      };
+
+      try {
+        const res = await fetch('/admin/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to submit message.');
+        }
+
+        statusBox.textContent = 'Message received. Thank you for reaching out!';
+        statusBox.className = 'block rounded-sm border border-emerald-900/60 bg-emerald-950/40 p-4 text-xs font-mono uppercase tracking-wider text-emerald-400';
+        form.reset();
+
+        // @ts-ignore
+        if (window.turnstile) {
+          // @ts-ignore
+          window.turnstile.reset();
+        }
+      } catch (err: any) {
+        statusBox.textContent = `Error: ${err.message || 'Submission error.'}`;
+        statusBox.className = 'block rounded-sm border border-rose-900/60 bg-rose-950/40 p-4 text-xs font-mono uppercase tracking-wider text-rose-400';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupContactForm);
+  if (document.readyState !== 'loading') setupContactForm();
+  else document.addEventListener('DOMContentLoaded', setupContactForm);
+</script>
