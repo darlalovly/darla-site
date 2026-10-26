@@ -1,225 +1,79 @@
 // File: src/pages/og/[...slug].png.ts
 
-export const prerender = true;
-
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
-import satori from 'satori';
-import { Resvg } from '@resvg/resvg-js';
+import { getEntry } from 'astro:content';
 
-export async function getStaticPaths() {
-  const posts = await getCollection('posts').catch(() => []);
-  const recipes = await getCollection('recipes').catch(() => []);
+export const prerender = false;
 
-  const postPaths = posts
-    .filter((p) => !p.data.isDraft && !p.data.draft)
-    .map((p) => {
-      const slug = (p as any).slug || p.id.replace(/\.(md|mdx)$/, '');
-      return {
-        params: { slug: `posts/${slug}` },
-        props: {
-          title: p.data.title || 'Untitled Post',
-          category: (p.data as any).category || (p.data as any).type || 'Post',
-          type: 'POST',
-          date: p.data.date,
-        },
-      };
-    });
-
-  const recipePaths = recipes
-    .filter((r) => !r.data.isDraft && !r.data.draft)
-    .map((r) => {
-      const slug = r.id.replace(/\.(md|mdx)$/, '');
-      return {
-        params: { slug: `recipes/${slug}` },
-        props: {
-          title: r.data.recipeName || r.data.title || 'Untitled Recipe',
-          category: 'Kitchen Archive',
-          type: 'RECIPE',
-          date: r.data.date,
-        },
-      };
-    });
-
-  return [
-    {
-      params: { slug: 'default' },
-      props: {
-        title: 'darlalovly',
-        category: 'Digital Garden',
-        type: 'JOURNAL',
-        date: undefined,
-      },
-    },
-    ...postPaths,
-    ...recipePaths,
-  ];
+function escapeXml(unsafe: string): string {
+  return unsafe.replace(/[<>&'"]/g, (char) => {
+    switch (char) {
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '&':
+        return '&amp;';
+      case "'":
+        return '&apos;';
+      case '"':
+        return '&quot;';
+      default:
+        return char;
+    }
+  });
 }
 
-export const GET: APIRoute = async ({ props }) => {
-  const { title, category, type, date } = props as {
-    title: string;
-    category: string;
-    type: string;
-    date?: string | Date;
-  };
+export const GET: APIRoute = async ({ params, redirect }) => {
+  const rawSlug = params.slug;
+  if (!rawSlug) {
+    return new Response('Not found', { status: 404 });
+  }
 
-  const fontRes = await fetch('https://cdn.jsdelivr.net/fontsource/fonts/space-mono@latest/latin-400-normal.ttf');
-  const fontData = await fontRes.arrayBuffer();
+  const slug = rawSlug.replace(/\.(png|jpg|jpeg|webp|svg)$/i, '').replace(/^\/|\/$/g, '');
+  const postEntry = await getEntry('posts', slug);
+  const recipeEntry = postEntry ? undefined : await getEntry('recipes', slug);
 
-  const formattedDate = date
-    ? new Date(date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }).toUpperCase()
-    : '';
+  if (!postEntry && !recipeEntry) {
+    return new Response('Not found', { status: 404 });
+  }
 
-  const markup = {
-    type: 'div',
-    props: {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#0a0a0a',
-        color: '#f4f4f5',
-        padding: '64px 72px',
-        fontFamily: 'Space Mono',
-        border: '14px solid #18181b',
-      },
-      children: [
-        {
-          type: 'div',
-          props: {
-            style: {
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '2px solid #27272a',
-              paddingBottom: '24px',
-            },
-            children: [
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    fontSize: '20px',
-                    letterSpacing: '0.2em',
-                    color: '#a1a1aa',
-                  },
-                  children: `[ ${type} / ${category.toUpperCase()} ]`,
-                },
-              },
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    fontSize: '18px',
-                    letterSpacing: '0.2em',
-                    color: '#71717a',
-                  },
-                  children: formattedDate,
-                },
-              },
-            ],
-          },
-        },
-        {
-          type: 'div',
-          props: {
-            style: {
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-            },
-            children: [
-              {
-                type: 'h1',
-                props: {
-                  style: {
-                    fontSize: title.length > 40 ? '48px' : '62px',
-                    lineHeight: 1.15,
-                    textTransform: 'uppercase',
-                    color: '#ffffff',
-                    margin: 0,
-                    letterSpacing: '0.03em',
-                  },
-                  children: title,
-                },
-              },
-            ],
-          },
-        },
-        {
-          type: 'div',
-          props: {
-            style: {
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderTop: '2px solid #27272a',
-              paddingTop: '24px',
-            },
-            children: [
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    fontSize: '22px',
-                    letterSpacing: '0.15em',
-                    color: '#ffffff',
-                    fontWeight: 'bold',
-                  },
-                  children: 'DARLALOVLY.COM',
-                },
-              },
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    fontSize: '16px',
-                    letterSpacing: '0.2em',
-                    color: '#71717a',
-                  },
-                  children: 'STUDIO ARCHIVE',
-                },
-              },
-            ],
-          },
-        },
-      ],
-    },
-  };
+  const heroImage = postEntry
+    ? postEntry.data.image || postEntry.data.thumbnailKey
+    : recipeEntry?.data.image || recipeEntry?.data.thumbnailKey;
 
-  const svg = await satori(markup as any, {
-    width: 1200,
-    height: 630,
-    fonts: [
-      {
-        name: 'Space Mono',
-        data: fontData,
-        style: 'normal',
-        weight: 400,
-      },
-    ],
-  });
+  if (heroImage) {
+    const destination = heroImage.startsWith('http') || heroImage.startsWith('/') ? heroImage : `/${heroImage}`;
+    return redirect(destination, 302);
+  }
 
-  const resvg = new Resvg(svg, {
-    fitTo: {
-      mode: 'width',
-      value: 1200,
-    },
-  });
+  const title = escapeXml(postEntry?.data?.title ?? recipeEntry?.data?.title ?? 'darlalovly');
+  const rawExcerpt =
+    postEntry?.data?.excerpt ||
+    postEntry?.data?.description ||
+    postEntry?.data?.seoDescription ||
+    recipeEntry?.data?.recipeExcerpt ||
+    recipeEntry?.data?.seoDescription ||
+    'Daily diary, field notes, and digital garden.';
+  const excerpt = escapeXml(rawExcerpt);
 
-  const pngData = resvg.render();
-  const pngBuffer = pngData.asPng();
+  const svg = `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#09090b" />
+  <rect x="32" y="32" width="1136" height="566" rx="16" fill="#18181b" stroke="#27272a" stroke-width="2" />
+  <text x="80" y="120" fill="#71717a" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="600" letter-spacing="0.15em">DARLALOVLY</text>
+  <text x="80" y="240" fill="#fafafa" font-family="Georgia, serif" font-size="52" font-weight="700">
+    ${title.slice(0, 48)}
+  </text>
+  <text x="80" y="340" fill="#a1a1aa" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="400">
+    ${excerpt.slice(0, 80)}
+  </text>
+  <circle cx="80" cy="520" r="12" fill="#22c55e" />
+  <text x="108" y="527" fill="#71717a" font-family="system-ui, -apple-system, sans-serif" font-size="20">Edge Generated</text>
+</svg>`;
 
-  return new Response(new Uint8Array(pngBuffer), {
+  return new Response(svg, {
     headers: {
-      'Content-Type': 'image/png',
+      'Content-Type': 'image/svg+xml',
       'Cache-Control': 'public, max-age=31536000, immutable',
     },
   });

@@ -1,11 +1,21 @@
 # File: wrangler.toml
-
 name = "darlalovly"
 compatibility_date = "2024-09-23"
-pages_build_output_dir = "./dist"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist/client"
+binding = "STATIC_ASSETS"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "darlalovly-messages"
-database_id = "darlalovly-messages"
-migrations_dir = "migrations"
+database_name = "darlalovly-db"
+database_id = "914b1499d5c93dcc77d8508c0887547f6acfa43a60b7b5e72f370ccccd86e92a"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "darlalovly-media"
+
+[[kv_namespaces]]
+binding = "SESSION"
+id = "SESSION"
