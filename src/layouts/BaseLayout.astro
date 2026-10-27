@@ -56,9 +56,9 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
   </head>
   <body 
     data-audio-transitions={enableAudioTransition ? "true" : "false"}
-    class="public-site selection:bg-white selection:text-neutral-900 bg-neutral-950 text-neutral-100 min-h-screen flex flex-col justify-between"
+    class="public-site selection:bg-white selection:text-neutral-900 bg-neutral-950 text-neutral-100 min-h-screen flex flex-col justify-between items-center w-full overflow-x-hidden"
   >
-    <!-- Fixed Analog Static Layer -->
+    <!-- Fixed Analog Noise Static Overlay -->
     <div class="fixed inset-0 pointer-events-none z-50 animated-noise-overlay" aria-hidden="true"></div>
 
     <!-- Multi-Mode Analog & CRT Transition Overlay -->
@@ -70,11 +70,11 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
       <div class="tv-scanlines absolute inset-0 pointer-events-none"></div>
     </div>
 
-    <!-- Modular Navigation Header -->
+    <!-- Modular Top Navigation Bar -->
     <Header logoUrl={logoUrl} />
 
-    <!-- Main Content Slot -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col">
+    <!-- Centered Main Viewport Slot -->
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12 sm:pb-16 flex flex-col items-center">
       <slot />
     </main>
 
@@ -88,13 +88,15 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
         ctx: AudioContext | null = null;
 
         init() {
-          if (!this.ctx) {
-            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-            if (AudioCtx) this.ctx = new AudioCtx();
-          }
-          if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume().catch(() => {});
-          }
+          try {
+            if (!this.ctx) {
+              const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+              if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+              this.ctx.resume().catch(() => {});
+            }
+          } catch {}
         }
 
         createNoiseBuffer(duration: number) {
@@ -102,50 +104,55 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
           const bufferSize = Math.floor(this.ctx.sampleRate * duration);
           const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
           const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
           return buffer;
         }
 
-        playPowerOff() {
+        // 1. Classic CRT TV Turning Off (Flyback pitch drop + bandpass static burst)
+        playTvTurnOff() {
           this.init();
           if (!this.ctx) return;
           const now = this.ctx.currentTime;
 
-          const buffer = this.createNoiseBuffer(0.45);
+          const buffer = this.createNoiseBuffer(0.44);
           if (buffer) {
             const noise = this.ctx.createBufferSource();
             noise.buffer = buffer;
-            const noiseFilter = this.ctx.createBiquadFilter();
-            noiseFilter.type = 'bandpass';
-            noiseFilter.frequency.setValueAtTime(1200, now);
-            noiseFilter.frequency.exponentialRampToValueAtTime(80, now + 0.4);
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1200, now);
+            filter.frequency.exponentialRampToValueAtTime(80, now + 0.4);
 
-            const noiseGain = this.ctx.createGain();
-            noiseGain.gain.setValueAtTime(0.25, now);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
-            noise.connect(noiseFilter);
-            noiseFilter.connect(noiseGain);
-            noiseGain.connect(this.ctx.destination);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
             noise.start(now);
-            noise.stop(now + 0.45);
+            noise.stop(now + 0.44);
           }
 
           const osc = this.ctx.createOscillator();
           const oscGain = this.ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.setValueAtTime(140, now);
           osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
-          oscGain.gain.setValueAtTime(0.2, now);
+
+          oscGain.gain.setValueAtTime(0.3, now);
           oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
           osc.connect(oscGain);
           oscGain.connect(this.ctx.destination);
           osc.start(now);
-          osc.stop(now + 0.45);
+          osc.stop(now + 0.44);
         }
 
-        playDegaussWarp() {
+        // 2. Electrical Buzz & Degauss Coil (Low magnetic resonance + spring twang)
+        playElectricalBuzz() {
           this.init();
           if (!this.ctx) return;
           const now = this.ctx.currentTime;
@@ -157,15 +164,66 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
           osc.frequency.linearRampToValueAtTime(180, now + 0.15);
           osc.frequency.exponentialRampToValueAtTime(20, now + 0.4);
 
-          oscGain.gain.setValueAtTime(0.28, now);
+          oscGain.gain.setValueAtTime(0.35, now);
           oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
           osc.connect(oscGain);
           oscGain.connect(this.ctx.destination);
           osc.start(now);
           osc.stop(now + 0.42);
+
+          const buzz = this.ctx.createOscillator();
+          const buzzGain = this.ctx.createGain();
+          buzz.type = 'sawtooth';
+          buzz.frequency.setValueAtTime(120, now);
+          buzz.frequency.linearRampToValueAtTime(60, now + 0.4);
+
+          buzzGain.gain.setValueAtTime(0.25, now);
+          buzzGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+          buzz.connect(buzzGain);
+          buzzGain.connect(this.ctx.destination);
+          buzz.start(now);
+          buzz.stop(now + 0.42);
         }
 
+        // 3. Mechanical Relay Clank & Cathode Hum
+        playClankHum() {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+
+          const clank = this.ctx.createOscillator();
+          const clankGain = this.ctx.createGain();
+          clank.type = 'square';
+          clank.frequency.setValueAtTime(320, now);
+          clank.frequency.exponentialRampToValueAtTime(35, now + 0.08);
+
+          clankGain.gain.setValueAtTime(0.5, now);
+          clankGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+          clank.connect(clankGain);
+          clankGain.connect(this.ctx.destination);
+          clank.start(now);
+          clank.stop(now + 0.1);
+
+          const hum = this.ctx.createOscillator();
+          const humGain = this.ctx.createGain();
+          hum.type = 'sawtooth';
+          hum.frequency.setValueAtTime(90, now + 0.02);
+          hum.frequency.linearRampToValueAtTime(80, now + 0.38);
+
+          humGain.gain.setValueAtTime(0.001, now);
+          humGain.gain.setValueAtTime(0.35, now + 0.02);
+          humGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+          hum.connect(humGain);
+          humGain.connect(this.ctx.destination);
+          hum.start(now + 0.02);
+          hum.stop(now + 0.4);
+        }
+
+        // 4. Authentic High-Frequency Flyback Beam Hum
         playBeamHum() {
           this.init();
           if (!this.ctx) return;
@@ -176,7 +234,8 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
           flyback.type = 'sine';
           flyback.frequency.setValueAtTime(14000, now);
           flyback.frequency.exponentialRampToValueAtTime(120, now + 0.38);
-          flybackGain.gain.setValueAtTime(0.15, now);
+
+          flybackGain.gain.setValueAtTime(0.2, now);
           flybackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
 
           flyback.connect(flybackGain);
@@ -187,58 +246,83 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
       }
 
       const audioEngine = new CRTTransitionAudio();
+      let isNavigating = false;
+      let lastVariantIndex = -1;
 
-      function setupGlobalEngine() {
-        const isAudioActive = document.body.dataset.audioTransitions === 'true';
+      const warmAudioContext = () => {
+        audioEngine.init();
+      };
+      window.addEventListener('pointerdown', warmAudioContext, { passive: true });
+      window.addEventListener('touchstart', warmAudioContext, { passive: true });
+      window.addEventListener('mousedown', warmAudioContext, { passive: true });
+
+      function resetOverlay() {
+        isNavigating = false;
         const crtOverlay = document.getElementById('crt-off-overlay');
         if (crtOverlay) {
           crtOverlay.className = 'fixed inset-0 pointer-events-none z-[100] opacity-0 flex items-center justify-center overflow-hidden';
         }
-
-        const transitionLinks = document.querySelectorAll('a.post-transition-link, a[data-transition="true"]');
-        transitionLinks.forEach((link) => {
-          link.addEventListener('click', (e) => {
-            const targetHref = link.getAttribute('href');
-            if (!targetHref || targetHref.startsWith('#')) return;
-
-            e.preventDefault();
-
-            if (isAudioActive) {
-              const audioVariants = ['power-off', 'degauss', 'beam-hum'];
-              const chosen = audioVariants[Math.floor(Math.random() * audioVariants.length)];
-              try {
-                if (chosen === 'power-off') audioEngine.playPowerOff();
-                else if (chosen === 'degauss') audioEngine.playDegaussWarp();
-                else audioEngine.playBeamHum();
-              } catch {}
-
-              if (crtOverlay) {
-                crtOverlay.className = `fixed inset-0 pointer-events-none z-[100] flex items-center justify-center overflow-hidden is-shutting-down mode-crt-${chosen}`;
-              }
-            } else {
-              const silentModes = [
-                'mode-scanline-sweep',
-                'mode-static-burst-silent',
-                'mode-horizontal-shutter',
-                'mode-vertical-curtain',
-                'mode-lens-defocus',
-                'mode-analog-fade'
-              ];
-              const chosenMode = silentModes[Math.floor(Math.random() * silentModes.length)];
-              if (crtOverlay) {
-                crtOverlay.className = `fixed inset-0 pointer-events-none z-[100] flex items-center justify-center overflow-hidden is-shutting-down ${chosenMode}`;
-              }
-            }
-
-            setTimeout(() => {
-              navigate(targetHref);
-            }, 420);
-          });
-        });
       }
 
-      document.addEventListener('DOMContentLoaded', setupGlobalEngine);
-      document.addEventListener('astro:page-load', setupGlobalEngine);
+      function handleTransitionClick(e: MouseEvent) {
+        const link = (e.target as HTMLElement)?.closest<HTMLAnchorElement>('a.post-transition-link, a[data-transition="true"]');
+        if (!link) return;
+
+        const targetHref = link.getAttribute('href');
+        if (!targetHref || targetHref.startsWith('#') || targetHref.startsWith('javascript:')) return;
+        if (isNavigating) return;
+
+        const isFromIndex = document.body.dataset.audioTransitions === 'true' || 
+                            window.location.pathname === '/' || 
+                            window.location.pathname === '';
+
+        if (!isFromIndex) return;
+
+        e.preventDefault();
+        isNavigating = true;
+
+        audioEngine.init();
+        const crtOverlay = document.getElementById('crt-off-overlay');
+
+        const transitionVariants = [
+          { name: 'power-off', play: () => audioEngine.playTvTurnOff(), delay: 440 },
+          { name: 'degauss', play: () => audioEngine.playElectricalBuzz(), delay: 420 },
+          { name: 'beam-hum', play: () => audioEngine.playClankHum(), delay: 400 },
+          { name: 'beam-hum', play: () => audioEngine.playBeamHum(), delay: 400 }
+        ];
+
+        let chosenIndex = Math.floor(Math.random() * transitionVariants.length);
+        if (chosenIndex === lastVariantIndex) {
+          chosenIndex = (chosenIndex + 1) % transitionVariants.length;
+        }
+        lastVariantIndex = chosenIndex;
+
+        const selected = transitionVariants[chosenIndex];
+
+        try {
+          selected.play();
+        } catch {}
+
+        if (crtOverlay) {
+          crtOverlay.className = `fixed inset-0 z-[100] flex items-center justify-center overflow-hidden is-shutting-down mode-crt-${selected.name}`;
+        }
+
+        setTimeout(() => {
+          navigate(targetHref);
+        }, selected.delay);
+      }
+
+      function bindRouter() {
+        document.removeEventListener('click', handleTransitionClick);
+        document.addEventListener('click', handleTransitionClick);
+      }
+
+      document.addEventListener('astro:page-load', () => {
+        resetOverlay();
+        bindRouter();
+      });
+
+      document.addEventListener('astro:after-swap', resetOverlay);
 
       document.addEventListener('contextmenu', async (e: MouseEvent) => {
         const target = e.target as HTMLElement | null;
@@ -288,12 +372,28 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
 </html>
 
 <style is:global>
-  /* Enforce black background on public layouts to prevent admin CSS bleed in production bundles */
+  /* Root Viewport Hard-Centering & Boundary Locks */
   html,
   body.public-site {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background-color: #0a0a0a !important;
     background: #0a0a0a !important;
     color: #e5e5e5 !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: 1024px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
   }
 
   .animated-noise-overlay {
@@ -311,7 +411,6 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
     100% { transform: translate(2px, 1px); }
   }
 
-  /* Global Content Flow, Typography Wrapping & Responsive Media */
   main,
   article,
   .prose,
@@ -337,7 +436,6 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
     line-height: 1.75;
   }
 
-  /* Floating image wrapping support for post articles */
   article img.align-left,
   .prose img.align-left,
   .post-body img.align-left {
@@ -368,11 +466,18 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
     }
   }
 
+  /* Full Screen CRT Transitions */
+  #crt-off-overlay {
+    background: transparent;
+    transition: opacity 0.08s ease;
+  }
+
   #crt-off-overlay.is-shutting-down {
     pointer-events: auto !important;
-    opacity: 1;
+    opacity: 1 !important;
     animation: crt-fade-black 0.46s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   }
+
   .is-shutting-down .tv-scanlines {
     background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.75) 0px, rgba(0, 0, 0, 0.75) 1px, transparent 1px, transparent 3px);
   }
@@ -383,38 +488,16 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
     animation: crt-beam-collapse 0.44s cubic-bezier(0.23, 1, 0.32, 1) forwards;
     box-shadow: 0 0 35px rgba(255, 255, 255, 1), 0 0 70px rgba(255, 255, 255, 0.9);
   }
+
   .mode-crt-degauss .degauss-warp-mesh {
     animation: degauss-warp 0.42s ease-out forwards;
     background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.85) 100%);
   }
+
   .mode-crt-beam-hum .crt-screen-flash {
     animation: flash-beam 0.4s ease-out forwards;
   }
 
-  /* Silent transitions for subpages & posts */
-  .mode-scanline-sweep .tv-scanlines {
-    animation: scanline-sweep 0.4s ease-out forwards;
-  }
-  .mode-static-burst-silent .crt-static-burst {
-    background-image: repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 1px, transparent 1px, transparent 100%);
-    background-size: 4px 4px;
-    animation: crt-static-fade 0.38s ease-out forwards;
-  }
-  .mode-horizontal-shutter {
-    animation: shutter-horiz 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  .mode-vertical-curtain {
-    animation: curtain-vert 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  .mode-lens-defocus {
-    backdrop-filter: blur(12px) contrast(140%);
-    animation: crt-fade-black 0.42s ease-out forwards;
-  }
-  .mode-analog-fade {
-    animation: crt-fade-black 0.38s ease-in-out forwards;
-  }
-
-  /* Global Print Isolation */
   @media print {
     header,
     footer,
@@ -438,32 +521,19 @@ const logoUrl = "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/branding/da
     70% { height: 2px; transform: scale(0.04, 0.85); background: #ffffff; opacity: 1; }
     100% { height: 0px; transform: scale(0, 0); background: #ffffff; opacity: 0; }
   }
+
   @keyframes degauss-warp {
     0% { transform: scale(1) rotate(0deg); opacity: 0; }
     40% { transform: scale(1.05) rotate(1deg); opacity: 0.8; }
     100% { transform: scale(0.98) rotate(0deg); opacity: 1; }
   }
+
   @keyframes flash-beam {
     0% { opacity: 0; }
     30% { opacity: 0.8; }
     100% { opacity: 0; }
   }
-  @keyframes scanline-sweep {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-  }
-  @keyframes shutter-horiz {
-    0% { clip-path: inset(0 0 0 0); }
-    100% { clip-path: inset(0 50% 0 50%); }
-  }
-  @keyframes curtain-vert {
-    0% { clip-path: inset(0 0 0 0); }
-    100% { clip-path: inset(50% 0 50% 0); }
-  }
-  @keyframes crt-static-fade {
-    0% { opacity: 0.8; }
-    100% { opacity: 0; }
-  }
+
   @keyframes crt-fade-black {
     0% { background-color: rgba(0, 0, 0, 0); }
     100% { background-color: rgba(0, 0, 0, 1); }

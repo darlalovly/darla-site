@@ -28,11 +28,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
         if (!isAllowed) {
           return new Response("Forbidden: Hotlinking is not permitted.", {
             status: 403,
-            headers: { "Content-Type": "text/plain" },
+            headers: {
+              "Content-Type": "text/plain",
+              "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+            },
           });
         }
       } catch {
-        return new Response("Forbidden", { status: 403 });
+        return new Response("Forbidden", {
+          status: 403,
+          headers: {
+            "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+          },
+        });
       }
     }
 
@@ -49,6 +57,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
           const headers = new Headers(response.headers);
           headers.set('Cache-Control', 'public, max-age=31536000, immutable');
           headers.set('Access-Control-Allow-Origin', '*');
+          headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
           return new Response(response.body, {
             status: 200,
             headers,
@@ -60,7 +69,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // 3. Pass static assets and direct media files through without auth
+  // 3. Edge-level robots.txt crawler disallow
+  if (pathname === '/robots.txt') {
+    return new Response("User-agent: *\nDisallow: /\n", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    });
+  }
+
+  // 4. Pass static assets through with noindex headers
   if (
     pathname.startsWith("/_astro/") ||
     pathname.startsWith("/_image") ||
@@ -68,25 +89,34 @@ export const onRequest = defineMiddleware(async (context, next) => {
     pathname.startsWith("/favicon") ||
     /\.(webp|jpg|jpeg|png|gif|svg|ico|mp4|css|js|woff|woff2|ttf|eot)$/i.test(pathname)
   ) {
-    return next();
+    const res = await next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+    return res;
   }
 
-  // 4. Bypass authentication during local development
+  // 5. Bypass authentication during local development
   if (
     import.meta.env.DEV ||
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
     hostname === "::1"
   ) {
-    return next();
+    const res = await next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+    return res;
   }
 
-  // 5. Zero Trust authenticated sessions bypass all preview checks
+  // 6. Zero Trust authenticated sessions bypass Basic Auth
   if (cfUserEmail) {
-    return next();
+    const res = await next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+    return res;
   }
 
-  // 6. Enforce HTTP Basic Auth fallback (protects preview & admin until Zero Trust edge rules apply)
+  // 7. Resolve runtime credentials across Cloudflare Pages adapter and environment
+  const locals = (context.locals as any) || {};
+  const runtimeEnv = locals?.runtime?.env || (context as any)?.env || {};
+
   let cfEnv: any = {};
   try {
     // @ts-ignore
@@ -94,21 +124,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
     cfEnv = cfWorkers?.env || {};
   } catch {}
 
-  const previewUsersRaw =
-    cfEnv.PREVIEW_USERS ||
-    (globalThis as any).process?.env?.PREVIEW_USERS ||
-    import.meta.env.PREVIEW_USERS;
+  const nodeEnv = (globalThis as any).process?.env || {};
+  const viteEnv = (import.meta as any).env || {};
+  const env = { ...cfEnv, ...runtimeEnv, ...nodeEnv, ...viteEnv };
 
   let allowedUsers: Record<string, string> = {};
-  if (previewUsersRaw) {
+  if (env.PREVIEW_USERS) {
     try {
-      allowedUsers = JSON.parse(previewUsersRaw);
+      allowedUsers = JSON.parse(env.PREVIEW_USERS);
     } catch {
       allowedUsers = {};
     }
   }
 
-  // 7. Verify HTTP Basic Auth credentials
+  const defaultUser = env.AUTH_USER || "darla";
+  const defaultPass = env.AUTH_PASS || "darlalovly2026";
+  if (Object.keys(allowedUsers).length === 0) {
+    allowedUsers[defaultUser] = defaultPass;
+  }
+
+  // 8. Verify HTTP Basic Auth credentials
   const authHeader =
     context.request.headers.get("authorization") ||
     context.request.headers.get("Authorization");
@@ -120,17 +155,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
         const decoded = atob(encoded);
         const [username, password] = decoded.split(":");
         if (username && allowedUsers[username] && allowedUsers[username] === password) {
-          return next();
+          const res = await next();
+          res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+          return res;
         }
       } catch {}
     }
   }
 
-  return new Response("Unauthorized access", {
+  return new Response("Unauthorized: Private preview requires authentication.", {
     status: 401,
     headers: {
-      "WWW-Authenticate": 'Basic realm="Darlalovly Site Preview", charset="UTF-8"',
+      "WWW-Authenticate": 'Basic realm="Darlalovly Private Preview", charset="UTF-8"',
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+      "Content-Type": "text/plain; charset=utf-8",
     },
   });
 });

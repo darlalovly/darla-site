@@ -95,7 +95,7 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
       </div>
     </div>
 
-    <!-- Quick Stats -->
+    <!-- Quick Stats (Vertical/Grid Flow) -->
     <div class="stats-row">
       <div class="stat-card">
         <span class="stat-num">{totalCount}</span>
@@ -130,7 +130,7 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
       </div>
     </div>
 
-    <!-- Content Table -->
+    <!-- Content Directory: Responsive Vertical Stream -->
     <div class="studio-card table-card">
       <table class="entries-table">
         <thead>
@@ -241,38 +241,50 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
 <style is:global>
   .studio-wrapper {
     max-width: 1240px;
+    width: 100%;
     margin: 0 auto;
     padding: 24px 20px 64px 20px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
   }
 
   .studio-header-bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
+  }
+
+  @media (min-width: 640px) {
+    .studio-header-bar {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
   }
 
   .header-left, .header-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .studio-page-title {
     font-size: clamp(1.4rem, 2.5vw, 1.75rem);
-    font-weight: 400;
+    font-weight: 500;
     margin: 0;
     color: var(--title);
   }
 
   .stats-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    width: 100%;
   }
 
   .stat-card {
@@ -304,8 +316,8 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
 
   .filter-bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 8px;
     font-size: 12px;
   }
 
@@ -323,19 +335,19 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
     font-size: 11px;
     letter-spacing: var(--caps-track);
     text-transform: uppercase;
-    color: var(--text-2);
+    color: var(--text-2) !important;
     cursor: pointer;
     padding: 0;
     transition: color 120ms ease;
   }
 
   .tab-btn:hover {
-    color: var(--title);
+    color: var(--title) !important;
   }
 
   .tab-btn.is-active {
     font-weight: 700;
-    color: var(--title);
+    color: var(--title) !important;
     text-decoration: underline;
     text-underline-offset: 4px;
   }
@@ -346,12 +358,13 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
     user-select: none;
   }
 
+  /* Responsive Table Card: Elimination of Horizontal Scroll */
   .table-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    overflow-x: auto;
+    width: 100%;
   }
 
   .entries-table {
@@ -399,12 +412,12 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
     font-family: var(--font-title);
     font-size: 13px;
     font-weight: 600;
-    color: var(--title);
+    color: var(--title) !important;
     text-decoration: none;
   }
 
   .entry-title-text:hover {
-    text-decoration: underline;
+    text-decoration: underline !important;
   }
 
   .entry-slug-text {
@@ -452,15 +465,15 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
   }
 
   .status-published {
-    background: #edf8ee;
-    color: #1e7025;
-    border: 1px solid #b8e2bb;
+    background: #f4f4f5 !important;
+    color: #09090b !important;
+    border: 1px solid var(--border) !important;
   }
 
   .status-draft {
-    background: #ffffff;
-    color: var(--text-2);
-    border: 1px dashed var(--border);
+    background: #ffffff !important;
+    color: var(--text-2) !important;
+    border: 1px dashed var(--border) !important;
   }
 
   .action-links {
@@ -471,7 +484,7 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
 
   .action-link {
     font-family: var(--font-title);
-    color: var(--title);
+    color: var(--title) !important;
     text-decoration: none;
     font-size: 11px;
     letter-spacing: var(--caps-track);
@@ -479,7 +492,7 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
   }
 
   .action-link:hover {
-    text-decoration: underline;
+    text-decoration: underline !important;
   }
 
   .action-divider {
@@ -495,5 +508,42 @@ const draftsCount = allEntries.filter((e) => e.isDraft).length;
     letter-spacing: var(--caps-track);
     text-transform: uppercase;
     color: var(--text-2);
+  }
+
+  /* Responsive Stack for Narrow Screens */
+  @media (max-width: 768px) {
+    .entries-table,
+    .entries-table thead,
+    .entries-table tbody,
+    .entries-table tr,
+    .entries-table td {
+      display: block;
+      width: 100%;
+    }
+
+    .entries-table thead {
+      display: none;
+    }
+
+    .entry-row {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .entries-table td {
+      padding: 0;
+      border: none;
+    }
+
+    .entries-table tr:hover td {
+      background: transparent;
+    }
+
+    .entry-row:hover {
+      background: #fafafa;
+    }
   }
 </style>

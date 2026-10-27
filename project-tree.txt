@@ -2,56 +2,59 @@ darlalovly/
 ├── .wrangler/
 │   ├── deploy/
 │   │   └── config.json
-│   └── state/
-│       └── v3/
-│           ├── cache/
-│           │   └── miniflare-CacheObject/
-│           │       ├── metadata.sqlite
-│           │       ├── metadata.sqlite-shm
-│           │       └── metadata.sqlite-wal
-│           ├── d1/
-│           │   └── miniflare-D1DatabaseObject/
-│           │       ├── 914b1499d5c93dcc77d8508c0887547f6acfa43a60b7b5e72f370ccccd86e92a.sqlite
-│           │       ├── metadata.sqlite
-│           │       ├── metadata.sqlite-shm
-│           │       └── metadata.sqlite-wal
-│           ├── do/
-│           ├── images/
-│           │   └── miniflare-images-KVNamespaceObject/
-│           │       ├── metadata.sqlite
-│           │       ├── metadata.sqlite-shm
-│           │       └── metadata.sqlite-wal
-│           ├── kv/
-│           │   └── miniflare-KVNamespaceObject/
-│           │       ├── metadata.sqlite
-│           │       ├── metadata.sqlite-shm
-│           │       └── metadata.sqlite-wal
-│           ├── observability/
-│           │   └── miniflare-wobs-trace-store/
-│           │       ├── a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite
-│           │       ├── a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-shm
-│           │       ├── a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-wal
-│           │       ├── metadata.sqlite
-│           │       ├── metadata.sqlite-shm
-│           │       └── metadata.sqlite-wal
-│           └── r2/
-│               ├── darlalovly-media/
-│               │   └── blobs/
-│               │       ├── 1423803660a803ec84879d4a6ae79b6c4787031524d8dd4ee755fdea6b6d9254000001a16eb677a9
-│               │       ├── 39e5106b1e04f0d43de5da99bee11398fa9297718d6ad40a982707917dffb0db000001a16eb604bc
-│               │       ├── 5b9b8d3561b7f8af9fdf9ae1f639f45d04866c979426ead0aa5e587832050f5e000001a16eb6aadd
-│               │       ├── 8f69c7a95a28d421c71af6b04f70bba4fac79fc050bda096ac2b90227fb8b7e1000001a16eb63ee1
-│               │       └── 9b2c5fcb90f3b7600eaf9596730f8b30b2c56037ba460d869cdfecd3e92022de000001a16eb5cc07
-│               └── miniflare-R2BucketObject/
-│                   ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite
-│                   ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite-shm
-│                   ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite-wal
-│                   ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite
-│                   ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite-shm
-│                   ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite-wal
-│                   ├── metadata.sqlite
-│                   ├── metadata.sqlite-shm
-│                   └── metadata.sqlite-wal
+│   ├── state/
+│   │   └── v3/
+│   │       ├── cache/
+│   │       │   └── miniflare-CacheObject/
+│   │       │       ├── metadata.sqlite
+│   │       │       ├── metadata.sqlite-shm
+│   │       │       └── metadata.sqlite-wal
+│   │       ├── d1/
+│   │       │   └── miniflare-D1DatabaseObject/
+│   │       │       ├── 914b1499d5c93dcc77d8508c0887547f6acfa43a60b7b5e72f370ccccd86e92a.sqlite
+│   │       │       ├── ef94821bffa3bf6790aad7b3386d65a9082a9d7cd19528bfe0598dc2d743945c.sqlite
+│   │       │       ├── metadata.sqlite
+│   │       │       ├── metadata.sqlite-shm
+│   │       │       └── metadata.sqlite-wal
+│   │       ├── do/
+│   │       ├── images/
+│   │       │   └── miniflare-images-KVNamespaceObject/
+│   │       │       ├── metadata.sqlite
+│   │       │       ├── metadata.sqlite-shm
+│   │       │       └── metadata.sqlite-wal
+│   │       ├── kv/
+│   │       │   └── miniflare-KVNamespaceObject/
+│   │       │       ├── metadata.sqlite
+│   │       │       ├── metadata.sqlite-shm
+│   │       │       └── metadata.sqlite-wal
+│   │       ├── observability/
+│   │       │   └── miniflare-wobs-trace-store/
+│   │       │       ├── a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite
+│   │       │       ├── a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-shm
+│   │       │       ├── a590acd76969f996ec6e4b599c3c09f58c283a76f2d61392b5d3046caf557602.sqlite-wal
+│   │       │       ├── metadata.sqlite
+│   │       │       ├── metadata.sqlite-shm
+│   │       │       └── metadata.sqlite-wal
+│   │       └── r2/
+│   │           ├── darlalovly-media/
+│   │           │   └── blobs/
+│   │           │       ├── 1423803660a803ec84879d4a6ae79b6c4787031524d8dd4ee755fdea6b6d9254000001a16eb677a9
+│   │           │       ├── 39e5106b1e04f0d43de5da99bee11398fa9297718d6ad40a982707917dffb0db000001a16eb604bc
+│   │           │       ├── 5b9b8d3561b7f8af9fdf9ae1f639f45d04866c979426ead0aa5e587832050f5e000001a16eb6aadd
+│   │           │       ├── 8f69c7a95a28d421c71af6b04f70bba4fac79fc050bda096ac2b90227fb8b7e1000001a16eb63ee1
+│   │           │       └── 9b2c5fcb90f3b7600eaf9596730f8b30b2c56037ba460d869cdfecd3e92022de000001a16eb5cc07
+│   │           └── miniflare-R2BucketObject/
+│   │               ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite
+│   │               ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite-shm
+│   │               ├── 2c6103f0747df60960b462c7a16aae54792052c27b5f8079672a5596e9bb081f.sqlite-wal
+│   │               ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite
+│   │               ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite-shm
+│   │               ├── 5a6f96e23fdc2971ad6fa65bc4ba04068d15e760adf4a8dabd54a47eafc97400.sqlite-wal
+│   │               ├── metadata.sqlite
+│   │               ├── metadata.sqlite-shm
+│   │               └── metadata.sqlite-wal
+│   └── tmp/
+│       └── pages-x3QQLy/
 ├── migrations/
 │   └── 0001_create_messages.sql
 ├── public/

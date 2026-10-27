@@ -2,11 +2,16 @@
 # File: src/content/posts/2026-02-04-cilantro-lime-chicken.md
 title: "Cilantro Lime Chicken with Black Beans & Rice"
 date: 2026-02-04
+description: "I'm trying out a new product tonight from Chef's Counter Cilantro Lime Boneless Skinless Chicken Thighs."
 excerpt: "I'm trying out a new product tonight from Chef's Counter Cilantro Lime Boneless Skinless Chicken Thighs."
+category: "Food"
 thumbnailKey: "images/posts/2026-02-04-cilantro-lime-chicken/chefs-corner-cilantro-lime-thighs-2.webp"
 image: "images/posts/2026-02-04-cilantro-lime-chicken/chefs-corner-cilantro-lime-thighs-2.webp"
-type: "entry"
+heroOrientation: "landscape"
 tags: []
+gallery: []
+locations: []
+type: "entry"
 isDraft: false
 ---
 

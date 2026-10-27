@@ -4,6 +4,8 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
+export const prerender = false;
+
 const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
 
 let rawPosts: any[] = [];
@@ -63,15 +65,15 @@ const detectOrientation = (data: any): 'portrait' | 'landscape' | 'square' => {
     data?.aspect ||
     ''
   ).toLowerCase();
-  if (raw.includes('portrait') || raw.includes('vertical')) return 'portrait';
-  if (raw.includes('square')) return 'square';
+  if (raw.includes('portrait') || raw.includes('vertical') || raw.includes('9/16') || raw.includes('9:16') || raw.includes('9x12')) return 'portrait';
+  if (raw.includes('square') || raw.includes('1/1') || raw.includes('1:1')) return 'square';
   return 'landscape';
 };
 
 const combinedEntries = [
   ...postsList.map((post) => {
     const slug = (post as any).slug || (post.id ? post.id.replace(/\.(md|mdx)$/, '') : '');
-    const imgKey = post.data?.image || post.data?.thumbnailKey;
+    const imgKey = post.data?.image || post.data?.thumbnailKey || (post.data?.gallery && post.data?.gallery[0]);
     const orientation = detectOrientation(post.data);
     return {
       title: post.data?.title || 'Untitled Post',
@@ -110,10 +112,11 @@ const streamItems = feed.slice(1);
 <BaseLayout 
   title="darlalovly — Personal Posts, Places & Scent"
   enableAudioTransition={true}
+  noindex={true}
 >
-  <!-- Primary Vertical Stream -->
-  <div class="w-full flex flex-col justify-between relative z-10 dot-bg">
-    <div class="w-full max-w-5xl mx-auto pt-8 sm:pt-12 pb-20">
+  <!-- Primary Vertical Stream Centering Wrapper -->
+  <div class="w-full flex flex-col items-center justify-between relative z-10 dot-bg overflow-x-clip px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-5xl mx-auto pt-8 sm:pt-12 pb-20 flex flex-col items-center">
       
       <!-- HERO TITLE -->
       <header class="relative mb-20 md:mb-28 flex flex-col items-center justify-center text-center space-y-6 animate-fade-in w-full overflow-hidden">
@@ -137,62 +140,62 @@ const streamItems = feed.slice(1);
       </header>
 
       <!-- STAGGERED INTRO QUOTES -->
-      <section id="intro" class="mb-24 sm:mb-32 pt-16 border-t border-neutral-800 space-y-20 sm:space-y-28">
+      <section id="intro" class="w-full mb-24 sm:mb-32 pt-16 border-t border-neutral-800 space-y-20 sm:space-y-28">
         <div class="glitch-reveal-item mr-auto max-w-2xl text-left">
-          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-white leading-relaxed">
+          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-white leading-relaxed m-0">
             My personal space for wandering thoughts, unexpected detours, and local discoveries along the open road.
           </p>
         </div>
 
         <div class="glitch-reveal-item ml-auto max-w-2xl text-right">
-          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed">
-            Written plainly from real, learned-life experience - no expert guides, no heavy photography, just stories as I see them.
+          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed m-0">
+            Written plainly from real, learned-life experience - no expert guides, no heavy photography, just stories as I see them.[cite: 18]
           </p>
         </div>
 
         <div class="glitch-reveal-item mx-auto max-w-2xl text-center">
-          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-neutral-400 leading-relaxed">
-            Paying attention to the little details, one step at a time, where fragrant memories mingle with everyday moments.
+          <p class="font-mono uppercase tracking-[0.14em] text-base sm:text-lg md:text-xl text-neutral-400 leading-relaxed m-0">
+            Paying attention to the little details, one step at a time, where fragrant memories mingle with everyday moments.[cite: 18]
           </p>
         </div>
       </section>
 
       <!-- STREAM CONTAINER -->
-      <section id="feed" class="w-full pt-12 border-t border-neutral-800">
+      <section id="feed" class="w-full pt-12 border-t border-neutral-800 flex flex-col items-center">
         
-        <div class="flex items-center justify-between mb-12 sm:mb-16 pb-4 border-b border-neutral-800/60 font-mono">
+        <div class="w-full flex items-center justify-between mb-12 sm:mb-16 pb-4 border-b border-neutral-800/60 font-mono">
           <span class="text-xs uppercase tracking-[0.25em] text-neutral-400">
-            [ Digital Garden & Posts ]
+            [ Digital Garden & Posts ][cite: 18]
           </span>
           <span class="text-xs uppercase tracking-[0.2em] text-neutral-500">
-            {feed.length} {feed.length === 1 ? 'Entry' : 'Entries'}
+            {feed.length} {feed.length === 1 ? 'Entry' : 'Entries'}[cite: 18]
           </span>
         </div>
 
         <!-- 1. FEATURED ENTRY -->
         {featuredItem && (
-          <article id="featured-post" class="mb-20 sm:mb-28 glitch-reveal-item">
+          <article id="featured-post" class="w-full mb-20 sm:mb-28 glitch-reveal-item flex flex-col items-center">
             <a
               href={featuredItem.href}
               class={`post-transition-link group flex ${
                 featuredItem.isVertical
                   ? 'flex-col md:flex-row items-center gap-8 md:gap-14'
                   : 'flex-col items-center gap-8 text-center'
-              }`}
+              } w-full`}
             >
               {featuredItem.image && (
-                <div class={`featured-img-container flex items-center justify-center ${
+                <div class={`featured-img-container flex items-center justify-center select-none ${
                   featuredItem.isVertical ? 'w-full md:w-1/2 flex-shrink-0' : 'w-full'
                 }`}>
-                  <div class="relative inline-flex overflow-hidden rounded-none crt-tv-frame select-none">
-                    <div class="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-screen-vignette"></div>
-                    <div class="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-scanlines"></div>
+                  <div class="relative inline-flex overflow-hidden rounded-xl bg-transparent border-0 shadow-none justify-center items-center max-w-full">
+                    <div class="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-screen-vignette rounded-xl"></div>
+                    <div class="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-scanlines rounded-xl"></div>
                     <img
                       src={featuredItem.image}
                       alt={featuredItem.title}
                       loading="eager"
-                      class={`block w-auto h-auto max-w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] ${
-                        featuredItem.isVertical ? 'max-h-[560px]' : 'max-h-[480px]'
+                      class={`block w-auto h-auto max-w-full object-contain rounded-xl transition-transform duration-500 ease-out group-hover:scale-[1.02] ${
+                        featuredItem.isVertical ? 'max-h-[650px]' : 'max-h-[520px]'
                       }`}
                     />
                   </div>
@@ -204,17 +207,17 @@ const streamItems = feed.slice(1);
               }`}>
                 <div class="flex flex-wrap items-center justify-between gap-3 text-xs font-mono tracking-widest text-neutral-400 w-full">
                   <span class="border border-neutral-700 px-2.5 py-1 text-[10px] text-white uppercase tracking-[0.2em]">
-                    [ FEATURED {featuredItem.type} ]
+                    [ FEATURED {featuredItem.type} ][cite: 18]
                   </span>
                   <span>{formatDate(featuredItem.date)}</span>
                 </div>
 
-                <h2 class="text-2xl sm:text-4xl md:text-5xl font-mono uppercase tracking-wide text-white group-hover:text-neutral-300 transition-colors leading-tight">
+                <h2 class="text-2xl sm:text-4xl md:text-5xl font-mono uppercase tracking-wide text-white group-hover:text-neutral-300 transition-colors leading-tight m-0">
                   {featuredItem.title}
                 </h2>
 
                 {featuredItem.excerpt && (
-                  <p class="text-base sm:text-lg text-neutral-300 font-sans leading-relaxed max-w-2xl">
+                  <p class="text-base sm:text-lg text-neutral-300 font-sans leading-relaxed max-w-2xl m-0">
                     {featuredItem.excerpt}
                   </p>
                 )}
@@ -229,18 +232,18 @@ const streamItems = feed.slice(1);
         )}
 
         <!-- 2. STREAM ITEMS -->
-        <div class="flex flex-col gap-16 sm:gap-24 w-full">
+        <div class="flex flex-col gap-16 sm:gap-24 w-full items-center">
           {streamItems.map((entry, index) => {
             const formattedDate = formatDate(entry.date);
             const isReversed = index % 2 === 1;
 
             return (
-              <article class="glitch-reveal-item group flex flex-col border-b border-neutral-800/60 pb-16 last:border-0 last:pb-0">
+              <article class="w-full glitch-reveal-item group flex flex-col border-b border-neutral-800/60 pb-16 last:border-0 last:pb-0">
                 <a
                   href={entry.href}
                   class={`post-transition-link flex flex-col ${
                     isReversed ? 'md:flex-row-reverse' : 'md:flex-row'
-                  } items-center gap-8 md:gap-14 justify-between`}
+                  } items-center gap-8 md:gap-14 justify-between w-full`}
                 >
                   <div class="flex flex-col gap-4 flex-1 w-full text-left">
                     <div class="flex items-center gap-3 text-xs font-mono tracking-widest text-neutral-400">
@@ -250,12 +253,12 @@ const streamItems = feed.slice(1);
                       {formattedDate && <span>{formattedDate}</span>}
                     </div>
 
-                    <h2 class="text-xl sm:text-2xl md:text-3xl font-mono uppercase tracking-wide text-white group-hover:text-neutral-300 transition-colors leading-snug">
+                    <h2 class="text-xl sm:text-2xl md:text-3xl font-mono uppercase tracking-wide text-white group-hover:text-neutral-300 transition-colors leading-snug m-0">
                       {entry.title}
                     </h2>
 
                     {entry.excerpt && (
-                      <p class="text-sm sm:text-base text-neutral-300 font-sans leading-relaxed line-clamp-3">
+                      <p class="text-sm sm:text-base text-neutral-300 font-sans leading-relaxed line-clamp-3 m-0">
                         {entry.excerpt}
                       </p>
                     )}
@@ -267,16 +270,16 @@ const streamItems = feed.slice(1);
                   </div>
 
                   {entry.image && (
-                    <div class="w-full md:w-1/2 flex-shrink-0 flex items-center justify-center">
-                      <div class="relative inline-flex overflow-hidden rounded-none crt-tv-frame select-none">
-                        <div class="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-screen-vignette"></div>
-                        <div class="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-scanlines"></div>
+                    <div class="w-full md:w-1/2 flex-shrink-0 flex items-center justify-center select-none">
+                      <div class="relative inline-flex overflow-hidden rounded-xl bg-transparent border-0 shadow-none justify-center items-center max-w-full">
+                        <div class="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-screen-vignette rounded-xl"></div>
+                        <div class="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 crt-scanlines rounded-xl"></div>
                         <img
                           src={entry.image}
                           alt={entry.title}
                           loading="lazy"
-                          class={`block w-auto h-auto max-w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] ${
-                            entry.orientation === 'portrait' ? 'max-h-[480px]' : 'max-h-[360px]'
+                          class={`block w-auto h-auto max-w-full object-contain rounded-xl transition-transform duration-500 ease-out group-hover:scale-[1.02] ${
+                            entry.orientation === 'portrait' ? 'max-h-[500px]' : 'max-h-[380px]'
                           }`}
                         />
                       </div>
@@ -289,7 +292,7 @@ const streamItems = feed.slice(1);
 
           {feed.length === 0 && (
             <div class="py-20 text-center text-xs font-mono uppercase tracking-[0.25em] text-neutral-500">
-              [ No entries cataloged ]
+              [ No entries cataloged ][cite: 18]
             </div>
           )}
         </div>
@@ -317,8 +320,8 @@ const streamItems = feed.slice(1);
           featuredImgContainer.classList.add('w-full', 'md:w-1/2', 'flex-shrink-0');
           featuredContent.classList.remove('items-center', 'text-center', 'max-w-3xl');
           featuredContent.classList.add('text-left');
-          featuredImg.classList.remove('max-h-[480px]');
-          featuredImg.classList.add('max-h-[560px]');
+          featuredImg.classList.remove('max-h-[520px]');
+          featuredImg.classList.add('max-h-[650px]');
         } else {
           featuredLink.classList.remove('md:flex-row', 'md:gap-14');
           featuredLink.classList.add('flex-col', 'items-center', 'gap-8', 'text-center');
@@ -326,8 +329,8 @@ const streamItems = feed.slice(1);
           featuredImgContainer.classList.add('w-full');
           featuredContent.classList.remove('text-left');
           featuredContent.classList.add('items-center', 'text-center', 'max-w-3xl');
-          featuredImg.classList.remove('max-h-[560px]');
-          featuredImg.classList.add('max-h-[480px]');
+          featuredImg.classList.remove('max-h-[650px]');
+          featuredImg.classList.add('max-h-[520px]');
         }
       };
 
@@ -374,10 +377,6 @@ const streamItems = feed.slice(1);
     background-size: 100% 4px;
   }
 
-  .group:hover .crt-tv-frame img {
-    filter: brightness(1.04) contrast(1.04);
-  }
-
   .glitch-title {
     position: relative;
     display: inline-block;
@@ -390,6 +389,7 @@ const streamItems = feed.slice(1);
     color: #ffffff !important;
     text-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
   }
+
   .glitch-title::before, .glitch-title::after {
     content: attr(data-text);
     position: absolute;
@@ -400,18 +400,21 @@ const streamItems = feed.slice(1);
     background: transparent;
     pointer-events: none;
   }
+
   .glitch-title::before {
     left: 2px;
     text-shadow: -2px 0 #a3a3a3, 1px 0 #e5e5e5;
     clip-path: inset(0 0 100% 0);
     animation: tv-static-glitch-1 3.2s infinite linear alternate-reverse;
   }
+
   .glitch-title::after {
     left: -2px;
     text-shadow: 2px 0 #ffffff, -1px 0 #d4d4d4;
     clip-path: inset(0 0 100% 0);
     animation: tv-static-glitch-2 2.6s infinite linear alternate-reverse;
   }
+
   @keyframes tv-static-glitch-1 {
     0%, 80%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); opacity: 0.9; }
     82% { clip-path: inset(20% 0 50% 0); transform: translate(-3px, 1px); opacity: 0.75; }
@@ -419,6 +422,7 @@ const streamItems = feed.slice(1);
     90% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 2px); opacity: 0.6; }
     95% { clip-path: inset(75% 0 8% 0); transform: translate(2px, -2px); opacity: 0.9; }
   }
+
   @keyframes tv-static-glitch-2 {
     0%, 75%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); opacity: 0.9; }
     78% { clip-path: inset(40% 0 35% 0); transform: translate(4px, -1px); opacity: 0.7; }
@@ -432,19 +436,25 @@ const streamItems = feed.slice(1);
     transform: translateY(24px);
     will-change: opacity, transform, filter;
   }
+
   .glitch-reveal-item.is-visible {
     animation: static-glitch-reveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
   @keyframes static-glitch-reveal {
-    0% { opacity: 0; transform: translateY(24px) skewX(6deg); filter: blur(4px) contrast(150%); }
-    20% { opacity: 0.4; transform: translateY(16px) skewX(-4deg) scaleX(1.02); filter: blur(2px) grayscale(100%); }
-    40% { opacity: 0.7; transform: translateY(8px) skewX(2deg); filter: blur(1px); }
-    60% { opacity: 0.9; transform: translateY(2px) skewX(-1deg); filter: blur(0px); }
-    100% { opacity: 1; transform: translateY(0) skewX(0deg); filter: blur(0); }
+    0% { opacity: 0; transform: translateY(24px); filter: blur(4px) contrast(150%); }
+    20% { opacity: 0.4; transform: translateY(16px); filter: blur(2px) grayscale(100%); }
+    40% { opacity: 0.7; transform: translateY(8px); filter: blur(1px); }
+    60% { opacity: 0.9; transform: translateY(2px); filter: blur(0px); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
   }
+
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+  .animate-fade-in { 
+    animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+  }
 </style>

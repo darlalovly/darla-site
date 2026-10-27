@@ -250,6 +250,16 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
               </select>
             </div>
 
+            <div class="form-row">
+              <label for="heroPosition" class="field-label">DISPLAY POSITION</label>
+              <select id="heroPosition" name="heroPosition" class="input-select" style="width: 100%;">
+                <option value="top" selected>TOP CENTER (ABOVE TEXT)</option>
+                <option value="left">LEFT (WRAP TEXT)</option>
+                <option value="right">RIGHT (WRAP TEXT)</option>
+                <option value="none">DO NOT DISPLAY IN POST</option>
+              </select>
+            </div>
+
             <div id="hero-preview-box" class="hero-preview-box mt-2">
               <span>NO IMAGE SELECTED</span>
             </div>
@@ -337,6 +347,7 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
   const locationInput = document.getElementById('location');
   const thumbInput = document.getElementById('thumbnailKey');
   const heroOrientationSelect = document.getElementById('heroOrientation');
+  const heroPositionSelect = document.getElementById('heroPosition');
   const heroPreview = document.getElementById('hero-preview-box');
   const markdownInput = document.getElementById('markdownBody');
   const descInput = document.getElementById('description');
@@ -524,6 +535,8 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
     const locationVal = locationInput.value.trim();
     const heroVal = thumbInput.value.trim();
     const orientationVal = heroOrientationSelect.value || 'landscape';
+    const heroPositionVal = heroPositionSelect ? heroPositionSelect.value : 'top';
+    const showHeroVal = heroPositionVal !== 'none';
     const bodyVal = markdownInput.value.trim();
     const descVal = descInput.value.trim();
 
@@ -564,6 +577,8 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
       ...(locationVal ? ['location: ' + JSON.stringify(locationVal)] : []),
       ...(heroVal ? ['thumbnailKey: ' + JSON.stringify(heroVal)] : []),
       'heroOrientation: ' + JSON.stringify(orientationVal),
+      'heroPosition: ' + JSON.stringify(heroPositionVal),
+      'showHeroImage: ' + showHeroVal,
       'isDraft: ' + isDraftVal,
       ...(moodVal.length ? ['mood: ' + JSON.stringify(moodVal)] : []),
       ...(tagsVal.length ? ['tags: ' + JSON.stringify(tagsVal)] : []),
@@ -592,6 +607,8 @@ const currentDateStr = new Date().toISOString().slice(0, 16);
         location: locationVal,
         thumbnailKey: heroVal,
         heroOrientation: orientationVal,
+        heroPosition: heroPositionVal,
+        showHeroImage: showHeroVal,
         isDraft: isDraftVal,
         mood: moodVal,
         tags: tagsVal,

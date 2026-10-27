@@ -2,10 +2,6 @@
 
 @import "tailwindcss";
 
-/* ==========================================================
-   Darla Lovly — Global Stylesheet 
-   ========================================================== */
-
 :root {
   --hdr-height: 80px;
   --bg: #0a0a0a;
@@ -34,18 +30,19 @@ html {
 html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background-color: var(--bg);
 }
 
 ::-webkit-scrollbar {
   display: none !important;
 }
 
-body {
+body.public-site,
+body:not(.admin-site) {
   min-height: 100vh;
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  margin: 0 !important;
+  background-color: #0a0a0a !important;
+  background: #0a0a0a !important;
+  color: #e5e5e5 !important;
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
@@ -53,18 +50,33 @@ body {
   overscroll-behavior-x: none;
 }
 
-/* Typography & Branding Rules */
-h1, h2, h3, h4 {
+body.public-site h1,
+body.public-site h2,
+body.public-site h3,
+body.public-site h4,
+body:not(.admin-site) h1,
+body:not(.admin-site) h2,
+body:not(.admin-site) h3,
+body:not(.admin-site) h4 {
   font-family: var(--font-title);
   text-transform: uppercase;
   letter-spacing: var(--caps-track);
   font-weight: 400;
-  color: var(--title);
+  color: #ffffff !important;
   margin: 0 0 1rem 0;
   clear: both;
 }
 
-h1 { font-size: clamp(2rem, 5vw, 2.5rem); }
+body.public-site h1,
+body:not(.admin-site) h1 { 
+  font-size: clamp(2rem, 5vw, 2.5rem) !important; 
+}
+
+body.public-site .glitch-title {
+  color: #ffffff !important;
+  font-size: clamp(2rem, 5.5vw, 4rem) !important;
+}
+
 p { margin-bottom: 1.5rem; }
 
 .col-signature {
@@ -90,7 +102,6 @@ p { margin-bottom: 1.5rem; }
   border-radius: 4px;
 }
 
-/* Header, Navigation & Logo Restraints */
 header img,
 nav img,
 .col-topnav-brand img,
@@ -161,15 +172,11 @@ main {
   }
 }
 
-/* ==========================================================
-   Prose Article Typography & Seamless Borderless Media System
-   ========================================================== */
-
 .prose {
   color: var(--text);
   --tw-prose-body: var(--text);
-  --tw-prose-headings: var(--title);
-  --tw-prose-bold: var(--title);
+  --tw-prose-headings: #ffffff;
+  --tw-prose-bold: #ffffff;
   --tw-prose-links: #ffffff;
 }
 

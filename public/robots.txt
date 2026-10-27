@@ -1,7 +1,7 @@
 # File: public/robots.txt
 
 User-agent: *
-Allow: /
+Disallow: /
 
 # Disallow admin studio routes
 Disallow: /admin/

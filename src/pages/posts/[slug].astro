@@ -5,40 +5,70 @@ import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-export const prerender = true;
-
-interface Props {
-  entry: CollectionEntry<'posts'>;
-}
-
-export async function getStaticPaths() {
-  const posts = await getCollection('posts');
-  return posts
-    .filter((post) => !post.data.isDraft && !post.data.draft)
-    .map((entry) => ({
-      params: { slug: (entry as any).slug || entry.id.replace(/\.(md|mdx)$/, '') },
-      props: { entry },
-    }));
-}
+export const prerender = false;
 
 const { slug } = Astro.params;
-const { entry: propEntry } = Astro.props;
+if (!slug) {
+  return Astro.redirect('/404');
+}
 
 const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
 
-const resolveImageUrl = (img: any): string | undefined => {
-  if (!img) return undefined;
-  if (typeof img === 'string') {
-    if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
-      return img;
+const isVideoUrl = (url?: string): boolean => {
+  if (!url) return false;
+  return /\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i.test(url);
+};
+
+const normalizeSlug = (val: string): string => {
+  if (!val) return '';
+  return val.replace(/\.(md|mdx)$/, '').split('/').pop() || val;
+};
+
+const resolveMediaUrl = (media: any, targetSlug = slug): string | undefined => {
+  if (!media) return undefined;
+  if (typeof media === 'string') {
+    const clean = media.trim();
+    if (clean.startsWith('http://') || clean.startsWith('https://')) {
+      return clean;
     }
     const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
-    return `${cleanBase}${img.replace(/^\/+/, '')}`;
+    const cleanPath = clean.replace(/^\/+/, '');
+    if (cleanPath.startsWith('images/')) {
+      return `${cleanBase}${cleanPath}`;
+    }
+    return `${cleanBase}images/posts/${targetSlug}/${cleanPath}`;
   }
-  if (typeof img === 'object' && img?.src) {
-    return img.src;
+  if (typeof media === 'object' && media?.src) {
+    return media.src;
   }
   return undefined;
+};
+
+const detectOrientation = (data: any): 'portrait' | 'landscape' | 'square' => {
+  const raw = String(
+    data?.heroOrientation ||
+    data?.orientation ||
+    data?.imageOrientation ||
+    data?.videoOrientation ||
+    data?.aspectRatio ||
+    data?.aspect ||
+    ''
+  ).toLowerCase();
+  if (
+    raw.includes('portrait') ||
+    raw.includes('vertical') ||
+    raw.includes('9/16') ||
+    raw.includes('9:16') ||
+    raw.includes('9x12') ||
+    raw.includes('3/4') ||
+    raw.includes('3:4')
+  ) {
+    return 'portrait';
+  }
+  if (raw.includes('square') || raw.includes('1/1') || raw.includes('1:1')) {
+    return 'square';
+  }
+  return 'landscape';
 };
 
 const allPosts = await getCollection('posts');
@@ -48,13 +78,13 @@ const publishedPosts = allPosts
 
 const getSlug = (p: CollectionEntry<'posts'>) => (p as any).slug || p.id.replace(/\.(md|mdx)$/, '');
 
-const post = propEntry ?? publishedPosts.find((p) => getSlug(p) === slug);
+const post = publishedPosts.find((p) => normalizeSlug(getSlug(p)) === normalizeSlug(slug));
 
 if (!post) {
   return Astro.redirect('/404');
 }
 
-const currentIndex = publishedPosts.findIndex((p) => getSlug(p) === getSlug(post));
+const currentIndex = publishedPosts.findIndex((p) => normalizeSlug(getSlug(p)) === normalizeSlug(getSlug(post)));
 
 if (currentIndex === -1) {
   return Astro.redirect('/404');
@@ -63,20 +93,37 @@ if (currentIndex === -1) {
 const prevPost = currentIndex > 0 ? publishedPosts[currentIndex - 1] : null;
 const nextPost = currentIndex < publishedPosts.length - 1 ? publishedPosts[currentIndex + 1] : null;
 
-const heroImage = resolveImageUrl(post.data.thumbnailKey || (post.data as any).image || (post.data as any).heroImage);
-
 const prevSlug = prevPost ? getSlug(prevPost) : null;
 const prevTitle = prevPost ? prevPost.data.title : null;
-const prevImage = prevPost ? resolveImageUrl(prevPost.data.thumbnailKey || (prevPost.data as any).image) : null;
+const prevImage = prevPost ? resolveMediaUrl(prevPost.data.thumbnailKey || (prevPost.data as any).image, prevSlug) : null;
+const prevOrientation = prevPost ? detectOrientation(prevPost.data) : 'landscape';
 
 const nextSlug = nextPost ? getSlug(nextPost) : null;
 const nextTitle = nextPost ? nextPost.data.title : null;
-const nextImage = nextPost ? resolveImageUrl(nextPost.data.thumbnailKey || (nextPost.data as any).image) : null;
+const nextImage = nextPost ? resolveMediaUrl(nextPost.data.thumbnailKey || (nextPost.data as any).image, nextSlug) : null;
+const nextOrientation = nextPost ? detectOrientation(nextPost.data) : 'landscape';
+
+const rawVideo = (post.data as any).video || (post.data as any).heroVideo || (post.data as any).videoUrl;
+const rawImage = post.data.thumbnailKey || (post.data as any).image || (post.data as any).heroImage;
+
+let heroVideo = resolveMediaUrl(rawVideo, slug);
+let heroImage = resolveMediaUrl(rawImage, slug);
+
+if (!heroVideo && isVideoUrl(heroImage)) {
+  heroVideo = heroImage;
+  heroImage = resolveMediaUrl((post.data as any).poster || (post.data as any).coverImage, slug);
+}
+
+const heroOrientation = detectOrientation(post.data);
+const heroPosition = (post.data as any).heroPosition || (
+  (post.data as any).showHeroImage === false || (post.data as any).showHero === false ? 'none' : 'top'
+);
+const showHero = heroPosition !== 'none' && (post.data as any).showHeroImage !== false && (post.data as any).showHero !== false;
 
 const locations = (post.data as any).locations || (post.data as any).pins || [];
 const galleryItems = post.data.gallery || [];
 
-const { Content } = await render(post);
+const { Content } = typeof (post as any).render === 'function' ? await (post as any).render() : await render(post);
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url);
 
 const formatDate = (dateVal: string | Date) => {
@@ -106,9 +153,6 @@ const locationSchemas = locations.map((loc: any) => {
         "latitude": Number(lat),
         "longitude": Number(lng)
       }
-    } : {}),
-    ...(loc.url || (lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : undefined) ? {
-      "hasMap": loc.url || `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
     } : {})
   };
 });
@@ -151,31 +195,7 @@ const schemaGraph: any = {
           }
         }
       } : {}))
-    },
-    ...((post.data.category === 'Events' || (post.data as any).categories?.includes('Events')) ? [
-      {
-        "@type": "Event",
-        "@id": `${canonicalURL}#event`,
-        "name": post.data.title,
-        "startDate": new Date(post.data.date).toISOString(),
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        "eventStatus": "https://schema.org/EventScheduled",
-        ...(locationSchemas.length > 0 ? {
-          "location": locationSchemas.length === 1 ? locationSchemas[0] : locationSchemas
-        } : (post.data.location ? {
-          "location": {
-            "@type": "Place",
-            "name": post.data.location,
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Shreveport",
-              "addressRegion": "LA",
-              "addressCountry": "US"
-            }
-          }
-        } : {}))
-      }
-    ] : [])
+    }
   ]
 };
 ---
@@ -187,6 +207,7 @@ const schemaGraph: any = {
   canonicalURL={canonicalURL}
   type="article"
   publishedTime={post.data.date}
+  noindex={true}
 >
   <script type="application/ld+json" set:html={JSON.stringify(schemaGraph)} is:inline />
 
@@ -203,9 +224,9 @@ const schemaGraph: any = {
     <div class="tv-scanlines absolute inset-0 pointer-events-none"></div>
   </div>
 
-  <div class="w-full max-w-4xl mx-auto flex flex-col pb-16">
-    <article class="flex flex-col w-full">
-      <header class="mb-10 sm:mb-14 flex flex-col items-center justify-center text-center space-y-4 sm:space-y-5">
+  <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center pb-16 overflow-x-clip">
+    <article class="flex flex-col w-full items-center">
+      <header class="mb-10 sm:mb-14 flex flex-col items-center justify-center text-center space-y-4 sm:space-y-5 w-full">
         <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-neutral-400">
           <time datetime={new Date(post.data.date).toISOString()}>
             {formattedDate}
@@ -228,28 +249,89 @@ const schemaGraph: any = {
         </div>
       </header>
 
-      {heroImage && (
-        <div class="mb-10 sm:mb-14 w-full flex justify-center">
-          <div class="relative max-w-full overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800 select-none flex items-center justify-center">
-            <img 
-              src={heroImage} 
-              alt={post.data.title} 
-              loading="eager"
-              decoding="async"
-              class="block w-auto h-auto max-w-full max-h-[85vh] object-contain mx-auto rounded-xl"
-            />
+      {/* Top Center Hero Media */}
+      {showHero && (heroVideo || heroImage) && heroPosition === 'top' && (
+        <div class="mb-10 sm:mb-14 w-full flex justify-center items-center">
+          <div class:list={[
+            "relative max-w-full select-none flex items-center justify-center bg-transparent border-0 shadow-none",
+            heroOrientation === 'portrait' ? 'max-w-md w-full' : '',
+            heroOrientation === 'square' ? 'max-w-xl w-full' : '',
+            heroOrientation === 'landscape' ? 'w-full' : ''
+          ]}>
+            {heroVideo ? (
+              <video
+                src={heroVideo}
+                poster={heroImage && !isVideoUrl(heroImage) ? heroImage : undefined}
+                controls
+                playsinline
+                preload="metadata"
+                data-orientation={heroOrientation}
+                class:list={[
+                  "block mx-auto rounded-xl border-0 shadow-none outline-none bg-transparent post-hero-video",
+                  heroOrientation === 'portrait' ? 'w-auto h-auto max-h-[85vh] aspect-[9/16] object-contain' : '',
+                  heroOrientation === 'square' ? 'w-auto h-auto max-h-[85vh] aspect-square object-contain' : '',
+                  heroOrientation === 'landscape' ? 'w-full h-auto max-h-[85vh] object-contain' : ''
+                ]}
+              >
+                <source src={heroVideo} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <img 
+                src={heroImage} 
+                alt={post.data.title} 
+                loading="eager"
+                decoding="async"
+                class:list={[
+                  "block mx-auto rounded-xl border-0 shadow-none outline-none bg-transparent",
+                  heroOrientation === 'portrait' ? 'w-auto h-auto max-w-full max-h-[85vh] object-contain' : '',
+                  heroOrientation === 'square' ? 'w-auto h-auto max-w-full max-h-[85vh] object-contain' : '',
+                  heroOrientation === 'landscape' ? 'w-auto h-auto max-w-full max-h-[85vh] object-contain' : ''
+                ]}
+              />
+            )}
           </div>
         </div>
       )}
 
-      <!-- Clean Narrative Text -->
-      <div class="prose prose-invert prose-neutral max-w-none font-sans text-neutral-200 leading-relaxed pt-2 break-words">
+      <!-- Clean Narrative Text with Float Wrap and Direct R2 Media Upgrades -->
+      <div class="prose prose-invert prose-neutral max-w-none font-sans text-neutral-200 leading-relaxed pt-2 break-words w-full text-left">
+        {/* Left or Right Floating Hero Media */}
+        {showHero && (heroVideo || heroImage) && (heroPosition === 'left' || heroPosition === 'right') && (
+          <div class:list={[
+            "hero-media-wrap select-none not-prose",
+            heroPosition === 'left' ? 'media-wrap-left' : 'media-wrap-right'
+          ]}>
+            {heroVideo ? (
+              <video
+                src={heroVideo}
+                poster={heroImage && !isVideoUrl(heroImage) ? heroImage : undefined}
+                controls
+                playsinline
+                preload="metadata"
+                data-orientation={heroOrientation}
+                class="block w-full h-auto rounded-xl border-0 shadow-none outline-none bg-transparent"
+              >
+                <source src={heroVideo} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <img 
+                src={heroImage} 
+                alt={post.data.title} 
+                loading="eager"
+                decoding="async"
+                class="block w-full h-auto max-h-[75vh] object-contain rounded-xl border-0 shadow-none outline-none bg-transparent"
+              />
+            )}
+          </div>
+        )}
+
         <Content />
       </div>
 
-      <!-- Structured Location Pins & Links Component -->
       {locations.length > 0 && (
-        <section class="mt-12 pt-8 border-t border-neutral-800/80 flex flex-col gap-4 font-mono w-full clear-both" aria-label="Locations">
+        <section class="mt-12 pt-8 border-t border-neutral-800/80 flex flex-col gap-4 font-mono w-full clear-both text-left" aria-label="Locations">
           <div class="flex items-center justify-between text-xs text-neutral-400 uppercase tracking-[0.2em]">
             <span>[ Location Pins & Links ]</span>
             <span>{locations.length} {locations.length === 1 ? 'Pin' : 'Pins'}</span>
@@ -284,9 +366,8 @@ const schemaGraph: any = {
         </section>
       )}
 
-      <!-- Structured Photo Archive Gallery Component -->
       {galleryItems.length > 0 && (
-        <section class="my-12 pt-8 border-t border-neutral-800/80 clear-both w-full select-none" aria-label="Photo Archive">
+        <section class="my-12 pt-8 border-t border-neutral-800/80 clear-both w-full select-none text-left" aria-label="Photo Archive">
           <div class="mb-6 flex items-center justify-between font-mono text-xs text-neutral-400 uppercase tracking-[0.2em]">
             <span>[ Photo Archive ]</span>
             <span>{galleryItems.length} {galleryItems.length === 1 ? 'Image' : 'Images'}</span>
@@ -294,7 +375,7 @@ const schemaGraph: any = {
           <div class="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
             {galleryItems.map((item: any) => {
               const itemKey = typeof item === 'string' ? item : (item.src || item.key);
-              const itemSrc = resolveImageUrl(itemKey);
+              const itemSrc = resolveMediaUrl(itemKey, slug);
               const altText = typeof item === 'object' ? (item.alt || item.caption || '') : '';
 
               return (
@@ -318,62 +399,76 @@ const schemaGraph: any = {
         </section>
       )}
 
-      <nav class="mt-16 sm:mt-24 pt-8 sm:pt-12 border-t border-neutral-800 flex flex-row items-center justify-between gap-4 w-full select-none clear-both" aria-label="Post pagination">
-        <div class="flex-1 flex justify-start min-w-0">
+      <nav class="mt-16 sm:mt-24 pt-8 sm:pt-12 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-8 w-full select-none clear-both" aria-label="Post pagination">
+        <div class="w-full sm:flex-1 flex justify-start min-w-0">
           {nextSlug && (
-            <a
-              href={`/posts/${nextSlug}`}
-              class="post-nav-link group relative flex items-center gap-2 sm:gap-4 text-left transition-colors cursor-pointer max-w-full sm:max-w-sm py-2 active:opacity-70"
-              rel="next"
-            >
+            <div class="relative group flex items-center w-full sm:w-auto">
               {nextImage && (
-                <div class="absolute bottom-full left-0 mb-3 hidden sm:block opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out z-30 p-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-2xl">
-                  <img 
-                    src={nextImage} 
-                    alt={nextTitle || 'Next post'} 
-                    loading="lazy"
-                    class="max-h-28 max-w-[150px] w-auto h-auto object-cover rounded-md block"
-                  />
+                <div class="absolute bottom-full mb-4 left-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                  <div class:list={[
+                    "crt-tv-frame rounded-xl bg-neutral-950 border border-neutral-700/60 shadow-2xl relative overflow-hidden flex items-center justify-center p-0.5",
+                    nextOrientation === 'portrait' ? 'crt-portrait' : nextOrientation === 'square' ? 'crt-square' : 'crt-landscape'
+                  ]}>
+                    <div class="absolute inset-0 pointer-events-none z-20 crt-screen-vignette"></div>
+                    <div class="absolute inset-0 pointer-events-none z-10 crt-scanlines"></div>
+                    <img
+                      src={nextImage}
+                      alt={nextTitle || 'Next post'}
+                      loading="lazy"
+                      class="crt-thumb-img rounded-xl block w-auto h-auto max-w-full max-h-full object-contain"
+                    />
+                  </div>
                 </div>
               )}
-
-              <span class="text-3xl sm:text-5xl md:text-6xl font-mono text-white leading-none select-none transition-all duration-300 ease-out group-hover:-translate-x-1 sm:group-hover:-translate-x-2 group-hover:scale-110 sm:group-hover:scale-125 group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.85)] flex-shrink-0">
-                &lt;
-              </span>
-
-              <span class="font-sans text-xs sm:text-sm font-normal uppercase tracking-wider text-neutral-300 group-hover:text-white transition-colors line-clamp-2">
-                {nextTitle}
-              </span>
-            </a>
+              <a
+                href={`/posts/${nextSlug}`}
+                class="post-nav-link flex items-center gap-3 sm:gap-4 text-left transition-colors cursor-pointer max-w-full sm:max-w-sm py-2 active:opacity-70 group"
+                rel="next"
+              >
+                <span class="text-3xl sm:text-5xl md:text-6xl font-mono text-white leading-none select-none transition-all duration-300 ease-out group-hover:-translate-x-1 sm:group-hover:-translate-x-2 group-hover:scale-110 sm:group-hover:scale-125 group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.85)] flex-shrink-0">
+                  &lt;
+                </span>
+                <span class="font-sans text-xs sm:text-sm font-normal uppercase tracking-wider text-neutral-300 group-hover:text-white transition-colors line-clamp-2">
+                  {nextTitle}
+                </span>
+              </a>
+            </div>
           )}
         </div>
 
-        <div class="flex-1 flex justify-end min-w-0">
+        <div class="w-full sm:flex-1 flex justify-end min-w-0">
           {prevSlug && (
-            <a
-              href={`/posts/${prevSlug}`}
-              class="post-nav-link group relative flex items-center justify-end text-right gap-2 sm:gap-4 transition-colors cursor-pointer max-w-full sm:max-w-sm py-2 active:opacity-70"
-              rel="prev"
-            >
-              <span class="font-sans text-xs sm:text-sm font-normal uppercase tracking-wider text-neutral-300 group-hover:text-white transition-colors line-clamp-2">
-                {prevTitle}
-              </span>
-
-              <span class="text-3xl sm:text-5xl md:text-6xl font-mono text-white leading-none select-none transition-all duration-300 ease-out group-hover:translate-x-1 sm:group-hover:translate-x-2 group-hover:scale-110 sm:group-hover:scale-125 group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.85)] flex-shrink-0">
-                &gt;
-              </span>
-
+            <div class="relative group flex items-center justify-end w-full sm:w-auto ml-auto">
               {prevImage && (
-                <div class="absolute bottom-full right-0 mb-3 hidden sm:block opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out z-30 p-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-2xl">
-                  <img 
-                    src={prevImage} 
-                    alt={prevTitle || 'Previous post'} 
-                    loading="lazy"
-                    class="max-h-28 max-w-[150px] w-auto h-auto object-cover rounded-md block"
-                  />
+                <div class="absolute bottom-full mb-4 right-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                  <div class:list={[
+                    "crt-tv-frame rounded-xl bg-neutral-950 border border-neutral-700/60 shadow-2xl relative overflow-hidden flex items-center justify-center p-0.5",
+                    prevOrientation === 'portrait' ? 'crt-portrait' : prevOrientation === 'square' ? 'crt-square' : 'crt-landscape'
+                  ]}>
+                    <div class="absolute inset-0 pointer-events-none z-20 crt-screen-vignette"></div>
+                    <div class="absolute inset-0 pointer-events-none z-10 crt-scanlines"></div>
+                    <img
+                      src={prevImage}
+                      alt={prevTitle || 'Previous post'}
+                      loading="lazy"
+                      class="crt-thumb-img rounded-xl block w-auto h-auto max-w-full max-h-full object-contain"
+                    />
+                  </div>
                 </div>
               )}
-            </a>
+              <a
+                href={`/posts/${prevSlug}`}
+                class="post-nav-link flex items-center justify-end text-right gap-3 sm:gap-4 transition-colors cursor-pointer max-w-full sm:max-w-sm py-2 active:opacity-70 group"
+                rel="prev"
+              >
+                <span class="font-sans text-xs sm:text-sm font-normal uppercase tracking-wider text-neutral-300 group-hover:text-white transition-colors line-clamp-2">
+                  {prevTitle}
+                </span>
+                <span class="text-3xl sm:text-5xl md:text-6xl font-mono text-white leading-none select-none transition-all duration-300 ease-out group-hover:translate-x-1 sm:group-hover:translate-x-2 group-hover:scale-110 sm:group-hover:scale-125 group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.85)] flex-shrink-0">
+                  &gt;
+                </span>
+              </a>
+            </div>
           )}
         </div>
       </nav>
@@ -383,6 +478,32 @@ const schemaGraph: any = {
 
 <script>
   import { navigate } from 'astro:transitions/client';
+
+  const R2_PUBLIC_BASE = 'https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/';
+
+  function upgradeProseMedia() {
+    const proseImgs = document.querySelectorAll<HTMLImageElement>('.prose img');
+    proseImgs.forEach((img) => {
+      const src = img.getAttribute('src') || '';
+      if (!src) return;
+
+      if (/\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(src)) {
+        const video = document.createElement('video');
+        video.src = src.startsWith('http') ? src : `${R2_PUBLIC_BASE}${src.replace(/^\/+/, '')}`;
+        video.controls = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        video.className = img.className || 'w-full h-auto rounded-xl';
+        img.parentNode?.replaceChild(video, img);
+        return;
+      }
+
+      if (!src.startsWith('http://') && !src.startsWith('https://')) {
+        const cleanPath = src.replace(/^\/+/, '');
+        img.src = `${R2_PUBLIC_BASE}${cleanPath}`;
+      }
+    });
+  }
 
   const TRANSITION_MODES = [
     { name: 'mode-antenna-gust', delay: 280 },
@@ -408,6 +529,8 @@ const schemaGraph: any = {
   }
 
   function initPostEngine() {
+    upgradeProseMedia();
+
     const staticOverlay = document.getElementById('crt-static-overlay');
     if (staticOverlay) {
       staticOverlay.className = 'fixed inset-0 pointer-events-none z-[100] opacity-0 bg-neutral-950 flex items-center justify-center overflow-hidden';
@@ -431,8 +554,59 @@ const schemaGraph: any = {
         }, selectedEffect.delay);
       });
     });
+
+    document.querySelectorAll<HTMLImageElement>('.crt-thumb-img').forEach((img) => {
+      const applyFrameOrientation = () => {
+        const frame = img.closest<HTMLElement>('.crt-tv-frame');
+        if (!frame || !img.naturalWidth || !img.naturalHeight) return;
+        const ratio = img.naturalHeight / img.naturalWidth;
+        if (ratio > 1.15) {
+          frame.classList.add('crt-portrait');
+          frame.classList.remove('crt-landscape', 'crt-square');
+        } else if (ratio >= 0.88 && ratio <= 1.15) {
+          frame.classList.add('crt-square');
+          frame.classList.remove('crt-landscape', 'crt-portrait');
+        } else {
+          frame.classList.add('crt-landscape');
+          frame.classList.remove('crt-portrait', 'crt-square');
+        }
+      };
+
+      if (img.complete && img.naturalWidth > 0) {
+        applyFrameOrientation();
+      } else {
+        img.addEventListener('load', applyFrameOrientation);
+      }
+    });
+
+    const videos = document.querySelectorAll<HTMLVideoElement>('video');
+    videos.forEach((video) => {
+      const applyOrientation = () => {
+        if (video.videoHeight && video.videoWidth) {
+          if (video.videoHeight > video.videoWidth) {
+            video.dataset.orientation = 'portrait';
+            video.classList.add('portrait');
+            video.classList.remove('landscape');
+          } else if (video.videoHeight === video.videoWidth) {
+            video.dataset.orientation = 'square';
+            video.classList.add('square');
+          } else {
+            video.dataset.orientation = 'landscape';
+            video.classList.add('landscape');
+            video.classList.remove('portrait');
+          }
+        }
+      };
+
+      if (video.readyState >= 1) {
+        applyOrientation();
+      } else {
+        video.addEventListener('loadedmetadata', applyOrientation);
+      }
+    });
   }
 
+  document.addEventListener('DOMContentLoaded', upgradeProseMedia);
   document.addEventListener('astro:page-load', initPostEngine);
 </script>
 
@@ -460,12 +634,117 @@ const schemaGraph: any = {
     100% { opacity: 1; filter: brightness(1); transform: none; }
   }
 
-  .prose img {
+  .prose img,
+  .prose video,
+  .post-hero-video {
     border-radius: 0.75rem !important;
     border: none !important;
-    max-width: 100% !important;
-    height: auto !important;
+    outline: none !important;
+    box-shadow: none !important;
+    display: block !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .hero-media-wrap.media-wrap-left {
+    float: left !important;
+    margin: 0.25rem 1.75rem 1.5rem 0 !important;
+    max-width: 48% !important;
+    width: auto !important;
+  }
+
+  .hero-media-wrap.media-wrap-right {
+    float: right !important;
+    margin: 0.25rem 0 1.5rem 1.75rem !important;
+    max-width: 48% !important;
+    width: auto !important;
+  }
+
+  @media (max-width: 640px) {
+    .hero-media-wrap.media-wrap-left,
+    .hero-media-wrap.media-wrap-right {
+      float: none !important;
+      max-width: 100% !important;
+      margin: 1.5rem auto !important;
+      display: block !important;
+    }
+  }
+
+  .prose video[data-orientation="portrait"],
+  .post-hero-video[data-orientation="portrait"],
+  video.portrait {
+    max-height: 80vh !important;
+    max-width: 420px !important;
+    margin: 1.5rem auto !important;
+    aspect-ratio: 9 / 16 !important;
     object-fit: contain !important;
+  }
+
+  .prose video[data-orientation="square"],
+  .post-hero-video[data-orientation="square"],
+  video.square {
+    max-width: 540px !important;
+    margin: 1.5rem auto !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+  }
+
+  .prose video[data-orientation="landscape"],
+  .post-hero-video[data-orientation="landscape"],
+  video.landscape {
+    max-width: 100% !important;
+    max-height: 80vh !important;
+    margin: 1.5rem auto !important;
+    aspect-ratio: 16 / 9 !important;
+    object-fit: contain !important;
+  }
+
+  .crt-tv-frame {
+    position: relative !important;
+    overflow: hidden !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #0a0a0a !important;
+    transition: all 0.25s ease-out;
+  }
+
+  .crt-tv-frame.crt-landscape {
+    width: 192px !important;
+    height: 128px !important;
+  }
+
+  .crt-tv-frame.crt-portrait {
+    width: 120px !important;
+    height: 168px !important;
+    aspect-ratio: 3 / 4 !important;
+  }
+
+  .crt-tv-frame.crt-square {
+    width: 140px !important;
+    height: 140px !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .crt-thumb-img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+
+  .crt-screen-vignette {
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.85), inset 0 0 6px rgba(0, 0, 0, 0.95);
+  }
+
+  .crt-scanlines {
+    background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%, 
+      rgba(0, 0, 0, 0.45) 50%
+    );
+    background-size: 100% 4px;
   }
 </style>
 
@@ -660,7 +939,8 @@ const schemaGraph: any = {
     letter-spacing: 0.05em;
     line-height: 1.15;
     max-width: 100%;
-    word-break: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
     text-transform: uppercase;
     cursor: default;
     color: #ffffff !important;
