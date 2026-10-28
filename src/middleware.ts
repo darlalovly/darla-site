@@ -69,7 +69,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // 3. Edge-level robots.txt crawler disallow
+  // 3. Dynamic edge-level robots.txt crawler lockdown
   if (pathname === '/robots.txt') {
     return new Response("User-agent: *\nDisallow: /\n", {
       status: 200,
@@ -81,7 +81,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
-  // 4. Pass static assets through with noindex headers
+  // 4. Pass static assets through with noindex crawler lock
   if (
     pathname.startsWith("/_astro/") ||
     pathname.startsWith("/_image") ||
@@ -113,7 +113,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return res;
   }
 
-  // 7. Resolve runtime credentials across Cloudflare Pages adapter and environment
+  // 7. Resolve runtime credentials dynamically from Cloudflare Pages environment
   const locals = (context.locals as any) || {};
   const runtimeEnv = locals?.runtime?.env || (context as any)?.env || {};
 
@@ -137,10 +137,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  const defaultUser = env.AUTH_USER || "darla";
-  const defaultPass = env.AUTH_PASS || "darlalovly2026";
+  if (env.AUTH_USER && env.AUTH_PASS) {
+    allowedUsers[env.AUTH_USER] = env.AUTH_PASS;
+  }
+
   if (Object.keys(allowedUsers).length === 0) {
-    allowedUsers[defaultUser] = defaultPass;
+    return new Response("Unauthorized: Server authentication variables not configured.", {
+      status: 500,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+      },
+    });
   }
 
   // 8. Verify HTTP Basic Auth credentials
