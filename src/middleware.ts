@@ -12,7 +12,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const cfUserEmail = request.headers.get("cf-access-authenticated-user-email");
   (context.locals as any).userEmail = cfUserEmail || "Darla";
 
-  // 2. Proxy /images/* requests to R2 storage with referer-based hotlink protection
+  // 2. Proxy /images/* requests to R2 storage across dev and production environments
   if (pathname.startsWith("/images/")) {
     const referer = request.headers.get("referer");
     if (referer) {
@@ -23,7 +23,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
           refererHost.endsWith("darlalovly.com") ||
           refererHost.endsWith(".pages.dev") ||
           refererHost === "localhost" ||
-          refererHost === "127.0.0.1";
+          refererHost === "127.0.0.1" ||
+          refererHost === "::1";
 
         if (!isAllowed) {
           return new Response("Forbidden: Hotlinking is not permitted.", {
@@ -47,6 +48,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const candidateUrls = [
       `${R2_PUBLIC_BASE}${pathname}`,
       `${R2_PUBLIC_BASE}${pathname.replace(/^\/images\/posts\//, '/posts/')}`,
+      `${R2_PUBLIC_BASE}${pathname.replace(/^\/images\/recipes\//, '/recipes/')}`,
       `${R2_PUBLIC_BASE}${pathname.replace(/^\/images\//, '/')}`,
     ];
 
@@ -94,17 +96,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return res;
   }
 
-  // 5. Zero Trust authenticated sessions bypass Basic Auth
+  // 5. Bypass authentication during local development
+  if (
+    import.meta.env.DEV ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
+  ) {
+    const res = await next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+    return res;
+  }
+
+  // 6. Zero Trust authenticated sessions bypass Basic Auth
   if (cfUserEmail) {
     const res = await next();
     res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
     return res;
   }
 
-  // 6. Resolve runtime credentials dynamically from Cloudflare Pages environment
-  const locals = (context.locals as any) || {};
-  const runtimeEnv = locals?.runtime?.env || (context as any)?.env || {};
-
+  // 7. Resolve runtime credentials dynamically from Cloudflare Pages environment
   let cfEnv: any = {};
   try {
     // @ts-ignore
@@ -112,6 +123,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     cfEnv = cfWorkers?.env || {};
   } catch {}
 
+  const runtimeEnv = (context as any)?.env || {};
   const nodeEnv = (globalThis as any).process?.env || {};
   const viteEnv = (import.meta as any).env || {};
   const env = { ...cfEnv, ...runtimeEnv, ...nodeEnv, ...viteEnv };
@@ -139,7 +151,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
-  // 7. Verify HTTP Basic Auth credentials
+  // 8. Verify HTTP Basic Auth credentials on production
   const authHeader =
     context.request.headers.get("authorization") ||
     context.request.headers.get("Authorization");
@@ -160,7 +172,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // 8. Lock down all routes: Prompt for credentials and prevent CDN/browser caching
+  // 9. Lock down all unauthenticated edge requests
   return new Response("Unauthorized: Private preview requires authentication.", {
     status: 401,
     headers: {

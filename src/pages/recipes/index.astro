@@ -5,6 +5,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 
+export const prerender = false;
+
 const allRecipes: CollectionEntry<'recipes'>[] = await getCollection('recipes');
 
 const publishedRecipes = allRecipes
@@ -19,13 +21,32 @@ const archiveTitle = "Recipes";
 const archiveNote = "A curated index of recipes and kitchen notes that make my house smell like home.";
 const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
 
-const resolveImageUrl = (imgKey?: string): string | undefined => {
+type ImageInput =
+  | string
+  | {
+      src?: string;
+      key?: string;
+      alt?: string;
+      caption?: string;
+      date?: string | number | Date;
+    }
+  | undefined
+  | null;
+
+const resolveImageUrl = (img?: ImageInput, recipeSlug?: string): string | undefined => {
+  if (!img) return undefined;
+  const imgKey = typeof img === 'string' ? img : (img.src || img.key);
   if (!imgKey) return undefined;
-  if (imgKey.startsWith('http://') || imgKey.startsWith('https://') || imgKey.startsWith('/')) {
-    return imgKey;
-  }
+  if (imgKey.startsWith('http://') || imgKey.startsWith('https://')) return imgKey;
   const cleanBase = cloudflareBase.endsWith('/') ? cloudflareBase : `${cloudflareBase}/`;
-  return `${cleanBase}${imgKey.replace(/^\/+/, '')}`;
+  const cleanKey = imgKey.replace(/^\/+/, '');
+  if (cleanKey.startsWith('images/')) {
+    return `${cleanBase}${cleanKey}`;
+  }
+  if (recipeSlug) {
+    return `${cleanBase}images/recipes/${recipeSlug}/${cleanKey}`;
+  }
+  return `${cleanBase}${cleanKey}`;
 };
 
 const formatDate = (date: Date | string | undefined) => {
@@ -41,6 +62,7 @@ const formatDate = (date: Date | string | undefined) => {
 <BaseLayout 
   title="Recipes | darlalovly"
   description={archiveNote}
+  noindex={true}
 >
   <div class="w-full max-w-4xl mx-auto pb-16">
     <header class="mb-14 border-b border-neutral-800 pb-10 flex flex-col items-start gap-4">
@@ -58,7 +80,10 @@ const formatDate = (date: Date | string | undefined) => {
     <div class="flex flex-col gap-10">
       {publishedRecipes.map((recipe) => {
         const recipeSlug = recipe.id ? recipe.id.replace(/\.(md|mdx)$/, '') : '';
-        const thumbUrl = resolveImageUrl(recipe.data.thumbnailKey || (recipe.data.gallery && recipe.data.gallery[0]));
+        const thumbUrl = resolveImageUrl(
+          recipe.data.thumbnailKey || (recipe.data.gallery && recipe.data.gallery[0]),
+          recipeSlug
+        );
         
         return (
           <article class="border border-neutral-800/80 bg-neutral-900/40 p-6 sm:p-8 transition-colors hover:border-neutral-600">
