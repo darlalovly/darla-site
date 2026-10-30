@@ -94,26 +94,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return res;
   }
 
-  // 5. Bypass authentication during local development
-  if (
-    import.meta.env.DEV ||
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "::1"
-  ) {
-    const res = await next();
-    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
-    return res;
-  }
-
-  // 6. Zero Trust authenticated sessions bypass Basic Auth
+  // 5. Zero Trust authenticated sessions bypass Basic Auth
   if (cfUserEmail) {
     const res = await next();
     res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
     return res;
   }
 
-  // 7. Resolve runtime credentials dynamically from Cloudflare Pages environment
+  // 6. Resolve runtime credentials dynamically from Cloudflare Pages environment
   const locals = (context.locals as any) || {};
   const runtimeEnv = locals?.runtime?.env || (context as any)?.env || {};
 
@@ -151,7 +139,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
-  // 8. Verify HTTP Basic Auth credentials
+  // 7. Verify HTTP Basic Auth credentials
   const authHeader =
     context.request.headers.get("authorization") ||
     context.request.headers.get("Authorization");
@@ -165,12 +153,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
         if (username && allowedUsers[username] && allowedUsers[username] === password) {
           const res = await next();
           res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+          res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
           return res;
         }
       } catch {}
     }
   }
 
+  // 8. Lock down all routes: Prompt for credentials and prevent CDN/browser caching
   return new Response("Unauthorized: Private preview requires authentication.", {
     status: 401,
     headers: {
