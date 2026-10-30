@@ -1,17 +1,25 @@
 ---
 // File: src/pages/recipes/[slug].astro
 
-export const prerender = false;
-
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, getEntry, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+export const prerender = false;
 
 const { slug } = Astro.params;
 if (!slug) {
   return Astro.redirect('/404');
 }
 
-const entry = (await getEntry('recipes', slug)) ?? (await getEntry('recipes', `${slug}.md`));
+const allRecipes = await getCollection('recipes');
+const publishedRecipes = allRecipes
+  .filter((r) => !r.data.isDraft && !r.data.draft)
+  .sort((a, b) => (b.data.date?.valueOf() || 0) - (a.data.date?.valueOf() || 0));
+
+const entry = publishedRecipes.find((r) => r.id.replace(/\.(md|mdx)$/, '') === slug || (r as any).slug === slug)
+  ?? (await getEntry('recipes', slug))
+  ?? (await getEntry('recipes', `${slug}.md`));
 
 if (!entry) {
   return Astro.redirect('/404');
@@ -19,15 +27,10 @@ if (!entry) {
 
 const { Content } = await render(entry);
 
-const allRecipes = await getCollection('recipes');
-const publishedRecipes = allRecipes
-  .filter((r) => !r.data.isDraft && !r.data.draft)
-  .sort((a, b) => (b.data.date?.valueOf() || 0) - (a.data.date?.valueOf() || 0));
-
 const currentId = entry.id.replace(/\.(md|mdx)$/, '');
 const currentIndex = publishedRecipes.findIndex((r) => r.id.replace(/\.(md|mdx)$/, '') === currentId);
-const prevRecipe = currentIndex !== -1 && currentIndex < publishedRecipes.length - 1 ? publishedRecipes[currentIndex + 1] : null;
-const nextRecipe = currentIndex > 0 ? publishedRecipes[currentIndex - 1] : null;
+const prevRecipe = currentIndex !== -1 && currentIndex < publishedRecipes.length - 1 ? publishedRecipes[currentIndex + 1] : undefined;
+const nextRecipe = currentIndex > 0 ? publishedRecipes[currentIndex - 1] : undefined;
 
 const cloudflareBase = import.meta.env.PUBLIC_R2_URL || "https://pub-23c94031ab954f6cb120959a02ecef04.r2.dev/";
 
@@ -229,7 +232,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
       </div>
 
       {entry.data.recipeExcerpt && (
-        <p class="text-base sm:text-lg text-neutral-300 leading-relaxed max-w-2xl font-sans m-0" set:html={cleanText(entry.data.recipeExcerpt)}></p>
+        <p class="text-base sm:text-lg text-neutral-300 leading-relaxed max-w-2xl font-sans m-0" set:html={cleanText(entry.data.recipeExcerpt)} />
       )}
 
       {resolvedFeatureImage && (
@@ -253,7 +256,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
     </section>
 
     <!-- Main Prose Body Content -->
-    <div class="recipe-prose prose prose-invert max-w-none text-neutral-200 font-sans leading-relaxed no-print flex flex-col gap-4">
+    <div class="recipe-prose prose prose-invert max-w-none text-neutral-200 font-sans leading-relaxed no-print">
       <Content />
     </div>
 
@@ -300,7 +303,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
           </h3>
           <ul class="flex flex-col gap-2.5 text-sm text-neutral-300 font-sans p-0 list-none">
             {entry.data.recipeIngredients?.split('\n').filter((l: string) => l.trim()).map((item: string) => (
-              <li class={item.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(item)}></li>
+              <li class={item.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(item)} />
             ))}
           </ul>
         </div>
@@ -311,7 +314,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
           </h3>
           <ol class="flex flex-col gap-4 text-sm text-neutral-300 font-sans list-decimal list-inside p-0">
             {entry.data.recipeInstructions?.split('\n').filter((l: string) => l.trim()).map((step: string) => (
-              <li class="leading-relaxed" set:html={cleanText(step)}></li>
+              <li class="leading-relaxed" set:html={cleanText(step)} />
             ))}
           </ol>
         </div>
@@ -322,7 +325,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
           <div class="notes-badge text-[11px] font-mono uppercase tracking-widest text-neutral-400">[ KITCHEN NOTES ]</div>
           <ul class="flex flex-col gap-2 text-sm text-neutral-300 font-sans p-0 list-none">
             {entry.data.recipeNotes.split('\n').filter((l: string) => l.trim() !== '').map((note: string) => (
-              <li class={note.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(note)}></li>
+              <li class={note.trim().startsWith('**') ? "font-bold text-white font-mono uppercase tracking-wide pt-2" : "leading-relaxed"} set:html={cleanText(note)} />
             ))}
           </ul>
         </div>
@@ -337,7 +340,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
           <span class="text-[11px] font-mono text-neutral-500 uppercase tracking-wider">{entry.data.gallery.length} Photos</span>
         </div>
         <div class="columns-1 sm:columns-2 md:columns-3 gap-5 [column-fill:_balance]">
-          {entry.data.gallery.map((img: any) => {
+          {entry.data.gallery.map((img) => {
             const galleryUrl = resolveImageUrl(img);
             const altText = typeof img === 'object' && img?.alt ? img.alt : `${entry.data.title} photograph`;
             const photoDate = extractImageDate(img, entry.data.date);
@@ -371,7 +374,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
       </section>
     )}
 
-    <!-- Previous / Next Navigation -->
+    <!-- Previous / Next Minimal Arrow Navigation -->
     <nav class="recipe-nav no-print relative border-t border-b border-neutral-800/80 py-12 my-6 flex flex-col sm:flex-row items-center justify-between gap-8 select-none" aria-label="Recipe navigation">
       {prevRecipe ? (
         <div class="relative group flex items-center w-full sm:w-1/2">
@@ -400,7 +403,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
             </span>
           </a>
         </div>
-      ) : <div class="w-full sm:w-1/2"></div>}
+      ) : <div class="w-full sm:w-1/2" />}
 
       {nextRecipe ? (
         <div class="relative group flex items-center justify-end w-full sm:w-1/2 ml-auto">
@@ -429,7 +432,7 @@ const nextThumb = nextRecipe ? resolveImageUrl(nextRecipe.data.thumbnailKey || (
             </svg>
           </a>
         </div>
-      ) : <div class="w-full sm:w-1/2"></div>}
+      ) : <div class="w-full sm:w-1/2" />}
     </nav>
 
   </article>
